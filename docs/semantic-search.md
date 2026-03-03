@@ -20,7 +20,7 @@ Semantic search dependencies (`fastembed`, `sqlite-vec`, and optional `openai`) 
 pip install -e .
 ```
 
-You can always override with `BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED=true|false`.
+You can always override with `MEMORYHUB_SEMANTIC_SEARCH_ENABLED=true|false`.
 
 ### Platform Compatibility
 
@@ -45,8 +45,8 @@ After installation, Intel Mac users have two runtime options:
 **Option 1: Use OpenAI embeddings (recommended)**
 
 ```bash
-export BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED=true
-export BASIC_MEMORY_SEMANTIC_EMBEDDING_PROVIDER=openai
+export MEMORYHUB_SEMANTIC_SEARCH_ENABLED=true
+export MEMORYHUB_SEMANTIC_EMBEDDING_PROVIDER=openai
 export OPENAI_API_KEY=sk-...
 ```
 
@@ -55,8 +55,8 @@ export OPENAI_API_KEY=sk-...
 Keep the same pinned installation and use FastEmbed (default provider):
 
 ```bash
-export BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED=true
-export BASIC_MEMORY_SEMANTIC_EMBEDDING_PROVIDER=fastembed
+export MEMORYHUB_SEMANTIC_SEARCH_ENABLED=true
+export MEMORYHUB_SEMANTIC_EMBEDDING_PROVIDER=fastembed
 ```
 
 ## Quick Start
@@ -70,7 +70,7 @@ uv sync
 2. (Optional) Explicitly enable semantic search:
 
 ```bash
-export BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED=true
+export MEMORYHUB_SEMANTIC_SEARCH_ENABLED=true
 ```
 
 3. Build vector embeddings for your existing content:
@@ -97,16 +97,16 @@ search_notes("login process", search_type="text")
 
 ## Configuration Reference
 
-All settings are fields on `BasicMemoryConfig` and can be set via environment variables (prefixed with `BASIC_MEMORY_`).
+All settings are fields on `BasicMemoryConfig` and can be set via environment variables. The supported env names use the `MEMORYHUB_` prefix; legacy `BASIC_MEMORY_` aliases are still accepted during the migration window.
 
 | Config Field | Env Var | Default | Description |
 |---|---|---|---|
-| `semantic_search_enabled` | `BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED` | Auto (`true` when semantic deps are available) | Enable semantic search. Required before vector/hybrid modes work. |
-| `semantic_embedding_provider` | `BASIC_MEMORY_SEMANTIC_EMBEDDING_PROVIDER` | `"fastembed"` | Embedding provider: `"fastembed"` (local) or `"openai"` (API). |
-| `semantic_embedding_model` | `BASIC_MEMORY_SEMANTIC_EMBEDDING_MODEL` | `"bge-small-en-v1.5"` | Model identifier. Auto-adjusted per provider if left at default. |
-| `semantic_embedding_dimensions` | `BASIC_MEMORY_SEMANTIC_EMBEDDING_DIMENSIONS` | Auto-detected | Vector dimensions. 384 for FastEmbed, 1536 for OpenAI. Override only if using a non-default model. |
-| `semantic_embedding_batch_size` | `BASIC_MEMORY_SEMANTIC_EMBEDDING_BATCH_SIZE` | `64` | Number of texts to embed per batch. |
-| `semantic_vector_k` | `BASIC_MEMORY_SEMANTIC_VECTOR_K` | `100` | Candidate count for vector nearest-neighbour retrieval. Higher values improve recall at the cost of latency. |
+| `semantic_search_enabled` | `MEMORYHUB_SEMANTIC_SEARCH_ENABLED` | Auto (`true` when semantic deps are available) | Enable semantic search. Required before vector/hybrid modes work. |
+| `semantic_embedding_provider` | `MEMORYHUB_SEMANTIC_EMBEDDING_PROVIDER` | `"fastembed"` | Embedding provider: `"fastembed"` (local) or `"openai"` (API). |
+| `semantic_embedding_model` | `MEMORYHUB_SEMANTIC_EMBEDDING_MODEL` | `"bge-small-en-v1.5"` | Model identifier. Auto-adjusted per provider if left at default. |
+| `semantic_embedding_dimensions` | `MEMORYHUB_SEMANTIC_EMBEDDING_DIMENSIONS` | Auto-detected | Vector dimensions. 384 for FastEmbed, 1536 for OpenAI. Override only if using a non-default model. |
+| `semantic_embedding_batch_size` | `MEMORYHUB_SEMANTIC_EMBEDDING_BATCH_SIZE` | `64` | Number of texts to embed per batch. |
+| `semantic_vector_k` | `MEMORYHUB_SEMANTIC_VECTOR_K` | `100` | Candidate count for vector nearest-neighbour retrieval. Higher values improve recall at the cost of latency. |
 
 ## Embedding Providers
 
@@ -121,7 +121,7 @@ FastEmbed runs entirely locally using ONNX models — no API key, no network cal
 ```bash
 # Install project dependencies and enable semantic search
 uv sync
-export BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED=true
+export MEMORYHUB_SEMANTIC_SEARCH_ENABLED=true
 ```
 
 ### OpenAI
@@ -133,8 +133,8 @@ Uses OpenAI's embeddings API for higher-dimensional vectors. Requires an API key
 - **Tradeoff**: Higher quality embeddings, requires API calls and an OpenAI key
 
 ```bash
-export BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED=true
-export BASIC_MEMORY_SEMANTIC_EMBEDDING_PROVIDER=openai
+export MEMORYHUB_SEMANTIC_SEARCH_ENABLED=true
+export MEMORYHUB_SEMANTIC_EMBEDDING_PROVIDER=openai
 export OPENAI_API_KEY=sk-...
 ```
 

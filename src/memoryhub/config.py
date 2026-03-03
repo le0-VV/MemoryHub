@@ -254,7 +254,13 @@ class BasicMemoryConfig(BaseSettings):
     # Project path constraints
     project_root: Optional[str] = Field(
         default=None,
-        description="If set, all projects must be created underneath this directory. Paths will be sanitized and constrained to this root. If not set, projects can be created anywhere (default behavior).",
+        description=(
+            "If set, all projects must be created underneath this directory. "
+            "Paths will be sanitized and constrained to this root. "
+            "Env: MEMORYHUB_PROJECT_ROOT "
+            "(legacy alias: BASIC_MEMORY_PROJECT_ROOT). "
+            "If not set, projects can be created anywhere (default behavior)."
+        ),
     )
 
     init_message_shown: bool = Field(

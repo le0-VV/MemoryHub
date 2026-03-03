@@ -167,7 +167,8 @@ class ProjectService:
             # Verify the resolved path is actually under project_root
             if not resolved_path.startswith(base_path.resolve().as_posix()):  # pragma: no cover
                 raise ValueError(
-                    f"BASIC_MEMORY_PROJECT_ROOT is set to {project_root}. "
+                    f"MEMORYHUB_PROJECT_ROOT is set to {project_root} "
+                    "(legacy alias: BASIC_MEMORY_PROJECT_ROOT). "
                     f"All projects must be created under this directory. Invalid path: {path}"
                 )  # pragma: no cover
 

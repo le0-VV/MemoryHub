@@ -746,9 +746,9 @@ async def test_synchronize_projects_handles_case_sensitivity_bug(project_service
 async def test_add_project_with_project_root_sanitizes_paths(
     project_service: ProjectService, config_manager: ConfigManager, monkeypatch
 ):
-    """Test that BASIC_MEMORY_PROJECT_ROOT uses sanitized project name, ignoring user path.
+    """Test that MEMORYHUB_PROJECT_ROOT uses sanitized project name, ignoring user path.
 
-    When BASIC_MEMORY_PROJECT_ROOT is set, the system should:
+    When MEMORYHUB_PROJECT_ROOT is set, the system should:
     1. Ignore the user's provided path completely
     2. Use the sanitized project name as the directory name
     3. Create a flat structure: /app/data/test-bisync instead of /app/data/documents/test bisync
@@ -760,7 +760,7 @@ async def test_add_project_with_project_root_sanitizes_paths(
         project_root_path = Path(temp_dir) / "app" / "data"
         project_root_path.mkdir(parents=True, exist_ok=True)
 
-        monkeypatch.setenv("BASIC_MEMORY_PROJECT_ROOT", str(project_root_path))
+        monkeypatch.setenv("MEMORYHUB_PROJECT_ROOT", str(project_root_path))
 
         # Invalidate config cache so it picks up the new env var
         from memoryhub import config as config_module
@@ -817,7 +817,7 @@ async def test_add_project_with_project_root_sanitizes_paths(
 async def test_add_project_with_project_root_rejects_escape_attempts(
     project_service: ProjectService, config_manager: ConfigManager, monkeypatch
 ):
-    """Test that BASIC_MEMORY_PROJECT_ROOT rejects paths that try to escape the project root."""
+    """Test that MEMORYHUB_PROJECT_ROOT rejects paths that try to escape the project root."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Set up project root environment
         project_root_path = Path(temp_dir) / "app" / "data"
@@ -827,7 +827,7 @@ async def test_add_project_with_project_root_rejects_escape_attempts(
         outside_dir = Path(temp_dir) / "outside"
         outside_dir.mkdir(parents=True, exist_ok=True)
 
-        monkeypatch.setenv("BASIC_MEMORY_PROJECT_ROOT", str(project_root_path))
+        monkeypatch.setenv("MEMORYHUB_PROJECT_ROOT", str(project_root_path))
 
         # Invalidate config cache so it picks up the new env var
         from memoryhub import config as config_module
@@ -868,11 +868,11 @@ async def test_add_project_with_project_root_rejects_escape_attempts(
 async def test_add_project_without_project_root_allows_arbitrary_paths(
     project_service: ProjectService, config_manager: ConfigManager, monkeypatch
 ):
-    """Test that without BASIC_MEMORY_PROJECT_ROOT set, arbitrary paths are allowed."""
+    """Test that without MEMORYHUB_PROJECT_ROOT set, arbitrary paths are allowed."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Ensure project_root is not set
-        if "BASIC_MEMORY_PROJECT_ROOT" in os.environ:
-            monkeypatch.delenv("BASIC_MEMORY_PROJECT_ROOT")
+        if "MEMORYHUB_PROJECT_ROOT" in os.environ:
+            monkeypatch.delenv("MEMORYHUB_PROJECT_ROOT")
 
         # Create a test directory
         test_dir = Path(temp_dir) / "arbitrary-location"
@@ -903,7 +903,7 @@ async def test_add_project_without_project_root_allows_arbitrary_paths(
 async def test_add_project_with_project_root_normalizes_case(
     project_service: ProjectService, config_manager: ConfigManager, monkeypatch
 ):
-    """Test that BASIC_MEMORY_PROJECT_ROOT normalizes paths to lowercase.
+    """Test that MEMORYHUB_PROJECT_ROOT normalizes paths to lowercase.
 
     NOTE: This test is obsolete. After fixing the bisync duplicate project bug,
     project_root mode now ignores the user's path and uses the sanitized project name instead.
@@ -913,7 +913,7 @@ async def test_add_project_with_project_root_normalizes_case(
         project_root_path = Path(temp_dir) / "app" / "data"
         project_root_path.mkdir(parents=True, exist_ok=True)
 
-        monkeypatch.setenv("BASIC_MEMORY_PROJECT_ROOT", str(project_root_path))
+        monkeypatch.setenv("MEMORYHUB_PROJECT_ROOT", str(project_root_path))
 
         # Invalidate config cache so it picks up the new env var
         from memoryhub import config as config_module
@@ -957,7 +957,7 @@ async def test_add_project_with_project_root_normalizes_case(
 async def test_add_project_with_project_root_detects_case_collisions(
     project_service: ProjectService, config_manager: ConfigManager, monkeypatch
 ):
-    """Test that BASIC_MEMORY_PROJECT_ROOT detects case-insensitive path collisions.
+    """Test that MEMORYHUB_PROJECT_ROOT detects case-insensitive path collisions.
 
     NOTE: This test is obsolete. After fixing the bisync duplicate project bug,
     project_root mode now ignores the user's path and uses the sanitized project name instead.
@@ -967,7 +967,7 @@ async def test_add_project_with_project_root_detects_case_collisions(
         project_root_path = Path(temp_dir) / "app" / "data"
         project_root_path.mkdir(parents=True, exist_ok=True)
 
-        monkeypatch.setenv("BASIC_MEMORY_PROJECT_ROOT", str(project_root_path))
+        monkeypatch.setenv("MEMORYHUB_PROJECT_ROOT", str(project_root_path))
 
         # Invalidate config cache so it picks up the new env var
         from memoryhub import config as config_module
@@ -1135,13 +1135,13 @@ async def test_add_project_rejects_deeply_nested_path(project_service: ProjectSe
 async def test_add_project_nested_validation_with_project_root(
     project_service: ProjectService, config_manager: ConfigManager, monkeypatch
 ):
-    """Test that nested path validation works with BASIC_MEMORY_PROJECT_ROOT set."""
+    """Test that nested path validation works with MEMORYHUB_PROJECT_ROOT set."""
     # Use a completely separate temp directory to avoid fixture conflicts
     with tempfile.TemporaryDirectory() as temp_dir:
         project_root_path = Path(temp_dir) / "app" / "data"
         project_root_path.mkdir(parents=True, exist_ok=True)
 
-        monkeypatch.setenv("BASIC_MEMORY_PROJECT_ROOT", str(project_root_path))
+        monkeypatch.setenv("MEMORYHUB_PROJECT_ROOT", str(project_root_path))
 
         # Invalidate config cache
         from memoryhub import config as config_module
@@ -1178,11 +1178,37 @@ async def test_add_project_nested_validation_with_project_root(
 
             # Clean up child
             await project_service.remove_project(child_project_name)
-
         finally:
             # Clean up
             if parent_project_name in project_service.projects:
                 await project_service.remove_project(parent_project_name)
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Project root constraints only tested on POSIX systems")
+@pytest.mark.asyncio
+async def test_add_project_accepts_legacy_basic_memory_project_root_alias(
+    project_service: ProjectService, monkeypatch
+):
+    """Legacy BASIC_MEMORY_PROJECT_ROOT should still map to the supported project_root setting."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        project_root_path = Path(temp_dir) / "app" / "data"
+        project_root_path.mkdir(parents=True, exist_ok=True)
+        monkeypatch.setenv("BASIC_MEMORY_PROJECT_ROOT", str(project_root_path))
+
+        from memoryhub import config as config_module
+
+        config_module._CONFIG_CACHE = None
+
+        test_project_name = f"legacy-root-alias-{os.urandom(4).hex()}"
+
+        try:
+            await project_service.add_project(test_project_name, "/tmp/ignored")
+
+            actual_path = Path(project_service.projects[test_project_name]).resolve()
+            assert actual_path.is_relative_to(project_root_path.resolve())
+        finally:
+            if test_project_name in project_service.projects:
+                await project_service.remove_project(test_project_name)
 
 
 @pytest.mark.asyncio
