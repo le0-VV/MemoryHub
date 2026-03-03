@@ -41,8 +41,9 @@ async def resolve_project_parameter(
     Resolution order:
     1. ENV_CONSTRAINT: MEMORYHUB_MCP_PROJECT env var (or BASIC_MEMORY_MCP_PROJECT during compatibility)
     2. EXPLICIT: project parameter passed directly
-    3. DEFAULT: default_project from config (if set)
-    4. Fallback: discovery (if allowed) → NONE
+    3. CWD: configured project containing the active working directory
+    4. DEFAULT: default_project from config (if set)
+    5. Fallback: discovery (if allowed) → NONE
 
     Args:
         project: Optional explicit project parameter

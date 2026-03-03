@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 from memoryhub.config import ConfigManager, ProjectConfig
+from memoryhub.project_registry import ProjectRegistry
 from memoryhub.project_resolver import ProjectResolver, ResolvedProject
 
 
@@ -63,7 +64,7 @@ class ProjectRoutingContext:
 class ProjectSelector:
     """Resolve and canonicalize project identifiers from local config state."""
 
-    config_manager: ConfigManager
+    project_registry: ProjectRegistry
     cwd: Optional[str] = None
 
     @classmethod
@@ -73,24 +74,32 @@ class ProjectSelector:
         cwd: Optional[str] = None,
     ) -> "ProjectSelector":
         """Create a selector backed by the current config file."""
-        return cls(config_manager=config_manager or ConfigManager(), cwd=cwd)
+        return cls(
+            project_registry=ProjectRegistry.from_config(config_manager or ConfigManager()),
+            cwd=cwd,
+        )
+
+    @property
+    def config_manager(self) -> ConfigManager:
+        """Expose the backing config manager for compatibility callers."""
+        return self.project_registry.config_manager
 
     @property
     def project_paths(self) -> dict[str, str]:
         """Configured project-name to path mapping."""
-        return self.config_manager.projects
+        return self.project_registry.project_paths
 
     @property
     def default_project(self) -> Optional[str]:
         """Configured default project name."""
-        return self.config_manager.default_project
+        return self.project_registry.default_project
 
     def lookup(self, identifier: str) -> Optional[ProjectConfig]:
         """Return canonical project config for a name or permalink."""
-        project_name, path = self.config_manager.get_project(identifier)
-        if not project_name or path is None:
+        entry = self.project_registry.lookup(identifier)
+        if entry is None:
             return None
-        return ProjectConfig(name=project_name, home=Path(path))
+        return entry.to_project_config()
 
     def resolve(
         self,
@@ -102,6 +111,7 @@ class ProjectSelector:
         resolver = ProjectResolver.from_env(
             default_project=self.default_project if default_project is None else default_project,
             project_paths=self.project_paths,
+            project_registry=self.project_registry,
             cwd=self.cwd,
         )
         resolution = resolver.resolve(project=project, allow_discovery=allow_discovery)
@@ -115,6 +125,7 @@ class ProjectSelector:
         resolver = ProjectResolver.from_env(
             default_project=None,
             project_paths=self.project_paths,
+            project_registry=self.project_registry,
             cwd=self.cwd,
         )
         if resolver.constrained_project is None:

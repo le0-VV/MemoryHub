@@ -4,11 +4,14 @@ import os
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from loguru import logger
 
 from memoryhub.env_compat import PROJECT_CONSTRAINT_ENV_VARS, get_env_value
+
+if TYPE_CHECKING:
+    from memoryhub.project_registry import ProjectRegistry
 
 
 def get_project_constraint_env() -> Optional[str]:
@@ -51,6 +54,7 @@ class ProjectResolver:
     default_project: Optional[str] = None
     constrained_project: Optional[str] = None
     project_paths: Optional[dict[str, str]] = None
+    project_registry: Optional["ProjectRegistry"] = None
     cwd: Optional[str] = None
 
     @classmethod
@@ -58,6 +62,7 @@ class ProjectResolver:
         cls,
         default_project: Optional[str] = None,
         project_paths: Optional[dict[str, str]] = None,
+        project_registry: Optional["ProjectRegistry"] = None,
         cwd: Optional[str] = None,
     ) -> "ProjectResolver":
         """Create resolver with constrained_project from environment."""
@@ -65,11 +70,25 @@ class ProjectResolver:
             default_project=default_project,
             constrained_project=get_project_constraint_env(),
             project_paths=project_paths,
+            project_registry=project_registry,
             cwd=cwd if cwd is not None else os.getcwd(),
         )
 
     def _resolve_from_cwd(self) -> Optional[ResolvedProject]:
         """Resolve a configured project from the current working directory."""
+        if self.project_registry is not None:
+            registry_match = self.project_registry.match_cwd(self.cwd)
+            if registry_match is None:
+                return None
+
+            cwd_path = Path(self.cwd).expanduser().resolve(strict=False)
+            logger.debug(f"Resolved project '{registry_match.name}' from cwd '{cwd_path}'")
+            return ResolvedProject(
+                project=registry_match.name,
+                mode=ResolutionMode.CWD,
+                reason=f"Current working directory '{cwd_path}' is inside '{registry_match.path}'",
+            )
+
         if not self.cwd or not self.project_paths:
             return None
 
