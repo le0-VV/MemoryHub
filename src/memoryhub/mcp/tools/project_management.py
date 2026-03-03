@@ -1,12 +1,12 @@
 """Project management tools for the local MCP server."""
 
-import os
 from typing import Literal
 
 from fastmcp import Context
 
 from memoryhub.mcp.async_client import get_client
 from memoryhub.mcp.server import mcp
+from memoryhub.project_selection import ProjectSelector
 from memoryhub.schemas.project_info import ProjectInfoRequest, ProjectList
 from memoryhub.utils import generate_permalink
 
@@ -60,7 +60,8 @@ async def list_memory_projects(
     if context:  # pragma: no cover
         await context.info("Listing all available projects")
 
-    constrained_project = os.environ.get("BASIC_MEMORY_MCP_PROJECT")
+    routing_context = ProjectSelector.from_config().routing_context(allow_discovery=True)
+    constrained_project = routing_context.constrained_project
 
     from memoryhub.mcp.clients import ProjectClient
 
@@ -126,25 +127,25 @@ async def create_memory_project(
         create_memory_project("my-research", "~/Documents/research")
         create_memory_project("work-notes", "/home/user/work", set_default=True)
     """
-    async with get_client() as client:
-        # Check if server is constrained to a specific project
-        constrained_project = os.environ.get("BASIC_MEMORY_MCP_PROJECT")
-        if constrained_project:
-            if output_format == "json":
-                return {
-                    "name": project_name,
-                    "path": project_path,
-                    "is_default": False,
-                    "created": False,
-                    "already_exists": False,
-                    "error": "PROJECT_CONSTRAINED",
-                    "message": (
-                        f"Project creation disabled - MCP server is constrained to project "
-                        f"'{constrained_project}'."
-                    ),
-                }
-            return f'# Error\n\nProject creation disabled - MCP server is constrained to project \'{constrained_project}\'.\nUse the CLI to create projects: `memoryhub project add "{project_name}" "{project_path}"`'
+    routing_context = ProjectSelector.from_config().routing_context(allow_discovery=True)
+    constrained_project = routing_context.constrained_project
+    if constrained_project:
+        if output_format == "json":
+            return {
+                "name": project_name,
+                "path": project_path,
+                "is_default": False,
+                "created": False,
+                "already_exists": False,
+                "error": "PROJECT_CONSTRAINED",
+                "message": (
+                    f"Project creation disabled - MCP server is constrained to project "
+                    f"'{constrained_project}'."
+                ),
+            }
+        return f'# Error\n\nProject creation disabled - MCP server is constrained to project \'{constrained_project}\'.\nUse the CLI to create projects: `memoryhub project add "{project_name}" "{project_path}"`'
 
+    async with get_client() as client:
         if context:  # pragma: no cover
             await context.info(f"Creating project: {project_name} at {project_path}")
 
@@ -237,12 +238,12 @@ async def delete_project(project_name: str, context: Context | None = None) -> s
         This action cannot be undone. The project will need to be re-added
         to access its content through MemoryHub again.
     """
-    async with get_client() as client:
-        # Check if server is constrained to a specific project
-        constrained_project = os.environ.get("BASIC_MEMORY_MCP_PROJECT")
-        if constrained_project:
-            return f"# Error\n\nProject deletion disabled - MCP server is constrained to project '{constrained_project}'.\nUse the CLI to delete projects: `memoryhub project remove \"{project_name}\"`"
+    routing_context = ProjectSelector.from_config().routing_context(allow_discovery=True)
+    constrained_project = routing_context.constrained_project
+    if constrained_project:
+        return f"# Error\n\nProject deletion disabled - MCP server is constrained to project '{constrained_project}'.\nUse the CLI to delete projects: `memoryhub project remove \"{project_name}\"`"
 
+    async with get_client() as client:
         if context:  # pragma: no cover
             await context.info(f"Deleting project: {project_name}")
 

@@ -35,6 +35,30 @@ class ProjectSelection:
         return self.configured_project is not None
 
 
+@dataclass(frozen=True)
+class ProjectRoutingContext:
+    """Resolved routing state for a request or long-lived session."""
+
+    selection: ProjectSelection
+    requested_project: Optional[str] = None
+    constrained_project: Optional[str] = None
+
+    @property
+    def project(self) -> Optional[str]:
+        """Return the canonical project selected for this context."""
+        return self.selection.project
+
+    @property
+    def path(self) -> Optional[Path]:
+        """Return the selected project path when configured locally."""
+        return self.selection.path
+
+    @property
+    def is_constrained(self) -> bool:
+        """Return True when the session is restricted to one project."""
+        return self.constrained_project is not None
+
+
 @dataclass
 class ProjectSelector:
     """Resolve and canonicalize project identifiers from local config state."""
@@ -85,6 +109,39 @@ class ProjectSelector:
             self.lookup(resolution.project) if resolution.project is not None else None
         )
         return ProjectSelection(resolution=resolution, configured_project=configured_project)
+
+    def resolve_constraint(self) -> Optional[ProjectSelection]:
+        """Resolve only the env-based project constraint, if one is active."""
+        resolver = ProjectResolver.from_env(
+            default_project=None,
+            project_paths=self.project_paths,
+            cwd=self.cwd,
+        )
+        if resolver.constrained_project is None:
+            return None
+
+        resolution = resolver.resolve(project=None, allow_discovery=True)
+        configured_project = self.lookup(resolution.project) if resolution.project else None
+        return ProjectSelection(resolution=resolution, configured_project=configured_project)
+
+    def routing_context(
+        self,
+        project: Optional[str] = None,
+        allow_discovery: bool = False,
+        default_project: Optional[str] = None,
+    ) -> ProjectRoutingContext:
+        """Build a routing context with selection and constraint state."""
+        selection = self.resolve(
+            project=project,
+            allow_discovery=allow_discovery,
+            default_project=default_project,
+        )
+        constraint = self.resolve_constraint()
+        return ProjectRoutingContext(
+            selection=selection,
+            requested_project=project,
+            constrained_project=constraint.project if constraint is not None else None,
+        )
 
     def require_project(
         self,

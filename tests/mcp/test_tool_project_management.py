@@ -6,6 +6,7 @@ import pytest
 from sqlalchemy import select
 
 from memoryhub import db
+from memoryhub.config import ProjectEntry
 from memoryhub.mcp.tools import create_memory_project, delete_project, list_memory_projects
 from memoryhub.models.project import Project
 from memoryhub.schemas.project_info import ProjectItem, ProjectList
@@ -106,6 +107,31 @@ async def test_list_memory_projects_constrained_env(monkeypatch, app, test_proje
     monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", test_project.name)
     result = await list_memory_projects()
     assert f"Project: {test_project.name}" in result
+    assert "constrained to a single project" in result
+
+
+@pytest.mark.asyncio
+async def test_list_memory_projects_constrained_env_uses_canonical_name(
+    monkeypatch, app, config_manager, config_home
+):
+    config = config_manager.load_config()
+    project_root = config_home / "My Research"
+    project_root.mkdir(parents=True, exist_ok=True)
+    config.projects["My Research"] = ProjectEntry(path=str(project_root))
+    config.default_project = None
+    config_manager.save_config(config)
+
+    mock_list = _make_list([_make_project("My Research", str(project_root))], default=None)
+
+    monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", "my-research")
+    with patch(
+        "memoryhub.mcp.clients.project.ProjectClient.list_projects",
+        new_callable=AsyncMock,
+        return_value=mock_list,
+    ):
+        result = await list_memory_projects()
+
+    assert "Project: My Research" in result
     assert "constrained to a single project" in result
 
 

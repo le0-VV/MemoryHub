@@ -7,7 +7,8 @@ import typer
 from loguru import logger
 
 from memoryhub.cli.app import app
-from memoryhub.config import ConfigManager, init_mcp_logging
+from memoryhub.config import init_mcp_logging
+from memoryhub.project_selection import ProjectSelector
 
 
 class _DeferredMcpServer:
@@ -51,11 +52,15 @@ def mcp(
 
     # Validate and set project constraint if specified
     if project:
-        config_manager = ConfigManager()
-        project_name, _ = config_manager.get_project(project)
-        if not project_name:
-            typer.echo(f"No project found named: {project}", err=True)
-            raise typer.Exit(1)
+        selector = ProjectSelector.from_config()
+        try:
+            project_name = selector.require_configured_project(
+                project,
+                error_message=f"No project found named: {project}",
+            ).project
+        except ValueError as exc:
+            typer.echo(str(exc), err=True)
+            raise typer.Exit(1) from exc
 
         # Set env var with validated project name
         os.environ["BASIC_MEMORY_MCP_PROJECT"] = project_name

@@ -70,3 +70,24 @@ def test_require_configured_project_rejects_unknown_identifier(config_manager):
 
     with pytest.raises(ValueError, match="No project found named: missing-project"):
         selector.require_configured_project("missing-project")
+
+
+def test_routing_context_exposes_canonical_constraint(config_manager, config_home, monkeypatch):
+    """Routing context should surface the canonical constrained project name."""
+    config = config_manager.load_config()
+    project_root = config_home / "My Research"
+    project_root.mkdir(parents=True, exist_ok=True)
+    config.projects["My Research"] = ProjectEntry(path=str(project_root))
+    config.default_project = None
+    config_manager.save_config(config)
+
+    monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", "my-research")
+    routing_context = ProjectSelector.from_config(config_manager).routing_context(
+        project="ignored-project",
+        allow_discovery=True,
+    )
+
+    assert routing_context.project == "My Research"
+    assert routing_context.constrained_project == "My Research"
+    assert routing_context.is_constrained is True
+    assert routing_context.requested_project == "ignored-project"

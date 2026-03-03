@@ -5,7 +5,6 @@ to ensure consistent application startup across all entry points.
 """
 
 import asyncio
-import os
 import sys
 from pathlib import Path
 
@@ -15,6 +14,7 @@ from loguru import logger
 from memoryhub import db
 from memoryhub.config import BasicMemoryConfig
 from memoryhub.models import Project
+from memoryhub.project_selection import ProjectSelector
 from memoryhub.repository import (
     ProjectRepository,
 )
@@ -110,7 +110,9 @@ async def initialize_file_sync(
     active_projects = await project_repository.get_active_projects()
 
     # Filter to constrained project if MCP server was started with --project
-    constrained_project = os.environ.get("BASIC_MEMORY_MCP_PROJECT")
+    constrained_project = (
+        ProjectSelector.from_config().routing_context(allow_discovery=True).constrained_project
+    )
     if constrained_project:
         active_projects = [p for p in active_projects if p.name == constrained_project]
         logger.info(f"Background sync constrained to project: {constrained_project}")
