@@ -1,8 +1,6 @@
 # MemoryHub Architecture
 
-This fork still ships under the inherited Python package and CLI names, `memoryhub` and
-`memoryhub`, but the product direction is MemoryHub: a local-first MCP memory system for many
-projects on one machine.
+This fork still ships under the inherited Python package and CLI names, `memoryhub` and `memoryhub`, but the product direction is MemoryHub: a local-first MCP memory system for many projects on one machine.
 
 ## Overview
 
@@ -36,8 +34,7 @@ The repo has three user-facing entrypoints:
 - `MCP`: the stdio/HTTP MCP server under `src/memoryhub/mcp/`
 - `CLI`: the Typer app under `src/memoryhub/cli/`
 
-Each entrypoint has a composition root in `container.py`. The composition root is the only place
-that should read global config and assemble concrete dependencies.
+Each entrypoint has a composition root in `container.py`. The composition root is the only place that should read global config and assemble concrete dependencies.
 
 ```text
 src/memoryhub/
@@ -54,11 +51,9 @@ The fork now treats runtime mode as a local concern:
 - `TEST`: isolated test environment
 - `LOCAL`: normal app runtime
 
-Historical cloud-oriented compatibility code still exists in parts of the tree, but it is not part
-of the supported architecture for this fork.
+Historical cloud-oriented compatibility code still exists in parts of the tree, but it is not part of the supported architecture for this fork.
 
-Runtime mode decides whether to start local background services such as file watching. It is not a
-network-routing feature anymore.
+Runtime mode decides whether to start local background services such as file watching. It is not a network-routing feature anymore.
 
 ## Composition Roots
 
@@ -89,8 +84,7 @@ repository layer
 SQLite
 ```
 
-This matters because MCP tools are intentionally thin. Business rules belong in services and
-repositories, not in tool handlers.
+This matters because MCP tools are intentionally thin. Business rules belong in services and repositories, not in tool handlers.
 
 ## Typed MCP Clients
 
@@ -108,8 +102,7 @@ Those clients encapsulate HTTP paths and response validation so the tool layer s
 
 ## Projects and Resolution
 
-Projects are the main isolation boundary. A project is a local directory of notes plus an indexed
-database view of that directory.
+Projects are the main isolation boundary. A project is a local directory of notes plus an indexed database view of that directory.
 
 Project selection is unified through `ProjectResolver`:
 
@@ -117,8 +110,7 @@ Project selection is unified through `ProjectResolver`:
 2. configured default project
 3. single available project
 
-The fork vision is to get smarter about workspace inference over time, but the current
-implementation is still explicit-project-first.
+The fork vision is to get smarter about workspace inference over time, but the current implementation is still explicit-project-first.
 
 ## Storage Model
 
@@ -169,8 +161,7 @@ src/memoryhub/deps/
 └── services.py
 ```
 
-New code should import from the specific dependency module it needs rather than from broad
-re-export shims.
+New code should import from the specific dependency module it needs rather than from broad re-export shims.
 
 ## Main Source Directories
 
@@ -210,5 +201,4 @@ Documentation and active code paths should optimize for local, SQLite-backed dep
 
 ### Compatibility is not the same as product direction
 
-Some inherited upstream code still exists for transition reasons. Treat docs and new development as
-the source of truth for what is actually supported.
+Some inherited upstream code still exists for transition reasons. Treat docs and new development as the source of truth for what is actually supported.

@@ -1,13 +1,10 @@
 # Character Handling and Conflict Resolution
 
-MemoryHub handles character encoding and file naming so permalink generation stays deterministic
-across platforms. This document explains the current local-only behavior and the common failure
-cases you may hit in a markdown workspace.
+MemoryHub handles character encoding and file naming so permalink generation stays deterministic across platforms. This document explains the current local-only behavior and the common failure cases you may hit in a markdown workspace.
 
 ## Overview
 
-The app normalizes file paths and frontmatter permalinks so the same logical note resolves to a
-stable identifier in SQLite and in `memory://` URLs.
+The app normalizes file paths and frontmatter permalinks so the same logical note resolves to a stable identifier in SQLite and in `memory://` URLs.
 
 ## Character Normalization Rules
 
@@ -70,8 +67,7 @@ Directory: Finance/investment.md
 Directory: finance/investment.md  (different on filesystem, same permalink)
 ```
 
-**Resolution:** MemoryHub detects case conflicts and prevents them during local sync/index
-operations with explicit error messages.
+**Resolution:** MemoryHub detects case conflicts and prevents them during local sync/index operations with explicit error messages.
 
 **Best Practice:** Use consistent casing for directory and file names.
 
@@ -85,8 +81,7 @@ File 1: "café.md" (é as single character)
 File 2: "café.md" (e + combining accent)
 ```
 
-**Resolution:** MemoryHub normalizes Unicode characters using NFD normalization to detect these
-conflicts.
+**Resolution:** MemoryHub normalizes Unicode characters using NFD normalization to detect these conflicts.
 
 ### 4. Forward Slash Conflicts
 
@@ -238,9 +233,8 @@ These logs help identify and resolve conflicts before they cause sync failures.
 If you encounter character-related conflicts not covered in this guide:
 
 1. **Check the logs** for specific conflict details
-2. **Review error messages** for resolution guidance  
+2. **Review error messages** for resolution guidance
 3. **Report issues** with examples of the conflicting files
 4. **Consider the file naming best practices** outlined above
 
-The system is designed to catch most character and permalink conflicts automatically while still
-making manual cleanup understandable when collisions happen.
+The system is designed to catch most character and permalink conflicts automatically while still making manual cleanup understandable when collisions happen.

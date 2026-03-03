@@ -1,6 +1,6 @@
 # AGENTS.md - MemoryHub Project Guide
 
-## Project Overview
+## Instructions
 
 MemoryHub is an experimental fork of Basic Memory.
 
@@ -11,31 +11,7 @@ The active fork direction is:
 - multi-project
 - agent-neutral
 
-`README.md` describes the current fork status. `README_old.md` preserves the
-upstream product README for reference.
-
-## Development Workflow
-
-### Core Commands
-
-- Install: `just install` or `pip install -e ".[dev]"`
-- Fast local loop: `just fast-check`
-- Full check: `just check`
-- Unit tests: `just test-unit-sqlite`
-- Integration tests: `just test-int-sqlite`
-- Full test suite: `just test`
-- Smoke test: `just test-smoke`
-- Doctor: `just doctor`
-- Lint: `just lint`
-- Format: `just format`
-- Type check: `just typecheck`
-- Supplemental type check: `just typecheck-ty`
-- Coverage: `just coverage`
-- Single test: `pytest tests/path/to/test_file.py::test_name`
-
-Project requires Python 3.12+.
-
-### Working Rules
+`README.md` describes the current fork status. `README_old.md` preserves the upstream product README for reference.
 
 - Read a file fully before editing it.
 - Keep diffs narrow and task-focused.
@@ -44,18 +20,7 @@ Project requires Python 3.12+.
 - Add tests for new behavior unless the change is strictly docs/metadata cleanup.
 - Keep comments rare and useful. Explain why or constraints, not obvious mechanics.
 
-### Verify Loop
-
-1. Make the change.
-2. Run `just fast-check`.
-3. Run `just doctor` when the change affects file/database or end-to-end behavior.
-4. Run `just test` or `just check` before larger merges.
-
-## Architecture
-
 See `docs/ARCHITECTURE.md` for the fuller design write-up.
-
-### Important Directories
 
 - `/src/memoryhub/api` - FastAPI app and routers
 - `/src/memoryhub/cli` - Typer CLI
@@ -68,8 +33,6 @@ See `docs/ARCHITECTURE.md` for the fuller design write-up.
 - `/src/memoryhub/sync` - file sync/watch logic
 - `/tests` - unit-style tests
 - `/test-int` - integration tests
-
-### Current Runtime Model
 
 - SQLite is the only supported database backend.
 - Local ASGI routing is the only supported MCP/API routing path.
@@ -99,9 +62,37 @@ async with get_client(project_name=project_name) as client:
 
 Do not use deprecated module-level HTTP clients or hand-managed auth headers.
 
-## Product Surface
+## Preferences
 
-### Supported Direction
+### Development Workflow
+
+#### Core Commands
+
+- Install: `just install` or `pip install -e ".[dev]"`
+- Fast local loop: `just fast-check`
+- Full check: `just check`
+- Unit tests: `just test-unit-sqlite`
+- Integration tests: `just test-int-sqlite`
+- Full test suite: `just test`
+- Smoke test: `just test-smoke`
+- Doctor: `just doctor`
+- Lint: `just lint`
+- Format: `just format`
+- Type check: `just typecheck`
+- Supplemental type check: `just typecheck-ty`
+- Coverage: `just coverage`
+- Single test: `pytest tests/path/to/test_file.py::test_name`
+
+Project requires Python 3.12+.
+
+#### Verify Loop
+
+1. Make the change.
+2. Run `just fast-check`.
+3. Run `just doctor` when the change affects file/database or end-to-end behavior.
+4. Run `just test` or `just check` before larger merges.
+
+### Product Surface
 
 - local note storage
 - local indexing and search
@@ -117,29 +108,26 @@ Do not use deprecated module-level HTTP clients or hand-managed auth headers.
 - Postgres-backed deployment paths
 - Claude-specific repository agent files
 
-If you find code that still assumes those features are current, prefer removing
-or isolating it instead of extending it.
+If you find code that still assumes those features are current, prefer removing or isolating it instead of extending it.
 
-## Testing Guidance
+### Testing Guidance
 
 - `tests/` covers smaller, isolated components.
 - `test-int/` covers real component interaction with the local stack.
 - Smoke tests and doctor checks matter for CLI/MCP regressions.
 - Keep coverage at 100% when modifying active runtime code.
 
-## Naming Guidance
+### Naming Guidance
 
 - User-facing docs should say `MemoryHub` when referring to the forked product.
 - Runtime package and CLI names are now `memoryhub`.
-- Some compatibility env vars and historical config helpers may still retain
-  `BASIC_MEMORY_*` names during the transition.
+- Some compatibility env vars and historical config helpers may still retain `BASIC_MEMORY_*` names during the transition.
 
-## Agent Files
+## Memory
 
 - `.agents/` contains agent-neutral workflow documents for this repository.
 - `AGENTS.md` is the main repository guide.
 - `.agents/commands/` contains reusable workflow notes for release/spec/test tasks.
 - `.agents/TODO.md` is a local ignored scratch plan for ongoing cleanup work.
 
-These files are intentionally system-agnostic. They should not assume a
-specific assistant product, slash-command syntax, or vendor-specific metadata.
+These files are intentionally system-agnostic. They should not assume a specific assistant product, slash-command syntax, or vendor-specific metadata.

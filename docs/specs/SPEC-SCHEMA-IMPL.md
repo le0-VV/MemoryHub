@@ -1,15 +1,10 @@
 # SPEC-SCHEMA-IMPL: Schema System Implementation Plan
 
-**Status:** Draft
-**Created:** 2025-02-06
-**Branch:** `feature/schema-system`
-**Depends on:** [SPEC-SCHEMA](SPEC-SCHEMA.md)
+**Status:** Draft **Created:** 2025-02-06 **Branch:** `feature/schema-system` **Depends on:** [SPEC-SCHEMA](SPEC-SCHEMA.md)
 
 ## Overview
 
-Implementation plan for the MemoryHub schema system. The system is entirely programmatic. No
-embedded agent runtime or hosted service is required; the assistant already in the user's session
-provides the reasoning layer by reading schema notes via existing MCP tools.
+Implementation plan for the MemoryHub schema system. The system is entirely programmatic. No embedded agent runtime or hosted service is required; the assistant already in the user's session provides the reasoning layer by reading schema notes via existing MCP tools.
 
 ## Architecture
 
@@ -32,8 +27,7 @@ provides the reasoning layer by reading schema notes via existing MCP tools.
 └──────────────────────┘ └────────────────────────┘
 ```
 
-No new database tables. Schemas are notes with `type: schema` — they're already indexed.
-Validation reads observations and relations from existing data.
+No new database tables. Schemas are notes with `type: schema` — they're already indexed. Validation reads observations and relations from existing data.
 
 ## Components
 
@@ -293,8 +287,7 @@ async def infer_schema(...) -> InferenceResult: ...
 async def diff_schema(...) -> SchemaDrift: ...
 ```
 
-MCP tools call these endpoints via the typed client pattern (consistent with existing
-architecture).
+MCP tools call these endpoints via the typed client pattern (consistent with existing architecture).
 
 ## Implementation Phases
 
@@ -308,8 +301,7 @@ Build the foundation — can parse Picoschema and find schemas for notes.
 - Unit tests for all Picoschema syntax variations
 - Unit tests for resolution order
 
-**No external dependencies.** Pure Python parsing of YAML dicts. Can develop and test
-in isolation.
+**No external dependencies.** Pure Python parsing of YAML dicts. Can develop and test in isolation.
 
 ### Phase 2: Validator
 
@@ -350,10 +342,8 @@ Compare schemas against current usage.
 
 ## Testing Strategy
 
-- **Unit tests** (`tests/schema/`): Parser edge cases, resolution logic, validation mapping,
-  inference thresholds
-- **Integration tests** (`test-int/schema/`): End-to-end with real markdown files, schema notes
-  on disk, CLI invocation
+- **Unit tests** (`tests/schema/`): Parser edge cases, resolution logic, validation mapping, inference thresholds
+- **Integration tests** (`test-int/schema/`): End-to-end with real markdown files, schema notes on disk, CLI invocation
 - Coverage target: 100% (consistent with project standard)
 
 ## What This Does NOT Include

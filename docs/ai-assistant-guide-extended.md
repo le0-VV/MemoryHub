@@ -1,8 +1,6 @@
 # AI Assistant Guide for MemoryHub
 
-This guide describes how an AI assistant should work with MemoryHub through MCP. The current code
-still exposes the inherited `memoryhub` command and `memoryhub` package name, but the fork's
-intended product identity is MemoryHub.
+This guide describes how an AI assistant should work with MemoryHub through MCP. The current code still exposes the inherited `memoryhub` command and `memoryhub` package name, but the fork's intended product identity is MemoryHub.
 
 ## Mental Model
 
@@ -12,8 +10,7 @@ MemoryHub is a local-first knowledge system built from:
 - SQLite as the derived index
 - MCP tools for searching, reading, editing, and linking notes
 
-The assistant's job is not to keep private hidden memory. The job is to help the user produce
-durable notes that remain useful outside any one session or model.
+The assistant's job is not to keep private hidden memory. The job is to help the user produce durable notes that remain useful outside any one session or model.
 
 ## Operating Assumptions
 
@@ -146,8 +143,7 @@ Prefer narrow edits over rewrites:
 - `find_replace` for deterministic text edits
 - `replace_section` when a heading needs targeted replacement
 
-If an operation could hit multiple matches, use expected replacement counts so the edit fails fast
-instead of mutating more content than intended.
+If an operation could hit multiple matches, use expected replacement counts so the edit fails fast instead of mutating more content than intended.
 
 ## Recording Conversations
 
@@ -218,8 +214,7 @@ The most important tools for assistants are:
 
 ## Schema Guidance
 
-Schemas are notes with `type: schema`. They describe expected structure without introducing a new
-storage system.
+Schemas are notes with `type: schema`. They describe expected structure without introducing a new storage system.
 
 Use schema tools when:
 
@@ -248,5 +243,4 @@ For this fork, optimize for:
 - high-quality markdown notes
 - agent-neutral usage patterns
 
-Do not assume cloud routing, managed sync, or hosted infrastructure unless the repo is explicitly
-changed to support them again.
+Do not assume cloud routing, managed sync, or hosted infrastructure unless the repo is explicitly changed to support them again.

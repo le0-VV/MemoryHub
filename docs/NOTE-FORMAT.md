@@ -1,8 +1,6 @@
 # Note Format Reference
 
-Every document in MemoryHub is a plain Markdown file. Files are the source of truth: the SQLite
-index is derived from them, not the other way around. This fork still uses the inherited
-`memoryhub` command and `memoryhub` package names in the current codebase.
+Every document in MemoryHub is a plain Markdown file. Files are the source of truth: the SQLite index is derived from them, not the other way around. This fork still uses the inherited `memoryhub` command and `memoryhub` package names in the current codebase.
 
 ## Document Structure
 
@@ -162,8 +160,7 @@ This creates two relations: `links_to [[Core Design]]` and `links_to [[Utility F
 
 ### Forward References
 
-Relations can link to entities that don't exist yet. MemoryHub resolves them when the target is
-created.
+Relations can link to entities that don't exist yet. MemoryHub resolves them when the target is created.
 
 ## Permalinks and memory:// URLs
 
@@ -292,8 +289,7 @@ The system looks up a schema note where `entity: Person`. If found, it applies. 
 
 ### Schema Notes
 
-A schema is itself a MemoryHub note with `type: schema`. It lives anywhere, though `schema/` is
-the conventional directory.
+A schema is itself a MemoryHub note with `type: schema`. It lives anywhere, though `schema/` is the conventional directory.
 
 ```yaml
 # schema/Person.md
@@ -395,7 +391,7 @@ Schema drift detected:
 
 + expertise: now in 81% of notes (was 12%)
 - department: dropped to 3% of notes
-~ works_at: cardinality changed (one → many)
+- works_at: cardinality changed (one → many)
 
 Update schema? [y/n/review]
 ```

@@ -2,9 +2,7 @@
 
 This guide is for the MemoryHub fork in this repository.
 
-Important: the fork has not been fully renamed yet. The code still runs through
-the inherited `memoryhub` CLI, so install from the local checkout rather
-than from PyPI.
+Important: the fork has not been fully renamed yet. The code still runs through the inherited `memoryhub` CLI, so install from the local checkout rather than from PyPI.
 
 ## Installation Steps
 
@@ -20,8 +18,7 @@ uv tool install -e .
 pip install -e .
 ```
 
-Do not use `uv tool install memoryhub` or `pip install memoryhub` if you
-want this fork. Those commands install the upstream project from PyPI.
+Do not use `uv tool install memoryhub` or `pip install memoryhub` if you want this fork. Those commands install the upstream project from PyPI.
 
 ### 2. Configure The MCP Server
 
@@ -112,5 +109,4 @@ memoryhub import memory-json path/to/memory.json
    cat ~/.memoryhub/memoryhub.log
    ```
 
-See [README.md](README.md) for the fork status and [README_old.md](README_old.md)
-for the preserved upstream product documentation.
+See [README.md](README.md) for the fork status and [README_old.md](README_old.md) for the preserved upstream product documentation.

@@ -1,24 +1,20 @@
 # Semantic Search
 
-This guide covers MemoryHub's semantic search feature. The fork is SQLite-only, so all supported
-semantic search flows run on local SQLite indexes and vector tables.
+This guide covers MemoryHub's semantic search feature. The fork is SQLite-only, so all supported semantic search flows run on local SQLite indexes and vector tables.
 
 ## Overview
 
-MemoryHub supports both full-text search and semantic retrieval. Semantic search adds vector
-embeddings that capture the meaning of your content, enabling:
+MemoryHub supports both full-text search and semantic retrieval. Semantic search adds vector embeddings that capture the meaning of your content, enabling:
 
 - **Paraphrase matching**: Find "authentication flow" when searching for "login process"
 - **Conceptual queries**: Search for "ways to improve performance" and find notes about caching, indexing, and optimization
 - **Hybrid retrieval**: Combine the precision of keyword search with the recall of semantic similarity
 
-Semantic search is enabled by default when semantic dependencies are available at runtime. In this
-fork, it works on SQLite only.
+Semantic search is enabled by default when semantic dependencies are available at runtime. In this fork, it works on SQLite only.
 
 ## Installation
 
-Semantic search dependencies (`fastembed`, `sqlite-vec`, and optional `openai`) are included in the
-default project install.
+Semantic search dependencies (`fastembed`, `sqlite-vec`, and optional `openai`) are included in the default project install.
 
 ```bash
 pip install -e .
@@ -152,8 +148,7 @@ memoryhub reindex --embeddings
 
 ### `text` (default)
 
-Full-text keyword search using SQLite FTS. Supports boolean operators (`AND`, `OR`, `NOT`), phrase
-matching, and prefix wildcards.
+Full-text keyword search using SQLite FTS. Supports boolean operators (`AND`, `OR`, `NOT`), phrase matching, and prefix wildcards.
 
 ```python
 search_notes("project AND planning", search_type="text")

@@ -15,7 +15,7 @@ This document covers how to contribute to the fork without confusing it with the
     ```bash
     just install
     ```
-    Or:
+Or:
     ```bash
     pip install -e ".[dev]"
     ```
@@ -56,11 +56,9 @@ If you want to run this fork, install from the local checkout. Do not use `uv to
 
 ## Pull Request Reviews
 
-This fork no longer uses repository-local Claude GitHub Actions workflows for
-PR review or issue triage.
+This fork no longer uses repository-local Claude GitHub Actions workflows for PR review or issue triage.
 
-If you use AI-assisted review on GitHub, use the current Codex/GitHub native
-review flow instead of the deleted Claude workflow files.
+If you use AI-assisted review on GitHub, use the current Codex/GitHub native review flow instead of the deleted Claude workflow files.
 
 ## Release Automation Status
 
@@ -96,8 +94,7 @@ Useful reference points:
 
 ## Developer Certificate Of Origin
 
-This fork uses the [Developer Certificate of Origin](CLA.md), not a separate
-copyright assignment CLA. Sign commits with:
+This fork uses the [Developer Certificate of Origin](CLA.md), not a separate copyright assignment CLA. Sign commits with:
 
 ```bash
 git commit -s -m "Your commit message"

@@ -1,8 +1,6 @@
 # Metadata Search Reference
 
-MemoryHub automatically indexes custom frontmatter fields so you can query them with structured
-filters. Any YAML key in a note's frontmatter beyond the standard set (`title`, `type`, `tags`,
-`permalink`, `schema`) is stored as `entity_metadata` and becomes searchable.
+MemoryHub automatically indexes custom frontmatter fields so you can query them with structured filters. Any YAML key in a note's frontmatter beyond the standard set (`title`, `type`, `tags`, `permalink`, `schema`) is stored as `entity_metadata` and becomes searchable.
 
 ## Querying with `search_notes`
 
@@ -137,8 +135,7 @@ await search_notes("tag:tier1 alpha")
 
 ## CLI Access
 
-The `memoryhub tool search-notes` command exposes metadata filtering via `--meta` and `--filter`
-flags.
+The `memoryhub tool search-notes` command exposes metadata filtering via `--meta` and `--filter` flags.
 
 ### `--meta` — simple key=value filters
 
