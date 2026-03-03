@@ -1,4 +1,4 @@
-"""File reading tool for Basic Memory MCP server.
+"""File reading tool for MemoryHub MCP.
 
 This module provides tools for reading raw file content directly,
 supporting various file types including text, images, and other binary files.
@@ -165,8 +165,8 @@ async def read_content(
     """Read a file's raw content by path or permalink.
 
     This tool provides direct access to file content in the knowledge base,
-    handling different file types appropriately. Uses stateless architecture -
-    project parameter optional with server resolution.
+    handling different file types appropriately. Project parameter remains
+    optional through the shared local-only project resolution flow.
 
     Supported file types:
     - Text files (markdown, code, etc.) are returned as plain text

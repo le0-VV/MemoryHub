@@ -1,4 +1,4 @@
-"""Search tools for Basic Memory MCP server."""
+"""Search tools for MemoryHub MCP."""
 
 from textwrap import dedent
 from typing import List, Optional, Dict, Any, Literal
@@ -27,7 +27,7 @@ def _semantic_search_enabled_for_text_search() -> bool:
     try:
         return get_container().config.semantic_search_enabled
     except RuntimeError:
-        # Trigger: MCP container is not initialized (e.g., `bm tool search-notes` direct call).
+        # Trigger: MCP container is not initialized (e.g., `memoryhub tool search-notes` direct call).
         # Why: CLI path still needs the same semantic-default behavior as MCP server path.
         # Outcome: load config directly and keep text-mode retrieval behavior consistent.
         return ConfigManager().config.semantic_search_enabled
@@ -52,11 +52,11 @@ def _format_search_error_response(
 
             ## How to enable
             1. Set `BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED=true`
-            2. Restart the Basic Memory server/process
+            2. Restart the MemoryHub server/process
 
             ## Alternative now
             - Run FTS search instead:
-              `search_notes("{project}", "{query}", search_type="text")`
+              `search_notes("{query}", project="{project}", search_type="text")`
             """).strip()
 
     if "pip install" in error_message.lower() and "semantic" in error_message.lower():
@@ -66,10 +66,10 @@ def _format_search_error_response(
             Semantic retrieval is enabled but required packages are not installed.
 
             ## Fix
-            1. Install/update Basic Memory: `pip install -U memoryhub`
-            2. Restart Basic Memory
+            1. Install/update MemoryHub: `pip install -U memoryhub`
+            2. Restart MemoryHub
             3. Retry your query:
-               `search_notes("{project}", "{query}", search_type="{search_type}")`
+               `search_notes("{query}", project="{project}", search_type="{search_type}")`
             """).strip()
 
     # FTS5 syntax errors
@@ -106,14 +106,14 @@ def _format_search_error_response(
             - Content-specific: `tag:example` or `category:observation`
 
             ## Try again with:
-            ```
-            search_notes("{project}","{clean_query}")
+            ```python
+            search_notes("{clean_query}", project="{project}")
             ```
 
             ## Alternative search strategies:
-            - Break into simpler terms: `search_notes("{project}", "{" ".join(clean_query.split()[:2])}")`
-            - Try different search types: `search_notes("{project}","{clean_query}", search_type="title")`
-            - Use filtering: `search_notes("{project}","{clean_query}", note_types=["note"])`
+            - Break into simpler terms: `search_notes("{" ".join(clean_query.split()[:2])}", project="{project}")`
+            - Try different search types: `search_notes("{clean_query}", project="{project}", search_type="title")`
+            - Use filtering: `search_notes("{clean_query}", project="{project}", note_types=["note"])`
             """).strip()
 
     # Project not found errors (check before general "not found")
@@ -124,11 +124,11 @@ def _format_search_error_response(
             The current project is not accessible or doesn't exist: {error_message}
 
             ## How to resolve:
-            1. **Check available projects**: `list_projects()`
+            1. **Check available projects**: `list_memory_projects()`
             3. **Verify project setup**: Ensure your project is properly configured
 
             ## Current session info:
-            - See available projects: `list_projects()`
+            - See available projects: `list_memory_projects()`
             """).strip()
 
     # No results found
@@ -155,28 +155,28 @@ def _format_search_error_response(
                - Try synonyms or related terms
 
             3. **Use different search approaches**:
-               - **Text search**: `search_notes("{project}","{query}", search_type="text")` (searches full content)
-               - **Title search**: `search_notes("{project}","{query}", search_type="title")` (searches only titles)
-               - **Permalink search**: `search_notes("{project}","{query}", search_type="permalink")` (searches file paths)
+               - **Text search**: `search_notes("{query}", project="{project}", search_type="text")` (searches full content)
+               - **Title search**: `search_notes("{query}", project="{project}", search_type="title")` (searches only titles)
+               - **Permalink search**: `search_notes("{query}", project="{project}", search_type="permalink")` (searches file paths)
 
             4. **Try boolean operators for broader results**:
-               - OR search: `search_notes("{project}","{" OR ".join(query.split()[:3])}")`
+               - OR search: `search_notes("{" OR ".join(query.split()[:3])}", project="{project}")`
                - Remove restrictive terms: Focus on the most important keywords
 
             5. **Use filtering to narrow scope**:
-               - By content type: `search_notes("{project}","{query}", note_types=["note"])`
-               - By recent content: `search_notes("{project}","{query}", after_date="1 week")`
-               - By entity type: `search_notes("{project}","{query}", entity_types=["observation"])`
+               - By content type: `search_notes("{query}", project="{project}", note_types=["note"])`
+               - By recent content: `search_notes("{query}", project="{project}", after_date="1 week")`
+               - By entity type: `search_notes("{query}", project="{project}", entity_types=["observation"])`
 
             6. **Try advanced search patterns**:
-               - Tag search: `search_notes("{project}","tag:your-tag")`
-               - Category search: `search_notes("{project}","category:observation")`
-               - Pattern matching: `search_notes("{project}","*{query}*", search_type="permalink")`
+               - Tag search: `search_notes("tag:your-tag", project="{project}")`
+               - Category search: `search_notes("category:observation", project="{project}")`
+               - Pattern matching: `search_notes("*{query}*", project="{project}", search_type="permalink")`
 
             ## Explore what content exists:
             - **Recent activity**: `recent_activity(timeframe="7d")` - See what's been updated recently
-            - **List directories**: `list_directory("{project}","/")` - Browse all content
-            - **Browse by folder**: `list_directory("{project}","/notes")` or `list_directory("/docs")`
+            - **List directories**: `list_directory("/", project="{project}")` - Browse all content
+            - **Browse by folder**: `list_directory("/notes", project="{project}")` or `list_directory("/docs")`
             """).strip()
 
     # Server/API errors
@@ -192,12 +192,12 @@ def _format_search_error_response(
             3. **Check project status**: Ensure your project is properly synced
 
             ## Alternative approaches:
-            - Browse files directly: `list_directory("{project}","/")`
+            - Browse files directly: `list_directory("/", project="{project}")`
             - Check recent activity: `recent_activity(timeframe="7d")`
-            - Try a different search type: `search_notes("{project}","{query}", search_type="title")`
+            - Try a different search type: `search_notes("{query}", project="{project}", search_type="title")`
 
             ## If the problem persists:
-            The search index might need to be rebuilt. Send a message to support@basicmachines.co or check the project sync status.
+            The search index might need to be rebuilt. Run `memoryhub doctor` or check the local project sync status.
             """).strip()
 
     # Permission/access errors
@@ -216,7 +216,7 @@ You don't have permission to search in the current project: {error_message}
 3. **Check authentication**: You might need to re-authenticate
 
 ## Alternative actions:
-- List available projects: `list_projects()`"""
+- List available projects: `list_memory_projects()`"""
 
     # Generic fallback
     return f"""# Search Failed
@@ -231,16 +231,16 @@ Error searching for '{query}': {error_message}
 
 ## Alternative search approaches:
 - **Different search types**: 
-  - Title only: `search_notes("{project}","{query}", search_type="title")`
-  - Permalink patterns: `search_notes("{project}","{query}*", search_type="permalink")`
-- **With filters**: `search_notes("{project}","{query}", note_types=["note"])`
-- **Recent content**: `search_notes("{project}","{query}", after_date="1 week")`
-- **Boolean variations**: `search_notes("{project}","{" OR ".join(query.split()[:2])}")`
+  - Title only: `search_notes("{query}", project="{project}", search_type="title")`
+  - Permalink patterns: `search_notes("{query}*", project="{project}", search_type="permalink")`
+- **With filters**: `search_notes("{query}", project="{project}", note_types=["note"])`
+- **Recent content**: `search_notes("{query}", project="{project}", after_date="1 week")`
+- **Boolean variations**: `search_notes("{" OR ".join(query.split()[:2])}", project="{project}")`
 
 ## Explore your content:
-- **Browse files**: `list_directory("{project}","/")` - See all available content
+- **Browse files**: `list_directory("/", project="{project}")` - See all available content
 - **Recent activity**: `recent_activity(timeframe="7d")` - Check what's been updated
-- **All projects**: `list_projects()` 
+- **All projects**: `list_memory_projects()` 
 
 ## Search syntax reference:
 - **Basic**: `keyword` or `multiple words`
@@ -279,47 +279,49 @@ async def search_notes(
     and date, with advanced boolean and phrase search capabilities.
 
     Project Resolution:
-    Server resolves projects in this order: Single Project Mode → project parameter → default project.
-    If project unknown, use list_memory_projects() or recent_activity() first.
+    Server resolves projects using the current local-only priority chain:
+    constrained project env var -> explicit project parameter -> configured CWD match
+    -> configured default project.
+    If project is unknown, use list_memory_projects() or recent_activity() first.
 
     ## Search Syntax Examples
 
     ### Basic Searches
-    - `search_notes("my-project", "keyword")` - Find any content containing "keyword"
-    - `search_notes("work-docs", "'exact phrase'")` - Search for exact phrase match
+    - `search_notes("keyword", project="my-project")` - Find any content containing "keyword"
+    - `search_notes("'exact phrase'", project="work-docs")` - Search for exact phrase match
 
     ### Advanced Boolean Searches
-    - `search_notes("my-project", "term1 term2")` - Strict implicit-AND first; retries with
+    - `search_notes("term1 term2", project="my-project")` - Strict implicit-AND first; retries with
       relaxed OR terms only if strict search returns no results
-    - `search_notes("my-project", "term1 AND term2")` - Explicit AND search (both terms required)
-    - `search_notes("my-project", "term1 OR term2")` - Either term can be present
-    - `search_notes("my-project", "term1 NOT term2")` - Include term1 but exclude term2
-    - `search_notes("my-project", "(project OR planning) AND notes")` - Grouped boolean logic
+    - `search_notes("term1 AND term2", project="my-project")` - Explicit AND search (both terms required)
+    - `search_notes("term1 OR term2", project="my-project")` - Either term can be present
+    - `search_notes("term1 NOT term2", project="my-project")` - Include term1 but exclude term2
+    - `search_notes("(project OR planning) AND notes", project="my-project")` - Grouped boolean logic
 
     ### Content-Specific Searches
-    - `search_notes("research", "tag:example")` - Search within specific tags (if supported by content)
-    - `search_notes("work-project", "category:observation")` - Filter by observation categories
-    - `search_notes("team-docs", "author:username")` - Find content by author (if metadata available)
+    - `search_notes("tag:example", project="research")` - Search within specific tags (if supported by content)
+    - `search_notes("category:observation", project="work-project")` - Filter by observation categories
+    - `search_notes("author:username", project="team-docs")` - Find content by author (if metadata available)
 
     **Note:** `tag:` shorthand requires `search_type="text"` when semantic search is enabled
     (the default is hybrid). Alternatively, use the `tags` parameter for tag filtering with
-    any search type: `search_notes("project", "query", tags=["my-tag"])`
+    any search type: `search_notes("query", project="project", tags=["my-tag"])`
 
     ### Search Type Examples
-    - `search_notes("my-project", "Meeting", search_type="title")` - Search only in titles
-    - `search_notes("work-docs", "docs/meeting-*", search_type="permalink")` - Pattern match permalinks
-    - `search_notes("research", "keyword")` - Default search (hybrid when semantic is enabled,
+    - `search_notes("Meeting", project="my-project", search_type="title")` - Search only in titles
+    - `search_notes("docs/meeting-*", project="work-docs", search_type="permalink")` - Pattern match permalinks
+    - `search_notes("keyword", project="research")` - Default search (hybrid when semantic is enabled,
       text when disabled)
 
     ### Filtering Options
-    - `search_notes("my-project", "query", note_types=["note"])` - Search only notes
-    - `search_notes("work-docs", "query", note_types=["note", "person"])` - Multiple note types
-    - `search_notes("research", "query", entity_types=["observation"])` - Filter by entity type
-    - `search_notes("team-docs", "query", after_date="2024-01-01")` - Recent content only
-    - `search_notes("my-project", "query", after_date="1 week")` - Relative date filtering
-    - `search_notes("my-project", "query", tags=["security"])` - Filter by frontmatter tags
-    - `search_notes("my-project", "query", status="in-progress")` - Filter by frontmatter status
-    - `search_notes("my-project", "query", metadata_filters={"priority": {"$in": ["high"]}})`
+    - `search_notes("query", project="my-project", note_types=["note"])` - Search only notes
+    - `search_notes("query", project="work-docs", note_types=["note", "person"])` - Multiple note types
+    - `search_notes("query", project="research", entity_types=["observation"])` - Filter by entity type
+    - `search_notes("query", project="team-docs", after_date="2024-01-01")` - Recent content only
+    - `search_notes("query", project="my-project", after_date="1 week")` - Relative date filtering
+    - `search_notes("query", project="my-project", tags=["security"])` - Filter by frontmatter tags
+    - `search_notes("query", project="my-project", status="in-progress")` - Filter by frontmatter status
+    - `search_notes("query", project="my-project", metadata_filters={"priority": {"$in": ["high"]}})`
 
     ### Structured Metadata Filters
     Filters are exact matches on frontmatter metadata. Supported forms:
@@ -342,10 +344,10 @@ async def search_notes(
     metadata_filters, that value wins.
 
     ### Advanced Pattern Examples
-    - `search_notes("work-project", "project AND (meeting OR discussion)")` - Complex boolean logic
-    - `search_notes("research", "\"exact phrase\" AND keyword")` - Combine phrase and keyword search
-    - `search_notes("dev-notes", "bug NOT fixed")` - Exclude resolved issues
-    - `search_notes("archive", "docs/2024-*", search_type="permalink")` - Year-based permalink search
+    - `search_notes("project AND (meeting OR discussion)", project="work-project")` - Complex boolean logic
+    - `search_notes("\"exact phrase\" AND keyword", project="research")` - Combine phrase and keyword search
+    - `search_notes("bug NOT fixed", project="dev-notes")` - Exclude resolved issues
+    - `search_notes("docs/2024-*", project="archive", search_type="permalink")` - Year-based permalink search
 
     Args:
         query: Optional search query string (supports boolean operators, phrases, patterns).

@@ -1,7 +1,7 @@
-"""MCP tools for Basic Memory.
+"""MCP tools for MemoryHub.
 
 This package provides the complete set of tools for interacting with
-Basic Memory through the MCP protocol. Importing this module registers
+MemoryHub through the MCP protocol. Importing this module registers
 all tools with the MCP server.
 """
 

@@ -1,4 +1,4 @@
-"""API composition root for Basic Memory.
+"""API composition root for MemoryHub.
 
 This container owns reading ConfigManager and environment variables for the
 API entrypoint. Downstream modules receive config/dependencies explicitly
@@ -6,7 +6,7 @@ rather than reading globals.
 
 Design principles:
 - Only this module reads ConfigManager directly
-- Runtime mode (cloud/local/test) is resolved here
+- Runtime mode (local/test) is resolved here
 - Factories for services are provided, not singletons
 """
 

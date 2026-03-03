@@ -76,7 +76,7 @@ def reset(
                     console.print(
                         f"[red]Error:[/red] Cannot delete {path.name}: {e}\n"
                         "The database may be in use by another process (e.g., MCP server).\n"
-                        "Please close Claude Desktop or any other Basic Memory clients and try again."
+                        "Please close any running MemoryHub MCP clients or local server processes and try again."
                     )
                     raise typer.Exit(1)
 
@@ -88,7 +88,7 @@ def reset(
                 console.print(
                     "[red]Error:[/red] Cannot access database. "
                     "It may be in use by another process (e.g., MCP server).\n"
-                    "Please close Claude Desktop or any other Basic Memory clients and try again."
+                    "Please close any running MemoryHub MCP clients or local server processes and try again."
                 )
                 raise typer.Exit(1)
             raise

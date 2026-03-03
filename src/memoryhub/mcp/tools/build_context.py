@@ -1,4 +1,4 @@
-"""Build context tool for Basic Memory MCP server."""
+"""Build context tool for MemoryHub MCP."""
 
 from typing import Optional, Literal
 
@@ -149,9 +149,10 @@ async def build_context(
     a rich context graph of related information.
 
     Project Resolution:
-    Server resolves projects using a unified priority chain (same in local and cloud modes):
-    Single Project Mode → project parameter → default project.
-    Uses default project automatically. Specify `project` parameter to target a different project.
+    Server resolves projects using the current local-only priority chain:
+    constrained project env var -> explicit project parameter -> configured CWD match
+    -> configured default project.
+    Specify `project` to override the CWD/default fallbacks.
 
     Args:
         project: Project name to build context from. Optional - server will resolve using hierarchy.

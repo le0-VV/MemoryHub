@@ -1,4 +1,4 @@
-"""View note tool for Basic Memory MCP server."""
+"""View note tool for MemoryHub MCP."""
 
 from textwrap import dedent
 from typing import Optional
@@ -23,8 +23,8 @@ async def view_note(
 ) -> str:
     """View a markdown note as a formatted artifact.
 
-    This tool reads a note using the same logic as read_note but instructs Claude
-    to display the content as a markdown artifact in the Claude Desktop app.
+    This tool reads a note using the same lookup logic as read_note, then returns
+    formatting guidance for MCP clients that support artifact-style markdown display.
     Project parameter optional with server resolution.
 
     Args:
@@ -36,7 +36,7 @@ async def view_note(
         context: Optional FastMCP context for performance caching.
 
     Returns:
-        Instructions for Claude to create a markdown artifact with the note content.
+        Instructions for the client to create a markdown artifact with the note content.
 
     Examples:
         # View a note by title
@@ -72,7 +72,7 @@ async def view_note(
     if "# Note Not Found" in content:
         return content  # Return error message directly
 
-    # Return instructions for Claude to create an artifact
+    # Return instructions for clients that support artifact-style rendering
     return dedent(f"""
         Note retrieved: "{identifier}"
         

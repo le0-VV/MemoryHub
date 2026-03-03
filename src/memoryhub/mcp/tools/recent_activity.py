@@ -1,4 +1,4 @@
-"""Recent activity tool for Basic Memory MCP server."""
+"""Recent activity tool for MemoryHub MCP."""
 
 from datetime import timezone
 from pathlib import PurePosixPath
@@ -50,10 +50,11 @@ async def recent_activity(
     """Get recent activity for a specific project or across all projects.
 
     Project Resolution:
-    The server resolves projects in this order:
-    1. Single Project Mode - server constrained to one project, parameter ignored
-    2. Explicit project parameter - specify which project to query
-    3. Default project - server configured default if no project specified
+    The server resolves projects using the current local-only priority chain:
+    1. constrained project env var
+    2. explicit project parameter
+    3. configured CWD match
+    4. configured default project
 
     Discovery Mode:
     When no specific project can be resolved, returns activity across all projects
@@ -160,7 +161,7 @@ async def recent_activity(
     if "type" not in params:
         params["type"] = [SearchItemType.ENTITY.value]
 
-    # Resolve project parameter using the three-tier hierarchy
+    # Resolve project parameter using the shared local-only hierarchy
     # allow_discovery=True enables Discovery Mode, so a project is not required
     resolved_project = await resolve_project_parameter(project, allow_discovery=True)
 
@@ -272,7 +273,7 @@ async def recent_activity(
 
     else:
         # Project-Specific Mode: Get activity for specific project
-        # Uses get_project_client() for per-project routing (local vs cloud)
+        # Uses get_project_client() for project-scoped local routing
         logger.info(
             f"Getting recent activity from project {resolved_project}: type={type}, depth={depth}, timeframe={timeframe}"
         )

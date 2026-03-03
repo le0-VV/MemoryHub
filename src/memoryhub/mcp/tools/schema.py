@@ -1,4 +1,4 @@
-"""Schema tools for Basic Memory MCP server.
+"""Schema tools for MemoryHub MCP.
 
 Provides tools for schema validation, inference, and drift detection through the MCP protocol.
 These tools call the schema API endpoints via the typed SchemaClient.
@@ -92,8 +92,10 @@ async def schema_validate(
     4. No schema (no validation)
 
     Project Resolution:
-    Server resolves projects in this order: Single Project Mode -> project parameter -> default.
-    If project unknown, use list_memory_projects() first.
+    Server resolves projects using the current local-only priority chain:
+    constrained project env var -> explicit project parameter -> configured CWD match
+    -> configured default project.
+    If project is still unknown, use list_memory_projects() first.
 
     Args:
         note_type: Note type to batch-validate (e.g., "person", "meeting").
@@ -197,8 +199,10 @@ async def schema_infer(
     - Below threshold -> excluded (but noted)
 
     Project Resolution:
-    Server resolves projects in this order: Single Project Mode -> project parameter -> default.
-    If project unknown, use list_memory_projects() first.
+    Server resolves projects using the current local-only priority chain:
+    constrained project env var -> explicit project parameter -> configured CWD match
+    -> configured default project.
+    If project is still unknown, use list_memory_projects() first.
 
     Args:
         note_type: The note type to analyze (e.g., "person", "meeting").
@@ -309,8 +313,10 @@ async def schema_diff(
     periodically to see if your schema still matches reality.
 
     Project Resolution:
-    Server resolves projects in this order: Single Project Mode -> project parameter -> default.
-    If project unknown, use list_memory_projects() first.
+    Server resolves projects using the current local-only priority chain:
+    constrained project env var -> explicit project parameter -> configured CWD match
+    -> configured default project.
+    If project is still unknown, use list_memory_projects() first.
 
     Args:
         note_type: The note type to check for drift (e.g., "person").

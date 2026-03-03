@@ -26,6 +26,29 @@ FastAPI application
 MCP tools / CLI commands
 ```
 
+## Support Status
+
+Supported:
+
+- local runtime only
+- SQLite-backed indexing and search
+- Markdown-first storage
+- API, MCP, and CLI entrypoints
+- project-scoped operations with explicit selection, env-constrained selection, and configured CWD fallback
+
+Transitional:
+
+- legacy `BASIC_MEMORY_*` environment names
+- local-routing compatibility helpers that still shape some CLI and client code
+- cloud-era abstractions and comments retained while the fork is being simplified
+
+Scheduled for removal or replacement:
+
+- cloud-specific routing concepts
+- Postgres-specific branches, migrations, and tests
+- transport-era routing flags whose only remaining effect is to force the local path
+- duplicated project-selection logic outside a future registry/routing context layer
+
 ## Entrypoints
 
 The repo has three user-facing entrypoints:
@@ -106,9 +129,10 @@ Projects are the main isolation boundary. A project is a local directory of note
 
 Project selection is unified through `ProjectResolver`:
 
-1. explicit project argument
-2. configured default project
-3. single available project
+1. constrained project from environment
+2. explicit project argument
+3. configured CWD match
+4. configured default project
 
 The fork vision is to get smarter about workspace inference over time, but the current implementation is still explicit-project-first.
 

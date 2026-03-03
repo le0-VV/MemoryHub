@@ -1,4 +1,4 @@
-"""Project info tool for Basic Memory MCP server."""
+"""Project info resource for MemoryHub MCP."""
 
 from typing import Optional
 
@@ -14,15 +14,15 @@ from memoryhub.schemas import ProjectInfoResponse
 
 @mcp.resource(
     uri="memory://{project}/info",
-    description="Get information and statistics about the current Basic Memory project.",
+    description="Get information and statistics about the current MemoryHub project.",
 )
 async def project_info(
     project: Optional[str] = None, context: Context | None = None
 ) -> ProjectInfoResponse:
-    """Get comprehensive information about the current Basic Memory project.
+    """Get comprehensive information about the current MemoryHub project.
 
     This tool provides detailed statistics and status information about your
-    Basic Memory project, including:
+    MemoryHub project, including:
 
     - Project configuration
     - Entity, observation, and relation counts
@@ -31,14 +31,14 @@ async def project_info(
     - System status (database, watch service, version)
 
     Use this tool to:
-    - Verify your Basic Memory installation is working correctly
+    - Verify your MemoryHub installation is working correctly
     - Get insights into your knowledge base structure
     - Monitor growth and activity over time
     - Identify potential issues like unresolved relations
 
     Args:
-        project: Optional project name. If not provided, uses default_project
-                from config or CLI constraint. If unknown, use
+        project: Optional project name. If not provided, uses the normal local-only
+                project resolution flow before falling back to discovery guidance. If unknown, use
                 list_memory_projects() to discover available projects.
         context: Optional FastMCP context for performance caching.
 
@@ -56,7 +56,7 @@ async def project_info(
         print(f"Total entities: {info.statistics.total_entities}")
 
         # Check system status
-        print(f"Basic Memory version: {info.system.version}")
+        print(f"MemoryHub version: {info.system.version}")
     """
     logger.info("Getting project info")
 

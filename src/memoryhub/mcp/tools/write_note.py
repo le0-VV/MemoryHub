@@ -1,4 +1,4 @@
-"""Write note tool for Basic Memory MCP server."""
+"""Write note tool for MemoryHub MCP."""
 
 import textwrap
 from typing import List, Union, Optional, Literal
@@ -39,9 +39,10 @@ async def write_note(
     to replace the existing note. For incremental updates, use edit_note instead.
 
     Project Resolution:
-    Server resolves projects using a unified priority chain (same in local and cloud modes):
-    Single Project Mode → project parameter → default project.
-    Uses default project automatically. Specify `project` parameter to target a different project.
+    Server resolves projects using the current local-only priority chain:
+    constrained project env var -> explicit project parameter -> configured CWD match
+    -> configured default project.
+    Specify `project` to override the CWD/default fallbacks.
 
     The content can include semantic observations and relations using markdown syntax:
 
@@ -117,7 +118,7 @@ async def write_note(
             project="my-research",
             title="Meeting Notes",
             directory="meetings",
-            content="# Weekly Standup\\n\\n- [decision] Use PostgreSQL instead #tech",
+            content="# Weekly Standup\\n\\n- [decision] Keep local SQLite storage as the default #tech",
             overwrite=True
         )
 

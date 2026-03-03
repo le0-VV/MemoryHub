@@ -175,7 +175,11 @@ def validate(
     ] = None,
     strict: bool = typer.Option(False, "--strict", help="Exit with error on validation failures"),
     json_output: bool = typer.Option(False, "--json", help="Output in JSON format"),
-    local: bool = typer.Option(False, "--local", help="Force local API routing"),
+    local: bool = typer.Option(
+        False,
+        "--local",
+        help="Compatibility flag; local API routing is already the default",
+    ),
 ):
     """Validate notes against their schemas.
 
@@ -254,7 +258,11 @@ def infer(
     ),
     save: bool = typer.Option(False, "--save", help="Save inferred schema to schema/ directory"),
     json_output: bool = typer.Option(False, "--json", help="Output in JSON format"),
-    local: bool = typer.Option(False, "--local", help="Force local API routing"),
+    local: bool = typer.Option(
+        False,
+        "--local",
+        help="Compatibility flag; local API routing is already the default",
+    ),
 ):
     """Infer schema from existing notes of a type.
 
@@ -334,7 +342,11 @@ def diff(
         typer.Option(help="The project name."),
     ] = None,
     json_output: bool = typer.Option(False, "--json", help="Output in JSON format"),
-    local: bool = typer.Option(False, "--local", help="Force local API routing"),
+    local: bool = typer.Option(
+        False,
+        "--local",
+        help="Compatibility flag; local API routing is already the default",
+    ),
 ):
     """Show drift between schema and actual usage.
 

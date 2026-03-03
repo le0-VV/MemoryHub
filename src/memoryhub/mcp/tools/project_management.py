@@ -106,7 +106,7 @@ async def create_memory_project(
     output_format: Literal["text", "json"] = "text",
     context: Context | None = None,
 ) -> str | dict:
-    """Create a new Basic Memory project.
+    """Create a new MemoryHub project.
 
     Creates a new project with the specified name and path. The project directory
     will be created if it doesn't exist. Optionally sets the new project as default.
@@ -218,10 +218,10 @@ async def create_memory_project(
     annotations={"destructiveHint": True, "openWorldHint": False},
 )
 async def delete_project(project_name: str, context: Context | None = None) -> str:
-    """Delete a Basic Memory project.
+    """Delete a MemoryHub project.
 
     Removes a project from the configuration and database. This does NOT delete
-    the actual files on disk - only removes the project from Basic Memory's
+    the actual files on disk - only removes the project from MemoryHub's
     configuration and database records.
 
     Args:
@@ -235,7 +235,7 @@ async def delete_project(project_name: str, context: Context | None = None) -> s
 
     Warning:
         This action cannot be undone. The project will need to be re-added
-        to access its content through Basic Memory again.
+        to access its content through MemoryHub again.
     """
     async with get_client() as client:
         # Check if server is constrained to a specific project
@@ -283,7 +283,7 @@ async def delete_project(project_name: str, context: Context | None = None) -> s
             if hasattr(status_response.old_project, "path"):
                 result += f"• Path: {status_response.old_project.path}\n"
 
-        result += "Files remain on disk but project is no longer tracked by Basic Memory.\n"
+        result += "Files remain on disk but the project is no longer tracked by MemoryHub.\n"
         result += "Re-add the project to access its content again.\n"
 
         return result

@@ -1,4 +1,4 @@
-"""Move note tool for Basic Memory MCP server."""
+"""Move note tool for MemoryHub MCP."""
 
 from pathlib import Path, PureWindowsPath
 from textwrap import dedent
@@ -263,10 +263,10 @@ This usually means the database and filesystem are out of sync.
 
 ## Troubleshooting steps:
 ```
-# Check if note exists in Basic Memory
+# Check if note exists in MemoryHub
 read_note("{identifier}")
 
-# If it exists, the file is missing on disk - send a message to support@basicmachines.co
+# If it exists, the file is missing on disk - run `memoryhub doctor` and inspect logs
 # If it doesn't exist, use search to find the correct identifier
 search_notes("{identifier}")
 ```"""
@@ -289,7 +289,7 @@ A system error occurred while moving '{identifier}': {error_message}
 ## Alternative approaches:
 - Copy content to new location: Use `read_note("{identifier}")` then `write_note()` 
 - Use a different destination folder that you know works
-- Send a message to support@basicmachines.co if the problem persists
+- Run `memoryhub doctor` and inspect logs if the problem persists
 
 ## Backup approach:
 ```
@@ -357,8 +357,12 @@ async def move_note(
     """Move a note or directory to a new location within the same project.
 
     Moves a note or directory from one location to another within the project,
-    updating all database references and maintaining semantic content. Uses stateless
-    architecture - project parameter optional with server resolution.
+    updating all database references and maintaining semantic content.
+
+    Project Resolution:
+    Server resolves projects using the current local-only priority chain:
+    constrained project env var -> explicit project parameter -> configured CWD match
+    -> configured default project.
 
     Args:
         identifier: For files: exact entity identifier (title, permalink, or memory:// URL).
@@ -736,7 +740,7 @@ move_note("{identifier}", destination_folder="notes")
                 move_note("{identifier}", "{destination_path}.{source_ext}")
                 ```
 
-                All examples in Basic Memory expect file extensions to be explicitly provided.
+                MemoryHub expects file extensions to be explicitly provided.
                 """).strip()
 
         # Validate extension consistency when source metadata is available.

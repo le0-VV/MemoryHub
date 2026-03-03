@@ -201,7 +201,7 @@ class LinkResolver:
                 permalink_candidates.append(candidate)
 
         # --- Path Resolution ---
-        # Note: All paths in Basic Memory are stored as POSIX strings (forward slashes)
+        # Note: All paths in MemoryHub are stored as POSIX strings (forward slashes)
         # for cross-platform compatibility. See entity_repository.py which normalizes
         # paths using Path().as_posix(). This allows consistent path operations here.
 

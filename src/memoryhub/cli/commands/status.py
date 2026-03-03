@@ -166,7 +166,11 @@ def status(
     ] = None,
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed file information"),
     json_output: bool = typer.Option(False, "--json", help="Output in JSON format"),
-    local: bool = typer.Option(False, "--local", help="Force local API routing"),
+    local: bool = typer.Option(
+        False,
+        "--local",
+        help="Compatibility flag; local API routing is already the default",
+    ),
 ):
     """Show sync status between files and database.
 

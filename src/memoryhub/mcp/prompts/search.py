@@ -1,4 +1,4 @@
-"""Search prompts for Basic Memory MCP server.
+"""Search prompts for MemoryHub MCP.
 
 These prompts help users search and explore their knowledge base.
 """
@@ -16,7 +16,7 @@ from memoryhub.schemas.search import SearchResponse
 
 @mcp.prompt(
     name="search_knowledge_base",
-    description="Search across all content in memoryhub",
+    description="Search across all content in MemoryHub",
 )
 async def search_prompt(
     query: str,
@@ -25,7 +25,7 @@ async def search_prompt(
         Field(description="How far back to search (e.g. '1d', '1 week')"),
     ] = None,
 ) -> str:
-    """Search across all content in memoryhub.
+    """Search across all content in MemoryHub.
 
     This prompt helps search for content in the knowledge base and
     provides helpful context about the results.

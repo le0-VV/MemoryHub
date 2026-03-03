@@ -1,4 +1,4 @@
-"""Session continuation prompts for Basic Memory MCP server.
+"""Session continuation prompts for MemoryHub MCP.
 
 These prompts help users continue conversations and work across sessions,
 providing context from previous interactions to maintain continuity.
@@ -70,7 +70,7 @@ async def continue_conversation(
 
         This is a memory retrieval session.
 
-        Please use the available memoryhub tools to gather relevant context before responding.
+        Please use the available MemoryHub tools to gather relevant context before responding.
         Start by executing one of the suggested commands below to retrieve content.
 
         {context_text}

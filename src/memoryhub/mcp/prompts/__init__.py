@@ -1,4 +1,4 @@
-"""Basic Memory MCP prompts.
+"""MemoryHub MCP prompts.
 
 Prompts are a special type of tool that returns a string response
 formatted for a user to read, typically invoking one or more tools

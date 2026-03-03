@@ -8,10 +8,10 @@ from loguru import logger
 @mcp.resource(
     uri="memory://ai_assistant_guide",
     name="ai assistant guide",
-    description="Give an AI assistant guidance on how to use Basic Memory tools effectively",
+    description="Give an AI assistant guidance on how to use MemoryHub tools effectively",
 )
 def ai_assistant_guide() -> str:
-    """Return a concise guide on Basic Memory tools and how to use them.
+    """Return a concise guide on MemoryHub tools and how to use them.
 
     Dynamically adapts instructions based on configuration:
     - Default project set: Simplified instructions with automatic project fallback
@@ -19,7 +19,7 @@ def ai_assistant_guide() -> str:
     - CLI constraint mode: Single project constraint information
 
     Returns:
-        A focused guide on Basic Memory usage.
+        A focused guide on MemoryHub usage.
     """
     logger.info("Loading AI assistant guide resource")
 
@@ -38,7 +38,7 @@ def ai_assistant_guide() -> str:
 **Current Configuration**: Operations automatically fall back to project '{config.default_project}'
 
 **Simplified Usage**: You don't need to specify the project parameter in tool calls.
-- `write_note(title="Note", content="...", folder="docs")` - uses '{config.default_project}'
+- `write_note(title="Note", content="...", directory="docs")` - uses '{config.default_project}'
 - To use a different project, explicitly specify: `project="other-project"`
 
 ---

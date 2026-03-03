@@ -1,4 +1,4 @@
-"""Recent activity prompts for Basic Memory MCP server.
+"""Recent activity prompts for MemoryHub MCP.
 
 These prompts help users see what has changed in their knowledge base recently.
 """
@@ -89,7 +89,7 @@ async def recent_activity_prompt(
             ## Relations
             - summarizes [[Recent Work]]
             ''',
-            folder="insights",
+            directory="insights",
             project="{project or "default"}"
         )
         ```

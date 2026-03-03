@@ -1,15 +1,13 @@
-"""API v2 module - ID-based entity references.
+"""API v2 module for MemoryHub.
 
-Version 2 of the Basic Memory API uses integer entity IDs as the primary
-identifier for improved performance and stability.
+Version 2 standardizes the active API surface around stable external IDs and
+explicit request models instead of path-only routing.
 
 Key changes from v1:
-- Entity lookups use integer IDs instead of paths/permalinks
-- Direct database queries instead of cascading resolution
-- Stable references that don't change with file moves
-- Better caching support
-
-All v2 routers are registered with the /v2 prefix.
+- project and entity operations prefer external UUIDs in API paths
+- request bodies carry file-path details when needed
+- lookups are more direct and less dependent on permalink/path resolution
+- routers are grouped under the `/v2` prefix
 """
 
 from memoryhub.api.v2.routers import (

@@ -1,4 +1,4 @@
-"""Read note tool for Basic Memory MCP server."""
+"""Read note tool for MemoryHub MCP."""
 
 from textwrap import dedent
 from typing import Optional, Literal
@@ -81,9 +81,10 @@ async def read_note(
     returning the raw markdown content including observations, relations, and metadata.
 
     Project Resolution:
-    Server resolves projects using a unified priority chain (same in local and cloud modes):
-    Single Project Mode → project parameter → default project.
-    Uses default project automatically. Specify `project` parameter to target a different project.
+    Server resolves projects using the current local-only priority chain:
+    constrained project env var -> explicit project parameter -> configured CWD match
+    -> configured default project.
+    Specify `project` to override the CWD/default fallbacks.
 
     This tool will try multiple lookup strategies to find the most relevant note:
     1. Direct permalink lookup
@@ -110,19 +111,19 @@ async def read_note(
 
     Examples:
         # Read by permalink
-        read_note("my-research", "specs/search-spec")
+        read_note("specs/search-spec", project="my-research")
 
         # Read by title
-        read_note("work-project", "Search Specification")
+        read_note("Search Specification", project="work-project")
 
         # Read with memory URL
-        read_note("my-research", "memory://specs/search-spec")
+        read_note("memory://specs/search-spec", project="my-research")
 
         # Read with pagination
-        read_note("work-project", "Project Updates", page=2, page_size=5)
+        read_note("Project Updates", project="work-project", page=2, page_size=5)
 
         # Read recent meeting notes
-        read_note("team-docs", "Weekly Standup")
+        read_note("Weekly Standup", project="team-docs")
 
     Raises:
         HTTPError: If project doesn't exist or is inaccessible
@@ -359,7 +360,7 @@ def format_not_found_message(project: str | None, identifier: str) -> str:
             ## Relations
             - relates_to [[Related Topic]]
             ''',
-            folder="notes"
+            directory="notes"
         )
         ```
     """)
@@ -421,7 +422,7 @@ def format_related_results(project: str | None, identifier: str, results) -> str
             project="{project}",
             title="[Your title]",
             content="[Your content]",
-            folder="notes"
+            directory="notes"
         )
         ```
     """)

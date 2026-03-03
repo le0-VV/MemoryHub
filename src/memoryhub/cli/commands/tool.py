@@ -51,7 +51,14 @@ def _default_local_routing(local: bool) -> bool:
 @tool_app.command()
 def write_note(
     title: Annotated[str, typer.Option(help="The title of the note")],
-    folder: Annotated[str, typer.Option(help="The folder to create the note in")],
+    directory: Annotated[
+        str,
+        typer.Option(
+            "--directory",
+            "--folder",
+            help="The directory to create the note in. --folder is kept as a compatibility alias.",
+        ),
+    ],
     content: Annotated[
         Optional[str],
         typer.Option(
@@ -67,15 +74,19 @@ def write_note(
             help="The project to write to. If not provided, the default project will be used."
         ),
     ] = None,
-    local: bool = typer.Option(False, "--local", help="Force local API routing"),
+    local: bool = typer.Option(
+        False,
+        "--local",
+        help="Compatibility flag; local API routing is already the default",
+    ),
 ):
     """Create or update a markdown note. Content can be provided via --content or stdin.
 
     Examples:
 
-    bm tool write-note --title "My Note" --folder "notes" --content "Note content"
-    echo "content" | bm tool write-note --title "My Note" --folder "notes"
-    bm tool write-note --title "My Note" --folder "notes" --local
+    memoryhub tool write-note --title "My Note" --directory "notes" --content "Note content"
+    echo "content" | memoryhub tool write-note --title "My Note" --directory "notes"
+    memoryhub tool write-note --title "My Note" --directory "notes" --local
     """
     try:
         local = _default_local_routing(local)
@@ -102,7 +113,7 @@ def write_note(
                 mcp_write_note(
                     title=title,
                     content=content,
-                    directory=folder,
+                    directory=directory,
                     project=project,
                     tags=tags,
                     output_format="json",
@@ -131,15 +142,19 @@ def read_note(
         Optional[str],
         typer.Option(help="The project to use. If not provided, the default project will be used."),
     ] = None,
-    local: bool = typer.Option(False, "--local", help="Force local API routing"),
+    local: bool = typer.Option(
+        False,
+        "--local",
+        help="Compatibility flag; local API routing is already the default",
+    ),
 ):
     """Read a markdown note from the knowledge base.
 
     Examples:
 
-    bm tool read-note my-note
-    bm tool read-note my-note --include-frontmatter
-    bm tool read-note my-note --page 2 --page-size 5
+    memoryhub tool read-note my-note
+    memoryhub tool read-note my-note --include-frontmatter
+    memoryhub tool read-note my-note --page 2 --page-size 5
     """
     try:
         local = _default_local_routing(local)
@@ -189,15 +204,19 @@ def edit_note(
             help="The project to edit. If not provided, the default project will be used."
         ),
     ] = None,
-    local: bool = typer.Option(False, "--local", help="Force local API routing"),
+    local: bool = typer.Option(
+        False,
+        "--local",
+        help="Compatibility flag; local API routing is already the default",
+    ),
 ):
     """Edit an existing markdown note using append/prepend/find_replace/replace_section.
 
     Examples:
 
-    bm tool edit-note my-note --operation append --content "new content"
-    bm tool edit-note my-note --operation find_replace --find-text "old" --content "new"
-    bm tool edit-note my-note --operation replace_section --section "## Notes" --content "updated"
+    memoryhub tool edit-note my-note --operation append --content "new content"
+    memoryhub tool edit-note my-note --operation find_replace --find-text "old" --content "new"
+    memoryhub tool edit-note my-note --operation replace_section --section "## Notes" --content "updated"
     """
     try:
         local = _default_local_routing(local)
@@ -246,14 +265,18 @@ def build_context(
         Optional[str],
         typer.Option(help="The project to use. If not provided, the default project will be used."),
     ] = None,
-    local: bool = typer.Option(False, "--local", help="Force local API routing"),
+    local: bool = typer.Option(
+        False,
+        "--local",
+        help="Compatibility flag; local API routing is already the default",
+    ),
 ):
     """Get context needed to continue a discussion.
 
     Examples:
 
-    bm tool build-context memory://specs/search
-    bm tool build-context specs/search --depth 2 --timeframe 30d
+    memoryhub tool build-context memory://specs/search
+    memoryhub tool build-context specs/search --depth 2 --timeframe 30d
     """
     try:
         local = _default_local_routing(local)
@@ -295,15 +318,19 @@ def recent_activity(
         Optional[str],
         typer.Option(help="The project to use. If not provided, the default project will be used."),
     ] = None,
-    local: bool = typer.Option(False, "--local", help="Force local API routing"),
+    local: bool = typer.Option(
+        False,
+        "--local",
+        help="Compatibility flag; local API routing is already the default",
+    ),
 ):
     """Get recent activity across the knowledge base.
 
     Examples:
 
-    bm tool recent-activity
-    bm tool recent-activity --timeframe 30d --page-size 20
-    bm tool recent-activity --type entity --type observation
+    memoryhub tool recent-activity
+    memoryhub tool recent-activity --timeframe 30d --page-size 20
+    memoryhub tool recent-activity --type entity --type observation
     """
     try:
         local = _default_local_routing(local)
@@ -378,16 +405,20 @@ def search_notes(
         Optional[str],
         typer.Option(help="The project to use. If not provided, the default project will be used."),
     ] = None,
-    local: bool = typer.Option(False, "--local", help="Force local API routing"),
+    local: bool = typer.Option(
+        False,
+        "--local",
+        help="Compatibility flag; local API routing is already the default",
+    ),
 ):
     """Search across all content in the knowledge base.
 
     Examples:
 
-    bm tool search-notes "my query"
-    bm tool search-notes --permalink "specs/*"
-    bm tool search-notes --tag python --tag async
-    bm tool search-notes --meta status=draft
+    memoryhub tool search-notes "my query"
+    memoryhub tool search-notes --permalink "specs/*"
+    memoryhub tool search-notes --tag python --tag async
+    memoryhub tool search-notes --meta status=draft
     """
     try:
         local = _default_local_routing(local)
@@ -481,14 +512,18 @@ def search_notes(
 
 @tool_app.command("list-projects")
 def list_projects(
-    local: bool = typer.Option(False, "--local", help="Force local API routing"),
+    local: bool = typer.Option(
+        False,
+        "--local",
+        help="Compatibility flag; local API routing is already the default",
+    ),
 ):
     """List all available projects with their status (JSON output).
 
     Examples:
 
-    bm tool list-projects
-    bm tool list-projects --local
+    memoryhub tool list-projects
+    memoryhub tool list-projects --local
     """
     try:
         local = _default_local_routing(local)
@@ -519,7 +554,11 @@ def schema_validate(
         Optional[str],
         typer.Option(help="The project to use. If not provided, the default project will be used."),
     ] = None,
-    local: bool = typer.Option(False, "--local", help="Force local API routing"),
+    local: bool = typer.Option(
+        False,
+        "--local",
+        help="Compatibility flag; local API routing is already the default",
+    ),
 ):
     """Validate notes against their schemas (JSON output).
 
@@ -528,9 +567,9 @@ def schema_validate(
 
     Examples:
 
-    bm tool schema-validate person
-    bm tool schema-validate people/ada-lovelace.md
-    bm tool schema-validate --project research
+    memoryhub tool schema-validate person
+    memoryhub tool schema-validate people/ada-lovelace.md
+    memoryhub tool schema-validate --project research
     """
     try:
         local = _default_local_routing(local)
@@ -579,15 +618,19 @@ def schema_infer(
         Optional[str],
         typer.Option(help="The project to use. If not provided, the default project will be used."),
     ] = None,
-    local: bool = typer.Option(False, "--local", help="Force local API routing"),
+    local: bool = typer.Option(
+        False,
+        "--local",
+        help="Compatibility flag; local API routing is already the default",
+    ),
 ):
     """Infer schema from existing notes of a type (JSON output).
 
     Examples:
 
-    bm tool schema-infer person
-    bm tool schema-infer meeting --threshold 0.5
-    bm tool schema-infer person --project research
+    memoryhub tool schema-infer person
+    memoryhub tool schema-infer meeting --threshold 0.5
+    memoryhub tool schema-infer person --project research
     """
     try:
         local = _default_local_routing(local)
@@ -625,14 +668,18 @@ def schema_diff(
         Optional[str],
         typer.Option(help="The project to use. If not provided, the default project will be used."),
     ] = None,
-    local: bool = typer.Option(False, "--local", help="Force local API routing"),
+    local: bool = typer.Option(
+        False,
+        "--local",
+        help="Compatibility flag; local API routing is already the default",
+    ),
 ):
     """Show drift between schema and actual usage (JSON output).
 
     Examples:
 
-    bm tool schema-diff person
-    bm tool schema-diff person --project research
+    memoryhub tool schema-diff person
+    memoryhub tool schema-diff person --project research
     """
     try:
         local = _default_local_routing(local)

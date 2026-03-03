@@ -1,4 +1,4 @@
-"""CLI routing utilities for local-only command execution."""
+"""Legacy CLI routing helpers for local-only command execution."""
 
 import os
 from contextlib import contextmanager
@@ -8,6 +8,10 @@ from typing import Generator
 @contextmanager
 def force_routing(local: bool = False) -> Generator[None, None, None]:
     """Context manager to temporarily force local routing.
+
+    This helper is a transition shim. The supported product surface is already
+    local-only, but some CLI commands still use the historical explicit-routing
+    environment flags while the entrypoint layer is being simplified.
 
     Args:
         local: If True, force local ASGI transport
@@ -42,6 +46,7 @@ def validate_routing_flags(local: bool, cloud: bool = False) -> None:
 
     Args:
         local: Value of --local flag
+        cloud: Unused compatibility parameter retained for old call sites
 
     Raises:
         ValueError: Reserved for future validation failures

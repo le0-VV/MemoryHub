@@ -132,7 +132,9 @@ async def run_doctor() -> None:
 @app.command()
 def doctor(
     local: bool = typer.Option(
-        False, "--local", help="Force local API routing"
+        False,
+        "--local",
+        help="Compatibility flag; local API routing is already the default",
     ),
 ) -> None:
     """Run local consistency checks to verify file/database sync."""

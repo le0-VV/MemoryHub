@@ -43,7 +43,11 @@ class CliContainer:
 
     @property
     def is_cloud_mode(self) -> bool:
-        """Legacy compatibility property retained for old callers."""
+        """Legacy compatibility property retained during local-only cleanup.
+
+        The supported product surface is local-only, so this always returns False.
+        New code should not branch on cloud mode.
+        """
         return False
 
 

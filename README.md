@@ -6,17 +6,42 @@ Today this repository is still mostly the upstream Basic Memory codebase with fo
 
 ## Current State
 
+### Support Matrix
+
+Supported now:
+
+- local-only runtime
+- SQLite-only storage and indexing
+- Markdown files as the source of truth
+- API, MCP, and CLI entrypoints
+- multi-project configuration and project management
+- explicit project selection, constrained-project operation, and configured CWD fallback
+
+Transitional code still present:
+
+- legacy `BASIC_MEMORY_*` config and routing shims
+- cloud-era abstractions and comments that no longer describe the supported product
+- compatibility paths retained only to ease the fork transition
+
+Not supported in this fork:
+
+- hosted cloud routing
+- per-project cloud workspaces
+- Postgres as a maintained backend
+- automatic routing from generic request metadata or repository inference
+- a dedicated project registry/cache layer
+
 What already exists in this repository today:
 
 - The upstream Basic Memory architecture: API, MCP server, CLI, sync, search, Markdown-backed notes, and knowledge graph traversal.
 - SQLite-backed local deployment.
 - Multi-project configuration and project management.
-- Default or explicit project selection for tool calls.
-- Per-project local or cloud routing once a project is known.
+- Default, constrained, or explicit project selection for tool calls, plus configured CWD fallback.
+- Per-project local routing once a project is known.
 
 What has not been implemented yet:
 
-- Automatic routing by repository root, current working directory, or generic request metadata.
+- Automatic routing by repository root or generic request metadata beyond configured project-path matching.
 - A dedicated MemoryHub routing layer or project registry/cache.
 - A maintained Postgres backend. This fork is standardizing on SQLite only.
 

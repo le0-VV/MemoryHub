@@ -1,4 +1,4 @@
-"""Canvas creation tool for Basic Memory MCP server.
+"""Canvas creation tool for MemoryHub MCP.
 
 This tool creates Obsidian canvas files (.canvas) using the JSON Canvas 1.0 spec.
 """
@@ -32,8 +32,10 @@ async def canvas(
     allowing visualization of relationships between concepts or documents.
 
     Project Resolution:
-    Server resolves projects in this order: Single Project Mode → project parameter → default project.
-    If project unknown, use list_memory_projects() or recent_activity() first.
+    Server resolves projects using the current local-only priority chain:
+    constrained project env var -> explicit project parameter -> configured CWD match
+    -> configured default project.
+    If project is still unknown, use list_memory_projects() or recent_activity() first.
 
     For the full JSON Canvas 1.0 specification, see the 'spec://canvas' resource.
 

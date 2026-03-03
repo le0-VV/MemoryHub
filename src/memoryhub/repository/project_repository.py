@@ -1,4 +1,4 @@
-"""Repository for managing projects in Basic Memory."""
+"""Repository for managing projects in MemoryHub."""
 
 from pathlib import Path
 from typing import Optional, Sequence, Union

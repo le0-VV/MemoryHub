@@ -31,7 +31,7 @@ def _format_delete_error_response(project: str, error_message: str, identifier: 
             3. **Different project**: The note might be in a different project
 
             ## How to verify:
-            1. **Search for the note**: Use `search_notes("{project}", "{search_term}")` to find it
+            1. **Search for the note**: Use `search_notes("{search_term}", project="{project}")` to find it
             2. **Try different formats**:
                - If you used a permalink like "folder/note-title", try just the title: "{title_format}"
                - If you used a title, try the permalink format: "{permalink_format}"
@@ -40,12 +40,12 @@ def _format_delete_error_response(project: str, error_message: str, identifier: 
             4. **List notes in project**: Use `list_directory("/")` to see what notes exist in the current project
 
             ## If the note actually exists:
-            ```
+            ```python
             # First, find the correct identifier:
-            search_notes("{project}", "{identifier}")
+            search_notes("{identifier}", project="{project}")
 
             # Then delete using the correct identifier:
-            delete_note("{project}", "correct-identifier-from-search")
+            delete_note("correct-identifier-from-search", project="{project}")
             ```
 
             ## If you want to delete multiple similar notes:
@@ -91,11 +91,11 @@ A system error occurred while deleting '{identifier}': {error_message}
 3. **Check disk space**: Ensure the system has adequate storage
 
 ## Troubleshooting:
-- Verify note exists: `read_note("{project}","{identifier}")`
+- Verify note exists: `read_note("{identifier}", project="{project}")`
 - Try again in a few moments
 
 ## If problem persists:
-Send a message to support@basicmachines.co - there may be a filesystem or database issue."""
+Run `memoryhub doctor` and inspect the local server logs - there may be a filesystem or database issue."""
 
     # Database/sync errors
     if "database" in error_message.lower() or "sync" in error_message.lower():
@@ -110,11 +110,11 @@ A database error occurred while deleting '{identifier}': {error_message}
 
 ## Steps to resolve:
 1. **Try again**: Wait a moment and retry the deletion
-2. **Check note status**: `read_note("{project}","{identifier}")` to see current state
+2. **Check note status**: `read_note("{identifier}", project="{project}")` to see current state
 3. **Manual verification**: Use `list_directory()` to see if file still exists
 
 ## If the note appears gone but database shows it exists:
-Send a message to support@basicmachines.co - a manual database cleanup may be needed."""
+Run `memoryhub doctor` and inspect the local database/index state - manual cleanup may still be needed."""
 
     # Generic fallback
     return f"""# Delete Failed
@@ -122,28 +122,28 @@ Send a message to support@basicmachines.co - a manual database cleanup may be ne
 Error deleting note '{identifier}': {error_message}
 
 ## General troubleshooting:
-1. **Verify the note exists**: `read_note("{project}", "{identifier}")` or `search_notes("{project}", "{identifier}")`
+1. **Verify the note exists**: `read_note("{identifier}", project="{project}")` or `search_notes("{identifier}", project="{project}")`
 2. **Check permissions**: Ensure you can edit/delete files in this project
 3. **Try again**: The error might be temporary
 4. **Check project**: Make sure you're in the correct project
 
 ## Step-by-step approach:
-```
+```python
 # 1. Confirm note exists and get correct identifier
-search_notes("{project}", "{identifier}")
+search_notes("{identifier}", project="{project}")
 
 # 2. Read the note to verify access
-read_note("{project}", "correct-identifier-from-search")
+read_note("correct-identifier-from-search", project="{project}")
 
 # 3. Try deletion with correct identifier
-delete_note("{project}", "correct-identifier-from-search")
+delete_note("correct-identifier-from-search", project="{project}")
 ```
 
 ## Alternative approaches:
-- Check what notes exist: `list_directory("{project}", "/")`
+- Check what notes exist: `list_directory("/", project="{project}")`
 
 ## Need help?
-If the note should be deleted but the operation keeps failing, send a message to support@basicmemory.com."""
+If the note should be deleted but the operation keeps failing, run `memoryhub doctor` and inspect the local logs."""
 
 
 @mcp.tool(
@@ -165,8 +165,10 @@ async def delete_note(
     False without error. If deletion fails, helpful error messages are provided.
 
     Project Resolution:
-    Server resolves projects in this order: Single Project Mode → project parameter → default project.
-    If project unknown, use list_memory_projects() or recent_activity() first.
+    Server resolves projects using the current local-only priority chain:
+    constrained project env var -> explicit project parameter -> configured CWD match
+    -> configured default project.
+    If project is unknown, use list_memory_projects() or recent_activity() first.
 
     Args:
         identifier: For files: note title or permalink to delete.

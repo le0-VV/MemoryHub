@@ -1,12 +1,12 @@
-# AI Assistant Guide for Basic Memory
+# AI Assistant Guide for MemoryHub
 
-Quick reference for using Basic Memory tools effectively through MCP.
+Quick reference for using MemoryHub tools effectively through MCP.
 
-**For comprehensive coverage**: See the [Extended AI Assistant Guide](https://github.com/basicmachines-co/memoryhub/blob/main/docs/ai-assistant-guide-extended.md) with detailed examples, advanced patterns, and self-contained sections.
+**For comprehensive coverage**: See the [Extended AI Assistant Guide](https://github.com/le0-VV/MemoryHub/blob/main/docs/ai-assistant-guide-extended.md) with detailed examples, advanced patterns, and self-contained sections.
 
 ## Overview
 
-Basic Memory creates a semantic knowledge graph from markdown files. Focus on building rich connections between notes.
+MemoryHub creates a semantic knowledge graph from markdown files. Focus on building rich connections between notes.
 
 - **Local-First**: Plain text files on user's computer
 - **Persistent**: Knowledge survives across sessions
@@ -17,9 +17,10 @@ Basic Memory creates a semantic knowledge graph from markdown files. Focus on bu
 ## Project Management
 
 **Resolution priority:**
-1. CLI constraint: `BASIC_MEMORY_MCP_PROJECT` env var (highest priority)
+1. Project constraint: `BASIC_MEMORY_MCP_PROJECT` env var (highest priority)
 2. Explicit parameter: `project="name"` in tool calls
-3. Default project: `default_project` in config (fallback)
+3. Configured CWD match
+4. Default project: `default_project` in config (fallback)
 
 ### Quick Setup Check
 
@@ -33,15 +34,15 @@ projects = await list_memory_projects()
 When `default_project` is set in config:
 ```python
 # These are equivalent:
-await write_note("Note", "Content", "folder")
-await write_note("Note", "Content", "folder", project="main")
+await write_note(title="Note", content="Content", directory="notes")
+await write_note(title="Note", content="Content", directory="notes", project="main")
 ```
 
 When no `default_project` is configured:
 ```python
 # Project required:
-await write_note("Note", "Content", "folder", project="main")  # ✓
-await write_note("Note", "Content", "folder")  # ✗ Error
+await write_note(title="Note", content="Content", directory="notes", project="main")  # ✓
+await write_note(title="Note", content="Content", directory="notes")  # ✗ Error
 ```
 
 ## Core Tools
@@ -52,7 +53,7 @@ await write_note("Note", "Content", "folder")  # ✗ Error
 await write_note(
     title="Topic",
     content="# Topic\n## Observations\n- [category] fact\n## Relations\n- relates_to [[Other]]",
-    folder="notes",
+    directory="notes",
     project="main"  # Optional if default_project is set in config
 )
 ```
@@ -118,7 +119,7 @@ Reference entities that don't exist yet:
 await write_note(
     title="Login Flow",
     content="## Relations\n- requires [[OAuth Provider]]",  # Doesn't exist yet
-    folder="auth",
+    directory="auth",
     project="main"
 )
 
@@ -126,7 +127,7 @@ await write_note(
 await write_note(
     title="OAuth Provider",
     content="# OAuth Provider\n...",
-    folder="auth",
+    directory="auth",
     project="main"
 )
 # → Relation automatically resolved
@@ -207,7 +208,7 @@ except:
 response = await write_note(
     title="New Topic",
     content="## Relations\n- relates_to [[Future Topic]]",
-    folder="notes",
+    directory="notes",
     project="main"
 )
 # Forward refs will resolve when target created
@@ -216,10 +217,10 @@ response = await write_note(
 ### 5. Recording Context
 
 **Ask permission:**
-> "Would you like me to save our discussion about [topic] to Basic Memory?"
+> "Would you like me to save our discussion about [topic] to MemoryHub?"
 
 **Confirm when done:**
-> "I've saved our discussion to Basic Memory."
+> "I've saved our discussion to MemoryHub."
 
 **What to record:**
 - Decisions and rationales
@@ -234,8 +235,8 @@ response = await write_note(
 ```python
 await write_note(
     title="DB Choice",
-    content="""# DB Choice\n## Decision\nUse PostgreSQL\n## Observations\n- [requirement] ACID compliance #reliability\n- [decision] PostgreSQL over MySQL\n## Relations\n- implements [[Data Architecture]]""",
-    folder="decisions",
+    content="""# DB Choice\n## Decision\nUse SQLite\n## Observations\n- [requirement] Local-first storage #reliability\n- [decision] SQLite fits the supported fork surface\n## Relations\n- implements [[Data Architecture]]""",
+    directory="decisions",
     project="main"
 )
 ```
@@ -244,7 +245,7 @@ await write_note(
 
 ```python
 # Link bidirectionally
-await write_note(title="API Auth", content="## Relations\n- part_of [[API Design]]", folder="api", project="main")
+await write_note(title="API Auth", content="## Relations\n- part_of [[API Design]]", directory="api", project="main")
 await edit_note(identifier="API Design", operation="append", content="\n- includes [[API Auth]]", project="main")
 
 # Search and build context
@@ -256,7 +257,7 @@ context = await build_context(url=f"memory://{results[0].permalink}", project="m
 
 | Tool | Purpose | Key Params |
 |------|---------|------------|
-| `write_note` | Create/update | title, content, folder, project |
+| `write_note` | Create/update | title, content, directory, project |
 | `read_note` | Read content | identifier, project |
 | `edit_note` | Modify existing | identifier, operation, content, project |
 | `search_notes` | Find notes | query, project |
@@ -271,6 +272,6 @@ context = await build_context(url=f"memory://{results[0].permalink}", project="m
 - `memory://permalink` - By permalink
 - `memory://folder/*` - All in folder
 
-For full documentation: https://docs.basicmemory.com
+For fuller repository documentation: https://github.com/le0-VV/MemoryHub/tree/main/docs
 
-Built with ♥️ by Basic Machines
+Derived from Basic Memory and maintained as the MemoryHub fork

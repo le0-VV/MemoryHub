@@ -1,4 +1,4 @@
-"""Shared initialization service for Basic Memory.
+"""Shared initialization service for MemoryHub.
 
 This module provides shared initialization functions used by both CLI and API
 to ensure consistent application startup across all entry points.
@@ -24,7 +24,7 @@ async def initialize_database(app_config: BasicMemoryConfig) -> None:
     """Initialize database with migrations handled automatically by get_or_create_db.
 
     Args:
-        app_config: The Basic Memory project configuration
+        app_config: The MemoryHub project configuration
 
     Note:
         Database migrations are now handled automatically when the database
@@ -45,7 +45,7 @@ async def reconcile_projects_with_config(app_config: BasicMemoryConfig):
     synchronization between the configuration file and the database.
 
     Args:
-        app_config: The Basic Memory application configuration
+        app_config: The MemoryHub application configuration
     """
     logger.info("Reconciling projects from config with database...")
 
@@ -76,7 +76,7 @@ async def initialize_file_sync(
     """Initialize file synchronization services. This function starts the watch service and does not return
 
     Args:
-        app_config: The Basic Memory project configuration
+        app_config: The MemoryHub project configuration
         quiet: Whether to suppress Rich console output (True for MCP, False for CLI watch)
 
     Returns:
@@ -153,7 +153,7 @@ async def initialize_file_sync(
 async def initialize_app(
     app_config: BasicMemoryConfig,
 ):
-    """Initialize the Basic Memory application.
+    """Initialize the MemoryHub application.
 
     This function handles all initialization steps:
     - Running database migrations
@@ -162,7 +162,7 @@ async def initialize_app(
     - Starting background migration for legacy project data
 
     Args:
-        app_config: The Basic Memory project configuration
+        app_config: The MemoryHub project configuration
     """
     # Trigger: frontmatter enforcement is enabled while permalink generation is disabled
     # Why: missing-frontmatter sync path needs canonical permalinks for deterministic indexing
@@ -191,7 +191,7 @@ def ensure_initialization(app_config: BasicMemoryConfig) -> None:
     called from synchronous code like CLI entry points.
 
     Args:
-        app_config: The Basic Memory project configuration
+        app_config: The MemoryHub project configuration
     """
     async def _init_and_cleanup():
         """Initialize app and clean up database connections.

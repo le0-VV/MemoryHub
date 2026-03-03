@@ -10,8 +10,8 @@ MIME_TYPE = "text/html"
 
 @mcp.resource(
     uri="ui://memoryhub/search-results",
-    name="Basic Memory Search Results",
-    description="Search results UI for Basic Memory tools.",
+    name="MemoryHub Search Results",
+    description="Search results UI for MemoryHub tools.",
     mime_type=MIME_TYPE,
 )
 def search_results_ui() -> str:
@@ -20,8 +20,8 @@ def search_results_ui() -> str:
 
 @mcp.resource(
     uri="ui://memoryhub/note-preview",
-    name="Basic Memory Note Preview",
-    description="Note preview UI for Basic Memory read_note tool.",
+    name="MemoryHub Note Preview",
+    description="Note preview UI for the MemoryHub read_note tool.",
     mime_type=MIME_TYPE,
 )
 def note_preview_ui() -> str:
@@ -31,7 +31,7 @@ def note_preview_ui() -> str:
 # Variant-specific resource URIs for bakeoff comparisons.
 @mcp.resource(
     uri="ui://memoryhub/search-results/vanilla",
-    name="Basic Memory Search Results (Vanilla)",
+    name="MemoryHub Search Results (Vanilla)",
     description="Vanilla HTML search results UI.",
     mime_type=MIME_TYPE,
 )
@@ -41,7 +41,7 @@ def search_results_ui_vanilla() -> str:
 
 @mcp.resource(
     uri="ui://memoryhub/search-results/tool-ui",
-    name="Basic Memory Search Results (Tool UI)",
+    name="MemoryHub Search Results (Tool UI)",
     description="Tool UI styled search results UI.",
     mime_type=MIME_TYPE,
 )
@@ -51,7 +51,7 @@ def search_results_ui_tool_ui() -> str:
 
 @mcp.resource(
     uri="ui://memoryhub/search-results/mcp-ui",
-    name="Basic Memory Search Results (MCP UI)",
+    name="MemoryHub Search Results (MCP UI)",
     description="MCP UI styled search results UI.",
     mime_type=MIME_TYPE,
 )
@@ -61,7 +61,7 @@ def search_results_ui_mcp_ui() -> str:
 
 @mcp.resource(
     uri="ui://memoryhub/note-preview/vanilla",
-    name="Basic Memory Note Preview (Vanilla)",
+    name="MemoryHub Note Preview (Vanilla)",
     description="Vanilla HTML note preview UI.",
     mime_type=MIME_TYPE,
 )
@@ -71,7 +71,7 @@ def note_preview_ui_vanilla() -> str:
 
 @mcp.resource(
     uri="ui://memoryhub/note-preview/tool-ui",
-    name="Basic Memory Note Preview (Tool UI)",
+    name="MemoryHub Note Preview (Tool UI)",
     description="Tool UI styled note preview UI.",
     mime_type=MIME_TYPE,
 )
@@ -81,7 +81,7 @@ def note_preview_ui_tool_ui() -> str:
 
 @mcp.resource(
     uri="ui://memoryhub/note-preview/mcp-ui",
-    name="Basic Memory Note Preview (MCP UI)",
+    name="MemoryHub Note Preview (MCP UI)",
     description="MCP UI styled note preview UI.",
     mime_type=MIME_TYPE,
 )

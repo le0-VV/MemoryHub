@@ -1,4 +1,4 @@
-"""List directory tool for Basic Memory MCP server."""
+"""List directory tool for MemoryHub MCP."""
 
 from typing import Optional
 

@@ -9,12 +9,12 @@ from memoryhub.api.app import app as fastapi_app
 
 
 def _force_local_mode() -> bool:
-    """Check if local mode is forced via environment variable."""
+    """Check whether a legacy compatibility flag forces local routing."""
     return os.environ.get("BASIC_MEMORY_FORCE_LOCAL", "").lower() in ("true", "1", "yes")
 
 
 def _explicit_routing() -> bool:
-    """Check if local routing was explicitly requested."""
+    """Check whether a legacy compatibility flag requested explicit routing."""
     return os.environ.get("BASIC_MEMORY_EXPLICIT_ROUTING", "").lower() in ("true", "1", "yes")
 
 
@@ -56,11 +56,13 @@ async def get_client(
 ) -> AsyncIterator[AsyncClient]:
     """Get an AsyncClient as a context manager.
 
-    Routing priority:
+    Client selection priority:
     1. Factory injection.
     2. Local ASGI transport.
 
-    This fork supports local routing only.
+    MemoryHub supports local ASGI routing only. The explicit-routing environment
+    flags remain as transitional shims while the CLI and client layers are
+    simplified around that single supported path.
     """
     if _client_factory:
         async with _client_factory() as client:

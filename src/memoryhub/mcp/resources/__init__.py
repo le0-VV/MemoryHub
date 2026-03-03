@@ -1,4 +1,4 @@
-"""MCP resources for Basic Memory."""
+"""MCP resources for MemoryHub."""
 
 from memoryhub.mcp.resources.project_info import project_info
 
