@@ -8,7 +8,7 @@ Runs identical query suites (lexical + paraphrase) against the supported fork co
 
 Quality is measured via hit@1, recall@5, and MRR@10.  A comparison table
 is printed at the end, and JSON-lines artifacts are written when
-``BASIC_MEMORY_BENCHMARK_OUTPUT`` is set.
+``MEMORYHUB_BENCHMARK_OUTPUT`` is set.
 """
 
 from __future__ import annotations

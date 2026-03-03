@@ -69,6 +69,11 @@ QUALITY_QUERY_SUITES: dict[str, list[QualityQueryCase]] = {
 }
 
 
+def _benchmark_env(name: str) -> str | None:
+    """Return the benchmark env var value, preferring MemoryHub naming."""
+    return os.getenv(f"MEMORYHUB_{name}") or os.getenv(f"BASIC_MEMORY_{name}")
+
+
 def _skip_if_not_sqlite(app_config) -> None:
     if app_config.database_backend != DatabaseBackend.SQLITE:
         pytest.skip("These benchmarks target local SQLite semantic search.")
@@ -125,7 +130,7 @@ def _percentile(values: list[float], percentile: float) -> float:
 
 
 def _parse_threshold(env_var: str) -> float | None:
-    raw_value = os.getenv(env_var)
+    raw_value = _benchmark_env(env_var.removeprefix("BASIC_MEMORY_"))
     if raw_value is None or not raw_value.strip():
         return None
     try:
@@ -153,7 +158,7 @@ def _enforce_max_threshold(metric_name: str, actual: float, env_var: str) -> Non
 
 
 def _write_benchmark_artifact(name: str, metrics: dict[str, float | int | str]) -> None:
-    output_path = os.getenv("BASIC_MEMORY_BENCHMARK_OUTPUT")
+    output_path = _benchmark_env("BENCHMARK_OUTPUT")
     if not output_path:
         return
 

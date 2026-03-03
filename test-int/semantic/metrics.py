@@ -16,6 +16,11 @@ from statistics import mean
 from memoryhub.repository.search_index_row import SearchIndexRow
 
 
+def _benchmark_env(name: str) -> str | None:
+    """Return the benchmark env var value, preferring MemoryHub naming."""
+    return os.getenv(f"MEMORYHUB_{name}") or os.getenv(f"BASIC_MEMORY_{name}")
+
+
 # --- Relevance helpers ---
 
 
@@ -122,8 +127,8 @@ def format_comparison_table(all_metrics: list[QualityMetrics]) -> str:
 
 
 def write_benchmark_artifact(all_metrics: list[QualityMetrics]) -> None:
-    """Append JSON-lines benchmark artifact if BASIC_MEMORY_BENCHMARK_OUTPUT is set."""
-    output_path = os.getenv("BASIC_MEMORY_BENCHMARK_OUTPUT")
+    """Append JSON-lines benchmark artifact if a benchmark output env var is set."""
+    output_path = _benchmark_env("BENCHMARK_OUTPUT")
     if not output_path:
         return
 
