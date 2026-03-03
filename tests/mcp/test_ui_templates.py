@@ -23,33 +23,33 @@ class TestGetUIVariant:
         assert get_ui_variant() == "vanilla"
 
     def test_vanilla_variant(self, monkeypatch):
-        monkeypatch.setenv("BASIC_MEMORY_MCP_UI_VARIANT", "vanilla")
+        monkeypatch.setenv("MEMORYHUB_MCP_UI_VARIANT", "vanilla")
         assert get_ui_variant() == "vanilla"
 
     def test_tool_ui_variant(self, monkeypatch):
-        monkeypatch.setenv("BASIC_MEMORY_MCP_UI_VARIANT", "tool-ui")
+        monkeypatch.setenv("MEMORYHUB_MCP_UI_VARIANT", "tool-ui")
         assert get_ui_variant() == "tool-ui"
 
     def test_mcp_ui_variant(self, monkeypatch):
-        monkeypatch.setenv("BASIC_MEMORY_MCP_UI_VARIANT", "mcp-ui")
+        monkeypatch.setenv("MEMORYHUB_MCP_UI_VARIANT", "mcp-ui")
         assert get_ui_variant() == "mcp-ui"
 
     def test_unsupported_variant_falls_back(self, monkeypatch):
         """Unsupported values fall back to DEFAULT_VARIANT."""
-        monkeypatch.setenv("BASIC_MEMORY_MCP_UI_VARIANT", "nonexistent")
+        monkeypatch.setenv("MEMORYHUB_MCP_UI_VARIANT", "nonexistent")
         assert get_ui_variant() == DEFAULT_VARIANT
 
     def test_whitespace_trimmed(self, monkeypatch):
-        monkeypatch.setenv("BASIC_MEMORY_MCP_UI_VARIANT", "  tool-ui  ")
+        monkeypatch.setenv("MEMORYHUB_MCP_UI_VARIANT", "  tool-ui  ")
         assert get_ui_variant() == "tool-ui"
 
     def test_case_insensitive(self, monkeypatch):
-        monkeypatch.setenv("BASIC_MEMORY_MCP_UI_VARIANT", "VANILLA")
+        monkeypatch.setenv("MEMORYHUB_MCP_UI_VARIANT", "VANILLA")
         assert get_ui_variant() == "vanilla"
 
-    def test_memoryhub_alias_variant(self, monkeypatch):
-        monkeypatch.setenv("MEMORYHUB_MCP_UI_VARIANT", "tool-ui")
-        monkeypatch.delenv("BASIC_MEMORY_MCP_UI_VARIANT", raising=False)
+    def test_legacy_basic_memory_variant_alias(self, monkeypatch):
+        monkeypatch.setenv("BASIC_MEMORY_MCP_UI_VARIANT", "tool-ui")
+        monkeypatch.delenv("MEMORYHUB_MCP_UI_VARIANT", raising=False)
         assert get_ui_variant() == "tool-ui"
 
     def test_memoryhub_alias_takes_precedence(self, monkeypatch):
@@ -82,19 +82,19 @@ class TestLoadVariantHtml:
     """Tests for load_variant_html()."""
 
     def test_loads_vanilla_variant(self, monkeypatch):
-        monkeypatch.setenv("BASIC_MEMORY_MCP_UI_VARIANT", "vanilla")
+        monkeypatch.setenv("MEMORYHUB_MCP_UI_VARIANT", "vanilla")
         html = load_variant_html("search-results")
         assert isinstance(html, str)
         assert len(html) > 0
 
     def test_loads_tool_ui_variant(self, monkeypatch):
-        monkeypatch.setenv("BASIC_MEMORY_MCP_UI_VARIANT", "tool-ui")
+        monkeypatch.setenv("MEMORYHUB_MCP_UI_VARIANT", "tool-ui")
         html = load_variant_html("search-results")
         assert isinstance(html, str)
         assert len(html) > 0
 
     def test_loads_mcp_ui_variant(self, monkeypatch):
-        monkeypatch.setenv("BASIC_MEMORY_MCP_UI_VARIANT", "mcp-ui")
+        monkeypatch.setenv("MEMORYHUB_MCP_UI_VARIANT", "mcp-ui")
         html = load_variant_html("note-preview")
         assert isinstance(html, str)
         assert len(html) > 0

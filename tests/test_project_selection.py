@@ -32,7 +32,7 @@ def test_resolve_canonicalizes_env_constraint(config_manager, config_home, monke
     config.default_project = None
     config_manager.save_config(config)
 
-    monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", "my-research")
+    monkeypatch.setenv("MEMORYHUB_MCP_PROJECT", "my-research")
     selection = ProjectSelector.from_config(config_manager).resolve()
 
     assert selection.project == "My Research"
@@ -55,6 +55,7 @@ def test_resolve_uses_cwd_project_before_default(config_manager, config_home, mo
     config_manager.save_config(config)
 
     monkeypatch.chdir(nested_dir)
+    monkeypatch.delenv("MEMORYHUB_MCP_PROJECT", raising=False)
     monkeypatch.delenv("BASIC_MEMORY_MCP_PROJECT", raising=False)
 
     selection = ProjectSelector.from_config(config_manager).resolve()
@@ -81,7 +82,7 @@ def test_routing_context_exposes_canonical_constraint(config_manager, config_hom
     config.default_project = None
     config_manager.save_config(config)
 
-    monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", "my-research")
+    monkeypatch.setenv("MEMORYHUB_MCP_PROJECT", "my-research")
     routing_context = ProjectSelector.from_config(config_manager).routing_context(
         project="ignored-project",
         allow_discovery=True,
@@ -91,6 +92,26 @@ def test_routing_context_exposes_canonical_constraint(config_manager, config_hom
     assert routing_context.constrained_project == "My Research"
     assert routing_context.is_constrained is True
     assert routing_context.requested_project == "ignored-project"
+
+
+def test_resolve_accepts_legacy_basic_memory_constraint_alias(
+    config_manager, config_home, monkeypatch
+):
+    """Legacy BASIC_MEMORY_MCP_PROJECT should still resolve through the selector."""
+    config = config_manager.load_config()
+    project_root = config_home / "My Research"
+    project_root.mkdir(parents=True, exist_ok=True)
+    config.projects["My Research"] = ProjectEntry(path=str(project_root))
+    config.default_project = None
+    config_manager.save_config(config)
+
+    monkeypatch.delenv("MEMORYHUB_MCP_PROJECT", raising=False)
+    monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", "my-research")
+
+    selection = ProjectSelector.from_config(config_manager).resolve()
+
+    assert selection.project == "My Research"
+    assert selection.resolution.mode == ResolutionMode.ENV_CONSTRAINT
 
 
 def test_routing_context_prefers_memoryhub_constraint_alias(config_manager, monkeypatch):

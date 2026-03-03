@@ -29,14 +29,14 @@ class TestVariantResources:
 
     def test_search_results_ui(self, monkeypatch):
         """search_results_ui loads the variant-specific template."""
-        monkeypatch.setenv("BASIC_MEMORY_MCP_UI_VARIANT", "vanilla")
+        monkeypatch.setenv("MEMORYHUB_MCP_UI_VARIANT", "vanilla")
         html = search_results_ui()
         assert isinstance(html, str)
         assert len(html) > 0
 
     def test_note_preview_ui(self, monkeypatch):
         """note_preview_ui loads the variant-specific template."""
-        monkeypatch.setenv("BASIC_MEMORY_MCP_UI_VARIANT", "vanilla")
+        monkeypatch.setenv("MEMORYHUB_MCP_UI_VARIANT", "vanilla")
         html = note_preview_ui()
         assert isinstance(html, str)
         assert len(html) > 0

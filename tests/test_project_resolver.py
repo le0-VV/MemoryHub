@@ -16,7 +16,7 @@ class TestProjectResolver:
 
     def test_env_constraint_has_highest_priority(self, monkeypatch):
         """Environment constraint should win over explicit/default."""
-        monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", "constrained-project")
+        monkeypatch.setenv("MEMORYHUB_MCP_PROJECT", "constrained-project")
         resolver = ProjectResolver.from_env(default_project="default-project")
 
         result = resolver.resolve(project="explicit-project")
@@ -139,7 +139,8 @@ class TestProjectResolver:
             resolver.require_project(error_message="Custom error message")
 
     def test_from_env_without_env_var(self, monkeypatch):
-        """from_env without BASIC_MEMORY_MCP_PROJECT set."""
+        """from_env without any project-constraint env var set."""
+        monkeypatch.delenv("MEMORYHUB_MCP_PROJECT", raising=False)
         monkeypatch.delenv("BASIC_MEMORY_MCP_PROJECT", raising=False)
         resolver = ProjectResolver.from_env(default_project="test")
 
@@ -148,12 +149,21 @@ class TestProjectResolver:
         assert result.mode == ResolutionMode.EXPLICIT
 
     def test_from_env_with_env_var(self, monkeypatch):
-        """from_env with BASIC_MEMORY_MCP_PROJECT set."""
-        monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", "env-project")
-        monkeypatch.delenv("MEMORYHUB_MCP_PROJECT", raising=False)
+        """from_env with MEMORYHUB_MCP_PROJECT set."""
+        monkeypatch.setenv("MEMORYHUB_MCP_PROJECT", "env-project")
+        monkeypatch.delenv("BASIC_MEMORY_MCP_PROJECT", raising=False)
         resolver = ProjectResolver.from_env()
 
         assert resolver.constrained_project == "env-project"
+
+    def test_from_env_accepts_legacy_basic_memory_constraint(self, monkeypatch):
+        """Legacy BASIC_MEMORY_MCP_PROJECT remains a supported compatibility alias."""
+        monkeypatch.delenv("MEMORYHUB_MCP_PROJECT", raising=False)
+        monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", "legacy-project")
+
+        resolver = ProjectResolver.from_env()
+
+        assert resolver.constrained_project == "legacy-project"
 
     def test_from_env_prefers_memoryhub_constraint(self, monkeypatch):
         """MEMORYHUB_MCP_PROJECT should override the legacy compatibility env var."""

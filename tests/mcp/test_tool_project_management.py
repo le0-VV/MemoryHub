@@ -104,7 +104,7 @@ async def test_list_memory_projects_json_output(app):
 
 @pytest.mark.asyncio
 async def test_list_memory_projects_constrained_env(monkeypatch, app, test_project):
-    monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", test_project.name)
+    monkeypatch.setenv("MEMORYHUB_MCP_PROJECT", test_project.name)
     result = await list_memory_projects()
     assert f"Project: {test_project.name}" in result
     assert "constrained to a single project" in result
@@ -123,7 +123,7 @@ async def test_list_memory_projects_constrained_env_uses_canonical_name(
 
     mock_list = _make_list([_make_project("My Research", str(project_root))], default=None)
 
-    monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", "my-research")
+    monkeypatch.setenv("MEMORYHUB_MCP_PROJECT", "my-research")
     with patch(
         "memoryhub.mcp.clients.project.ProjectClient.list_projects",
         new_callable=AsyncMock,

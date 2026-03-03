@@ -27,6 +27,7 @@ async def test_returns_none_when_no_default_and_no_project(config_manager, monke
     cfg.default_project = None
     config_manager.save_config(cfg)
 
+    monkeypatch.delenv("MEMORYHUB_MCP_PROJECT", raising=False)
     monkeypatch.delenv("BASIC_MEMORY_MCP_PROJECT", raising=False)
     assert await resolve_project_parameter(project=None, allow_discovery=False) is None
 
@@ -67,9 +68,19 @@ async def test_canonicalizes_configured_project_permalink(config_manager, config
 async def test_uses_env_var_priority(monkeypatch):
     from memoryhub.mcp.project_context import resolve_project_parameter
 
-    monkeypatch.delenv("MEMORYHUB_MCP_PROJECT", raising=False)
-    monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", "env-project")
+    monkeypatch.setenv("MEMORYHUB_MCP_PROJECT", "env-project")
+    monkeypatch.delenv("BASIC_MEMORY_MCP_PROJECT", raising=False)
     assert await resolve_project_parameter(project="explicit-project") == "env-project"
+
+
+@pytest.mark.asyncio
+async def test_accepts_legacy_basic_memory_env_var_priority(monkeypatch):
+    from memoryhub.mcp.project_context import resolve_project_parameter
+
+    monkeypatch.delenv("MEMORYHUB_MCP_PROJECT", raising=False)
+    monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", "legacy-project")
+
+    assert await resolve_project_parameter(project="explicit-project") == "legacy-project"
 
 
 @pytest.mark.asyncio
@@ -93,6 +104,7 @@ async def test_uses_default_project(config_manager, config_home, monkeypatch):
     cfg.default_project = "default-project"
     config_manager.save_config(cfg)
 
+    monkeypatch.delenv("MEMORYHUB_MCP_PROJECT", raising=False)
     monkeypatch.delenv("BASIC_MEMORY_MCP_PROJECT", raising=False)
     assert await resolve_project_parameter(project=None) == "default-project"
 
@@ -112,6 +124,7 @@ async def test_uses_cwd_project_when_default_missing(config_manager, config_home
     config_manager.save_config(cfg)
 
     monkeypatch.chdir(nested_dir)
+    monkeypatch.delenv("MEMORYHUB_MCP_PROJECT", raising=False)
     monkeypatch.delenv("BASIC_MEMORY_MCP_PROJECT", raising=False)
 
     assert await resolve_project_parameter(project=None) == "cwd-project"

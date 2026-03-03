@@ -57,7 +57,7 @@ memoryhub mcp --transport stdio
 Optional to pick UI variant for MCP App resources:
 
 ```bash
-export BASIC_MEMORY_MCP_UI_VARIANT=tool-ui   # or vanilla | mcp-ui
+export MEMORYHUB_MCP_UI_VARIANT=tool-ui   # or vanilla | mcp-ui
 ```
 
 ---
@@ -72,7 +72,7 @@ Tools:
 
 Expect:
 - Tool meta points to `ui://memoryhub/search-results` and `ui://memoryhub/note-preview`
-- Resource content differs by `BASIC_MEMORY_MCP_UI_VARIANT`
+- Resource content differs by `MEMORYHUB_MCP_UI_VARIANT` (legacy `BASIC_MEMORY_MCP_UI_VARIANT` still works during compatibility)
 - Variant‑specific URIs also available:
   - `ui://memoryhub/search-results/vanilla`
   - `ui://memoryhub/search-results/tool-ui`

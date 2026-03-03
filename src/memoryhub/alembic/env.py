@@ -65,6 +65,14 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 
+def get_configured_sqlalchemy_url() -> str:
+    """Return a concrete SQLAlchemy URL after the local setup block has run."""
+    url = config.get_main_option("sqlalchemy.url")
+    if not url:
+        raise RuntimeError("Alembic sqlalchemy.url must be configured before running migrations.")
+    return url
+
+
 # Add this function to tell Alembic what to include/exclude
 def include_object(object, name, type_, reflected, compare_to):
     # Ignore SQLite FTS tables
@@ -84,7 +92,7 @@ def run_migrations_offline() -> None:
     Calls to context.execute() here emit the given string to the
     script output.
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = get_configured_sqlalchemy_url()
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -124,7 +132,7 @@ def run_migrations_online() -> None:
     connectable = context.config.attributes.get("connection", None)
 
     if connectable is None:
-        url = context.config.get_main_option("sqlalchemy.url")
+        url = get_configured_sqlalchemy_url()
         connectable = create_migration_connectable(url)
 
     if isinstance(connectable, AsyncEngine):
