@@ -1,12 +1,10 @@
-"""Semantic search quality benchmarks across backend×provider combinations.
+"""Semantic search quality benchmarks across local SQLite/provider combinations.
 
-Runs identical query suites (lexical + paraphrase) against five configurations:
+Runs identical query suites (lexical + paraphrase) against the supported fork combinations:
 
   sqlite-fts          SQLite FTS5, no embeddings
   sqlite-fastembed    SQLite + FastEmbed (384-d ONNX)
-  postgres-fts        Postgres tsvector, no embeddings
-  postgres-fastembed  Postgres + FastEmbed (384-d)
-  postgres-openai     Postgres + OpenAI (1536-d, needs OPENAI_API_KEY)
+  sqlite-openai       SQLite + OpenAI (1536-d, needs OPENAI_API_KEY)
 
 Quality is measured via hit@1, recall@5, and MRR@10.  A comparison table
 is printed at the end, and JSON-lines artifacts are written when
@@ -45,15 +43,12 @@ from semantic.metrics import (
 RECALL_AT_5_THRESHOLDS: dict[tuple[str, str, str], float] = {
     # FTS-only: realistic corpus makes pure keyword matching harder
     ("sqlite-fts", "lexical", "fts"): 0.25,
-    ("postgres-fts", "lexical", "fts"): 0.25,
     # FastEmbed hybrid should improve on FTS for both suites
     ("sqlite-fastembed", "lexical", "hybrid"): 0.37,
     ("sqlite-fastembed", "paraphrase", "hybrid"): 0.25,
-    ("postgres-fastembed", "lexical", "hybrid"): 0.37,
-    ("postgres-fastembed", "paraphrase", "hybrid"): 0.25,
     # OpenAI hybrid should handle paraphrases better than FastEmbed
-    ("postgres-openai", "lexical", "hybrid"): 0.37,
-    ("postgres-openai", "paraphrase", "hybrid"): 0.25,
+    ("sqlite-openai", "lexical", "hybrid"): 0.37,
+    ("sqlite-openai", "paraphrase", "hybrid"): 0.25,
 }
 
 
@@ -87,25 +82,14 @@ def _retrieval_modes(combo: SearchCombo) -> list[SearchRetrievalMode]:
 async def test_semantic_quality(
     combo: SearchCombo,
     sqlite_engine_factory,
-    postgres_engine_factory,
     tmp_path,
 ):
     """Benchmark search quality for a single backend×provider combo."""
     skip_if_needed(combo)
 
-    # Pick the right engine factory
-    from memoryhub.config import DatabaseBackend
-
-    if combo.backend == DatabaseBackend.SQLITE:
-        engine_factory_result = sqlite_engine_factory
-    else:
-        if postgres_engine_factory is None:
-            pytest.skip("Postgres engine not available")
-        engine_factory_result = postgres_engine_factory
-
     provider = _resolve_provider(combo)
     search_service = await create_search_service(
-        engine_factory_result, combo, tmp_path, embedding_provider=provider
+        sqlite_engine_factory, combo, tmp_path, embedding_provider=provider
     )
 
     # Seed corpus

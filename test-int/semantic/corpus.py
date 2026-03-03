@@ -19,7 +19,7 @@ from dataclasses import dataclass
 
 TOPIC_TERMS: dict[str, list[str]] = {
     "auth": ["authentication", "session", "token", "oauth", "refresh", "login"],
-    "database": ["database", "migration", "schema", "sqlite", "postgres", "index"],
+    "database": ["database", "migration", "schema", "sqlite", "alembic", "index"],
     "sync": ["sync", "filesystem", "watcher", "checksum", "reindex", "changes"],
     "agent": ["agent", "memory", "context", "prompt", "retrieval", "tooling"],
 }
@@ -76,38 +76,38 @@ TOPIC_CONTENT_TEMPLATES: dict[str, list[str]] = {
         (
             "## Database Migration Strategy\n\n"
             "We use Alembic for schema migrations with auto-generation from SQLAlchemy "
-            "models. Each migration runs inside a transaction and is tested against both "
-            "SQLite and Postgres before merging. The migration naming convention is "
+            "models. Each migration runs inside a transaction and is tested against the "
+            "supported local SQLite runtime before merging. The migration naming convention is "
             "descriptive: `add_user_roles_table`, `alter_entity_metadata_column`. "
             "Rollbacks are supported for the last 5 migrations. Large data migrations "
             "run as background tasks to avoid blocking the API."
         ),
         (
             "## Query Optimization Notes\n\n"
-            "The search index uses a GIN index on the tsvector column for full-text "
-            "search. We found that combining text search with a B-tree index on the "
-            "created_at column reduces query time by 60% for time-filtered searches. "
-            "The entity metadata column uses JSONB with a GIN index for flexible "
-            "filtering. Connection pooling is handled by SQLAlchemy's async engine "
-            "with a pool size of 10 and overflow of 20."
+            "The search index uses SQLite FTS5 for full-text search alongside supporting "
+            "B-tree indexes on frequently-filtered columns. We found that combining FTS "
+            "with an index on the created_at column reduces query time by 60% for "
+            "time-filtered searches. The entity metadata column uses JSON text plus "
+            "generated columns for stable filtering. Connection management uses the "
+            "local async SQLite engine with WAL enabled for better read concurrency."
         ),
         (
             "## Schema Design Decisions\n\n"
             "Entities use a single-table design with a polymorphic entity_type column. "
             "The search_index table is denormalized for query performance — it stores "
-            "pre-computed tsvector data and flattened metadata. Relations use a join "
-            "table with source_id and target_id foreign keys. We chose JSONB for "
-            "entity_metadata over separate attribute tables because the query patterns "
+            "pre-computed FTS content and flattened metadata. Relations use a join "
+            "table with source_id and target_id foreign keys. We chose a JSON-based "
+            "entity_metadata column over separate attribute tables because the query patterns "
             "favor flexible filtering over strict schema enforcement."
         ),
         (
-            "## SQLite to Postgres Migration\n\n"
-            "The migration from SQLite to Postgres required adapting FTS5 virtual "
-            "tables to tsvector/tsquery. SQLite's MATCH syntax maps to Postgres "
-            "plainto_tsquery for simple searches. Ranking uses ts_rank_cd instead of "
-            "SQLite's bm25(). The biggest challenge was handling concurrent writes — "
-            "SQLite's WAL mode is single-writer, while Postgres needs explicit locking "
-            "strategies for upsert operations on the search index."
+            "## SQLite Search Schema Evolution\n\n"
+            "Our search schema is built around SQLite primitives: FTS5 virtual tables, "
+            "MATCH queries, bm25() ranking, and WAL mode for read-heavy concurrency. "
+            "The biggest challenge is coordinating schema changes with derived search "
+            "state so reindex operations remain deterministic after migrations. We keep "
+            "the search index rebuildable from markdown source files rather than treating "
+            "it as the system of record."
         ),
     ],
     "sync": [
@@ -267,7 +267,7 @@ LEXICAL_QUERIES: list[QueryCase] = [
     QueryCase(text="JWT token refresh login OAuth", expected_topic="auth"),
     QueryCase(text="session cookie authentication credentials", expected_topic="auth"),
     QueryCase(text="schema migration alembic database table", expected_topic="database"),
-    QueryCase(text="tsvector GIN index query optimization", expected_topic="database"),
+    QueryCase(text="fts5 bm25 index query optimization", expected_topic="database"),
     QueryCase(text="filesystem watcher inotify checksum reindex", expected_topic="sync"),
     QueryCase(text="file change detection sync queue", expected_topic="sync"),
     QueryCase(text="agent knowledge graph memory context", expected_topic="agent"),

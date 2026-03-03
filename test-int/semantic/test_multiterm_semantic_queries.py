@@ -47,37 +47,27 @@ NATURAL_LANGUAGE_MULTI_TERM_CASES = [
 # Keep vector assertions on the most stable topic queries.
 LEXICAL_MULTI_TERM_CASES = [
     QueryCase(text="authentication session token oauth refresh login", expected_topic="auth"),
-    QueryCase(text="database migration schema sqlite postgres index", expected_topic="database"),
+    QueryCase(text="database migration schema sqlite alembic index", expected_topic="database"),
 ]
 
 HYBRID_MIN_HITS_AT_5 = {
     "sqlite-fastembed": 2,
-    "postgres-fastembed": 3,
 }
 
 VECTOR_MIN_HITS_AT_10 = {
     "sqlite-fastembed": 1,
-    "postgres-fastembed": 2,
 }
 
 
 async def _create_service_for_combo(
     combo: SearchCombo,
     sqlite_engine_factory,
-    postgres_engine_factory,
     tmp_path,
 ):
     """Create a configured SearchService for the selected backend/provider combo."""
-    if combo.backend == DatabaseBackend.SQLITE:
-        engine_factory_result = sqlite_engine_factory
-    else:
-        if postgres_engine_factory is None:
-            pytest.skip("Postgres engine not available")
-        engine_factory_result = postgres_engine_factory
-
     provider = _create_fastembed_provider()
     return await create_search_service(
-        engine_factory_result, combo, tmp_path, embedding_provider=provider
+        sqlite_engine_factory, combo, tmp_path, embedding_provider=provider
     )
 
 
@@ -87,7 +77,6 @@ async def _create_service_for_combo(
 async def test_multiterm_paraphrase_queries_rank_expected_topic_with_hybrid(
     combo: SearchCombo,
     sqlite_engine_factory,
-    postgres_engine_factory,
     tmp_path,
 ):
     """Hybrid retrieval should rank relevant topic notes for natural-language multi-term queries."""
@@ -96,7 +85,6 @@ async def test_multiterm_paraphrase_queries_rank_expected_topic_with_hybrid(
     search_service = await _create_service_for_combo(
         combo,
         sqlite_engine_factory,
-        postgres_engine_factory,
         tmp_path,
     )
     await seed_benchmark_notes(search_service, note_count=120)
@@ -130,7 +118,6 @@ async def test_multiterm_paraphrase_queries_rank_expected_topic_with_hybrid(
 async def test_multiterm_lexical_queries_return_relevant_topic_with_vector(
     combo: SearchCombo,
     sqlite_engine_factory,
-    postgres_engine_factory,
     tmp_path,
 ):
     """Vector-only retrieval should return relevant notes for multi-term lexical queries."""
@@ -139,7 +126,6 @@ async def test_multiterm_lexical_queries_return_relevant_topic_with_vector(
     search_service = await _create_service_for_combo(
         combo,
         sqlite_engine_factory,
-        postgres_engine_factory,
         tmp_path,
     )
     await seed_benchmark_notes(search_service, note_count=120)

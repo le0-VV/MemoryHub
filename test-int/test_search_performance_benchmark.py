@@ -23,7 +23,7 @@ from memoryhub.schemas.search import SearchItemType, SearchQuery, SearchRetrieva
 
 TOPIC_TERMS = {
     "auth": ["authentication", "session", "token", "oauth", "refresh", "login"],
-    "database": ["database", "migration", "schema", "sqlite", "postgres", "index"],
+    "database": ["database", "migration", "schema", "sqlite", "alembic", "index"],
     "sync": ["sync", "filesystem", "watcher", "checksum", "reindex", "changes"],
     "agent": ["agent", "memory", "context", "prompt", "retrieval", "tooling"],
 }
@@ -44,7 +44,7 @@ class QualityQueryCase:
 QUALITY_QUERY_SUITES: dict[str, list[QualityQueryCase]] = {
     "lexical": [
         QualityQueryCase(text="token refresh login", expected_topic="auth"),
-        QualityQueryCase(text="schema migration postgres index", expected_topic="database"),
+        QualityQueryCase(text="schema migration sqlite index", expected_topic="database"),
         QualityQueryCase(text="filesystem watcher checksum reindex", expected_topic="sync"),
         QualityQueryCase(text="agent memory context retrieval", expected_topic="agent"),
     ],
