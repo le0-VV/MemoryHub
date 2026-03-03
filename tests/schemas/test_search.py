@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from basic_memory.schemas.search import (
+from memoryhub.schemas.search import (
     SearchItemType,
     SearchQuery,
     SearchRetrievalMode,

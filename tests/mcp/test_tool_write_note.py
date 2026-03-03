@@ -4,9 +4,9 @@ from textwrap import dedent
 
 import pytest
 
-from basic_memory import config as config_module
-from basic_memory.mcp.tools import write_note, read_note, delete_note
-from basic_memory.utils import normalize_newlines
+from memoryhub import config as config_module
+from memoryhub.mcp.tools import write_note, read_note, delete_note
+from memoryhub.utils import normalize_newlines
 
 
 @pytest.mark.asyncio

@@ -14,11 +14,11 @@ from statistics import mean
 import pytest
 from sqlalchemy import text
 
-from basic_memory import db
-from basic_memory.config import DatabaseBackend
-from basic_memory.repository.fastembed_provider import FastEmbedEmbeddingProvider
-from basic_memory.repository.sqlite_search_repository import SQLiteSearchRepository
-from basic_memory.schemas.search import SearchItemType, SearchQuery, SearchRetrievalMode
+from memoryhub import db
+from memoryhub.config import DatabaseBackend
+from memoryhub.repository.fastembed_provider import FastEmbedEmbeddingProvider
+from memoryhub.repository.sqlite_search_repository import SQLiteSearchRepository
+from memoryhub.schemas.search import SearchItemType, SearchQuery, SearchRetrievalMode
 
 
 TOPIC_TERMS = {

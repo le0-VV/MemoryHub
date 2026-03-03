@@ -2,7 +2,7 @@
 
 import pytest
 
-from basic_memory.schema.parser import parse_schema_note
+from memoryhub.schema.parser import parse_schema_note
 
 
 class TestPersonSchemaParsing:

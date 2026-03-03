@@ -15,29 +15,29 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
 )
 
-from basic_memory import db
-from basic_memory.config import ProjectConfig, BasicMemoryConfig, ConfigManager
-from basic_memory.db import DatabaseType
-from basic_memory.markdown import EntityParser
-from basic_memory.markdown.markdown_processor import MarkdownProcessor
-from basic_memory.models import Base
-from basic_memory.models.knowledge import Entity
-from basic_memory.models.project import Project
-from basic_memory.repository.entity_repository import EntityRepository
-from basic_memory.repository.observation_repository import ObservationRepository
-from basic_memory.repository.project_repository import ProjectRepository
-from basic_memory.repository.relation_repository import RelationRepository
-from basic_memory.schemas.base import Entity as EntitySchema
-from basic_memory.services import (
+from memoryhub import db
+from memoryhub.config import ProjectConfig, BasicMemoryConfig, ConfigManager
+from memoryhub.db import DatabaseType
+from memoryhub.markdown import EntityParser
+from memoryhub.markdown.markdown_processor import MarkdownProcessor
+from memoryhub.models import Base
+from memoryhub.models.knowledge import Entity
+from memoryhub.models.project import Project
+from memoryhub.repository.entity_repository import EntityRepository
+from memoryhub.repository.observation_repository import ObservationRepository
+from memoryhub.repository.project_repository import ProjectRepository
+from memoryhub.repository.relation_repository import RelationRepository
+from memoryhub.schemas.base import Entity as EntitySchema
+from memoryhub.services import (
     EntityService,
     ProjectService,
 )
-from basic_memory.services.directory_service import DirectoryService
-from basic_memory.services.file_service import FileService
-from basic_memory.services.link_resolver import LinkResolver
-from basic_memory.services.search_service import SearchService
-from basic_memory.sync.sync_service import SyncService
-from basic_memory.sync.watch_service import WatchService
+from memoryhub.services.directory_service import DirectoryService
+from memoryhub.services.file_service import FileService
+from memoryhub.services.link_resolver import LinkResolver
+from memoryhub.services.search_service import SearchService
+from memoryhub.sync.sync_service import SyncService
+from memoryhub.sync.watch_service import WatchService
 
 
 @pytest.fixture(scope="session")
@@ -64,7 +64,7 @@ def config_home(tmp_path, monkeypatch) -> Path:
     if os.name == "nt":
         monkeypatch.setenv("USERPROFILE", str(tmp_path))
     # Set BASIC_MEMORY_HOME to the test directory
-    monkeypatch.setenv("BASIC_MEMORY_HOME", str(tmp_path / "basic-memory"))
+    monkeypatch.setenv("BASIC_MEMORY_HOME", str(tmp_path / "memoryhub"))
     return tmp_path
 
 
@@ -86,14 +86,14 @@ def app_config(config_home, monkeypatch) -> BasicMemoryConfig:
 @pytest.fixture
 def config_manager(app_config: BasicMemoryConfig, config_home: Path, monkeypatch) -> ConfigManager:
     # Invalidate config cache to ensure clean state for each test
-    from basic_memory import config as config_module
+    from memoryhub import config as config_module
 
     config_module._CONFIG_CACHE = None
 
     # Create a new ConfigManager that uses the test home directory
     config_manager = ConfigManager()
     # Update its paths to use the test directory
-    config_manager.config_dir = config_home / ".basic-memory"
+    config_manager.config_dir = config_home / ".memoryhub"
     config_manager.config_file = config_manager.config_dir / "config.json"
     config_manager.config_dir.mkdir(parents=True, exist_ok=True)
 
@@ -134,7 +134,7 @@ async def engine_factory(
     config_manager,
 ) -> AsyncGenerator[tuple[AsyncEngine, async_sessionmaker[AsyncSession]], None]:
     """Engine factory for SQLite tests."""
-    from basic_memory.models.search import (
+    from memoryhub.models.search import (
         CREATE_SEARCH_INDEX,
         CREATE_SQLITE_SEARCH_VECTOR_CHUNKS,
         CREATE_SQLITE_SEARCH_VECTOR_CHUNKS_PROJECT_ENTITY,
@@ -301,7 +301,7 @@ async def directory_service(entity_repository, project_config) -> DirectoryServi
 @pytest_asyncio.fixture
 async def search_repository(session_maker, test_project: Project, app_config: BasicMemoryConfig):
     """Create SQLite SearchRepository instance with project context."""
-    from basic_memory.repository.sqlite_search_repository import SQLiteSearchRepository
+    from memoryhub.repository.sqlite_search_repository import SQLiteSearchRepository
 
     return SQLiteSearchRepository(
         session_maker,

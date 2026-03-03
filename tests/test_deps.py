@@ -7,10 +7,10 @@ import pytest
 import pytest_asyncio
 from fastapi import HTTPException
 
-from basic_memory.deps import get_project_config, get_project_id
-from basic_memory.deps.projects import validate_project_id
-from basic_memory.models.project import Project
-from basic_memory.repository.project_repository import ProjectRepository
+from memoryhub.deps import get_project_config, get_project_id
+from memoryhub.deps.projects import validate_project_id
+from memoryhub.models.project import Project
+from memoryhub.repository.project_repository import ProjectRepository
 
 
 @pytest_asyncio.fixture

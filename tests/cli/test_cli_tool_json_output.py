@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, patch
 
 from typer.testing import CliRunner
 
-from basic_memory.cli.main import app as cli_app
+from memoryhub.cli.main import app as cli_app
 
 runner = CliRunner()
 
@@ -83,7 +83,7 @@ SEARCH_RESULT = {
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_write_note",
+    "memoryhub.cli.commands.tool.mcp_write_note",
     new_callable=AsyncMock,
     return_value=WRITE_NOTE_RESULT,
 )
@@ -114,7 +114,7 @@ def test_write_note_json_output(mock_mcp_write):
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_write_note",
+    "memoryhub.cli.commands.tool.mcp_write_note",
     new_callable=AsyncMock,
     return_value=WRITE_NOTE_RESULT,
 )
@@ -146,7 +146,7 @@ def test_write_note_with_tags(mock_mcp_write):
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_read_note",
+    "memoryhub.cli.commands.tool.mcp_read_note",
     new_callable=AsyncMock,
     return_value=READ_NOTE_RESULT,
 )
@@ -168,7 +168,7 @@ def test_read_note_json_output(mock_mcp_read):
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_read_note",
+    "memoryhub.cli.commands.tool.mcp_read_note",
     new_callable=AsyncMock,
     return_value=READ_NOTE_RESULT,
 )
@@ -184,7 +184,7 @@ def test_read_note_include_frontmatter(mock_mcp_read):
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_read_note",
+    "memoryhub.cli.commands.tool.mcp_read_note",
     new_callable=AsyncMock,
     return_value=READ_NOTE_RESULT,
 )
@@ -204,7 +204,7 @@ def test_read_note_pagination(mock_mcp_read):
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_edit_note",
+    "memoryhub.cli.commands.tool.mcp_edit_note",
     new_callable=AsyncMock,
     return_value=EDIT_NOTE_RESULT,
 )
@@ -232,7 +232,7 @@ def test_edit_note_json_output(mock_mcp_edit):
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_edit_note",
+    "memoryhub.cli.commands.tool.mcp_edit_note",
     new_callable=AsyncMock,
     return_value={"title": "Test", "permalink": "test", "error": "Edit failed: not found"},
 )
@@ -258,7 +258,7 @@ def test_edit_note_error_response(mock_mcp_edit):
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_build_context",
+    "memoryhub.cli.commands.tool.mcp_build_context",
     new_callable=AsyncMock,
     return_value=BUILD_CONTEXT_RESULT,
 )
@@ -277,7 +277,7 @@ def test_build_context_json_output(mock_build_ctx):
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_build_context",
+    "memoryhub.cli.commands.tool.mcp_build_context",
     new_callable=AsyncMock,
     return_value=BUILD_CONTEXT_RESULT,
 )
@@ -312,7 +312,7 @@ def test_build_context_with_options(mock_build_ctx):
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_recent_activity",
+    "memoryhub.cli.commands.tool.mcp_recent_activity",
     new_callable=AsyncMock,
     return_value=RECENT_ACTIVITY_RESULT,
 )
@@ -334,7 +334,7 @@ def test_recent_activity_json_output(mock_mcp_recent):
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_recent_activity",
+    "memoryhub.cli.commands.tool.mcp_recent_activity",
     new_callable=AsyncMock,
     return_value=RECENT_ACTIVITY_RESULT,
 )
@@ -352,7 +352,7 @@ def test_recent_activity_pagination(mock_mcp_recent):
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_recent_activity",
+    "memoryhub.cli.commands.tool.mcp_recent_activity",
     new_callable=AsyncMock,
     return_value=[],
 )
@@ -372,7 +372,7 @@ def test_recent_activity_empty(mock_mcp_recent):
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_search",
+    "memoryhub.cli.commands.tool.mcp_search",
     new_callable=AsyncMock,
     return_value=SEARCH_RESULT,
 )
@@ -392,7 +392,7 @@ def test_search_notes_json_output(mock_mcp_search):
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_search",
+    "memoryhub.cli.commands.tool.mcp_search",
     new_callable=AsyncMock,
     return_value=SEARCH_RESULT,
 )
@@ -408,7 +408,7 @@ def test_search_notes_with_meta_filter(mock_mcp_search):
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_search",
+    "memoryhub.cli.commands.tool.mcp_search",
     new_callable=AsyncMock,
     return_value=SEARCH_RESULT,
 )
@@ -424,7 +424,7 @@ def test_search_notes_permalink_mode(mock_mcp_search):
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_search",
+    "memoryhub.cli.commands.tool.mcp_search",
     new_callable=AsyncMock,
     return_value="Error: search failed",
 )
@@ -485,7 +485,7 @@ SCHEMA_VALIDATE_RESULT = {
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_schema_validate",
+    "memoryhub.cli.commands.tool.mcp_schema_validate",
     new_callable=AsyncMock,
     return_value=SCHEMA_VALIDATE_RESULT,
 )
@@ -505,7 +505,7 @@ def test_schema_validate_json_output(mock_mcp):
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_schema_validate",
+    "memoryhub.cli.commands.tool.mcp_schema_validate",
     new_callable=AsyncMock,
     return_value=SCHEMA_VALIDATE_RESULT,
 )
@@ -522,7 +522,7 @@ def test_schema_validate_identifier_heuristic(mock_mcp):
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_schema_validate",
+    "memoryhub.cli.commands.tool.mcp_schema_validate",
     new_callable=AsyncMock,
     return_value={"error": "No notes found of type 'person'"},
 )
@@ -555,7 +555,7 @@ SCHEMA_INFER_RESULT = {
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_schema_infer",
+    "memoryhub.cli.commands.tool.mcp_schema_infer",
     new_callable=AsyncMock,
     return_value=SCHEMA_INFER_RESULT,
 )
@@ -575,7 +575,7 @@ def test_schema_infer_json_output(mock_mcp):
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_schema_infer",
+    "memoryhub.cli.commands.tool.mcp_schema_infer",
     new_callable=AsyncMock,
     return_value=SCHEMA_INFER_RESULT,
 )
@@ -604,7 +604,7 @@ SCHEMA_DIFF_RESULT = {
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_schema_diff",
+    "memoryhub.cli.commands.tool.mcp_schema_diff",
     new_callable=AsyncMock,
     return_value=SCHEMA_DIFF_RESULT,
 )
@@ -646,7 +646,7 @@ LIST_PROJECTS_RESULT = {
 
 
 @patch(
-    "basic_memory.cli.commands.tool.mcp_list_projects",
+    "memoryhub.cli.commands.tool.mcp_list_projects",
     new_callable=AsyncMock,
     return_value=LIST_PROJECTS_RESULT,
 )

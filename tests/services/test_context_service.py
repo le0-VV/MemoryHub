@@ -5,12 +5,12 @@ from datetime import datetime, timedelta, UTC
 import pytest
 import pytest_asyncio
 
-from basic_memory.repository.search_repository import SearchIndexRow
-from basic_memory.schemas.memory import memory_url, memory_url_path
-from basic_memory.schemas.search import SearchItemType
-from basic_memory.services.context_service import ContextService
-from basic_memory.models.knowledge import Entity, Relation
-from basic_memory.models.project import Project
+from memoryhub.repository.search_repository import SearchIndexRow
+from memoryhub.schemas.memory import memory_url, memory_url_path
+from memoryhub.schemas.search import SearchItemType
+from memoryhub.services.context_service import ContextService
+from memoryhub.models.knowledge import Entity, Relation
+from memoryhub.models.project import Project
 
 
 @pytest_asyncio.fixture
@@ -229,10 +229,10 @@ async def test_context_metadata(context_service, test_graph):
 @pytest.mark.asyncio
 async def test_project_isolation_in_find_related(session_maker):
     """Test that find_related respects project boundaries and doesn't leak data."""
-    from basic_memory.repository.entity_repository import EntityRepository
-    from basic_memory.repository.observation_repository import ObservationRepository
-    from basic_memory.repository.sqlite_search_repository import SQLiteSearchRepository
-    from basic_memory import db
+    from memoryhub.repository.entity_repository import EntityRepository
+    from memoryhub.repository.observation_repository import ObservationRepository
+    from memoryhub.repository.sqlite_search_repository import SQLiteSearchRepository
+    from memoryhub import db
 
     # Create database session
     async with db.scoped_session(session_maker) as db_session:

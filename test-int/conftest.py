@@ -30,7 +30,7 @@ Test → MCP Client → MCP Server → HTTP Request (ASGITransport) → FastAPI 
 4. **Search Index Initialization**: Creates the FTS5 search index tables that
    the application requires for search functionality.
 
-5. **Global Configuration Override**: Modifies the global `basic_memory_app_config`
+5. **Global Configuration Override**: Modifies the global `memoryhub_app_config`
    so MCP tools use test project settings instead of user configuration.
 
 ## Usage
@@ -60,18 +60,18 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from httpx import AsyncClient, ASGITransport
 
-from basic_memory.config import BasicMemoryConfig, ProjectConfig, ConfigManager
-from basic_memory.db import engine_session_factory, DatabaseType
-from basic_memory.models import Project
-from basic_memory.models.base import Base
-from basic_memory.repository.project_repository import ProjectRepository
+from memoryhub.config import BasicMemoryConfig, ProjectConfig, ConfigManager
+from memoryhub.db import engine_session_factory, DatabaseType
+from memoryhub.models import Project
+from memoryhub.models.base import Base
+from memoryhub.repository.project_repository import ProjectRepository
 from fastapi import FastAPI
 
-from basic_memory.deps import get_project_config, get_engine_factory, get_app_config
+from memoryhub.deps import get_project_config, get_engine_factory, get_app_config
 
 
 # Import MCP tools so they're available for testing
-from basic_memory.mcp import tools  # noqa: F401
+from memoryhub.mcp import tools  # noqa: F401
 
 
 @pytest_asyncio.fixture
@@ -81,7 +81,7 @@ async def engine_factory(
     tmp_path,
 ) -> AsyncGenerator[tuple, None]:
     """Create engine and session factory for SQLite integration tests."""
-    from basic_memory.models.search import (
+    from memoryhub.models.search import (
         CREATE_SEARCH_INDEX,
     )
 
@@ -124,7 +124,7 @@ async def test_project(config_home, engine_factory) -> Project:
 def config_home(tmp_path, monkeypatch) -> Path:
     monkeypatch.setenv("HOME", str(tmp_path))
     # Set BASIC_MEMORY_HOME to the test directory
-    monkeypatch.setenv("BASIC_MEMORY_HOME", str(tmp_path / "basic-memory"))
+    monkeypatch.setenv("BASIC_MEMORY_HOME", str(tmp_path / "memoryhub"))
     return tmp_path
 
 
@@ -151,13 +151,13 @@ def app_config(
 @pytest.fixture
 def config_manager(app_config: BasicMemoryConfig, config_home) -> ConfigManager:
     # Invalidate config cache to ensure clean state for each test
-    from basic_memory import config as config_module
+    from memoryhub import config as config_module
 
     config_module._CONFIG_CACHE = None
 
     config_manager = ConfigManager()
     # Update its paths to use the test directory
-    config_manager.config_dir = config_home / ".basic-memory"
+    config_manager.config_dir = config_home / ".memoryhub"
     config_manager.config_file = config_manager.config_dir / "config.json"
     config_manager.config_dir.mkdir(parents=True, exist_ok=True)
 
@@ -184,7 +184,7 @@ def app(app_config, project_config, engine_factory, test_project, config_manager
 
     # Import the FastAPI app AFTER the config_manager has written the test config to disk
     # This ensures that when the app's lifespan manager runs, it reads the correct test config
-    from basic_memory.api.app import app as fastapi_app
+    from memoryhub.api.app import app as fastapi_app
 
     app = fastapi_app
     previous_overrides = dict(app.dependency_overrides)
@@ -205,13 +205,13 @@ async def search_service(engine_factory, test_project, app_config):
 
     Uses app_config fixture to determine database backend - no patching needed.
     """
-    from basic_memory.repository.entity_repository import EntityRepository
-    from basic_memory.services.file_service import FileService
-    from basic_memory.services.search_service import SearchService
-    from basic_memory.markdown.markdown_processor import MarkdownProcessor
-    from basic_memory.markdown import EntityParser
+    from memoryhub.repository.entity_repository import EntityRepository
+    from memoryhub.services.file_service import FileService
+    from memoryhub.services.search_service import SearchService
+    from memoryhub.markdown.markdown_processor import MarkdownProcessor
+    from memoryhub.markdown import EntityParser
 
-    from basic_memory.repository.search_repository import create_search_repository
+    from memoryhub.repository.search_repository import create_search_repository
 
     engine, session_maker = engine_factory
 
@@ -234,16 +234,16 @@ async def search_service(engine_factory, test_project, app_config):
 @pytest.fixture
 def mcp_server(config_manager, search_service):
     # Import mcp instance
-    from basic_memory.mcp.server import mcp as server
+    from memoryhub.mcp.server import mcp as server
 
     # Import mcp tools to register them
-    import basic_memory.mcp.tools  # noqa: F401
+    import memoryhub.mcp.tools  # noqa: F401
 
     # Import resources to register them
-    import basic_memory.mcp.resources  # noqa: F401
+    import memoryhub.mcp.resources  # noqa: F401
 
     # Import prompts to register them
-    import basic_memory.mcp.prompts  # noqa: F401
+    import memoryhub.mcp.prompts  # noqa: F401
 
     return server
 

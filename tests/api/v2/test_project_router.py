@@ -6,9 +6,9 @@ from pathlib import Path
 import pytest
 from httpx import AsyncClient
 
-from basic_memory.models import Project
-from basic_memory.schemas.project_info import ProjectItem, ProjectStatusResponse
-from basic_memory.schemas.v2 import ProjectResolveResponse
+from memoryhub.models import Project
+from memoryhub.schemas.project_info import ProjectItem, ProjectStatusResponse
+from memoryhub.schemas.v2 import ProjectResolveResponse
 
 
 @pytest.mark.asyncio
@@ -282,7 +282,7 @@ async def test_resolve_project_by_permalink(
 ):
     """Test resolving a project by permalink returns correct project external_id."""
     # Assume test_project.name can be converted to permalink
-    from basic_memory.utils import generate_permalink
+    from memoryhub.utils import generate_permalink
 
     project_permalink = generate_permalink(test_project.name)
     resolve_data = {"identifier": project_permalink}
@@ -350,7 +350,7 @@ async def test_legacy_v1_list_projects_endpoint(client: AsyncClient, test_projec
     """Test that the legacy /projects/projects endpoint still works for older CLI versions.
 
     This endpoint was removed when we migrated to v2 but older versions of
-    basic-memory-cloud CLI still call it for `bm project list`.
+    memoryhub-cloud CLI still call it for `bm project list`.
 
     Note: The route must be without trailing slash to avoid 307 redirects
     that the cloud proxy doesn't follow.
@@ -372,7 +372,7 @@ async def test_legacy_v1_list_projects_endpoint(client: AsyncClient, test_projec
 async def test_legacy_v1_add_project_endpoint(client: AsyncClient, test_project: Project):
     """Test that the legacy POST /projects/projects endpoint still works for older CLI versions.
 
-    Older versions of basic-memory-cloud CLI call POST /projects/projects to add projects.
+    Older versions of memoryhub-cloud CLI call POST /projects/projects to add projects.
     The legacy route must proxy through to the same handler as v2.
 
     Uses the existing test project name+path to exercise the idempotent path (200 OK),
@@ -398,7 +398,7 @@ async def test_legacy_v1_add_project_endpoint(client: AsyncClient, test_project:
 async def test_legacy_v1_sync_config_endpoint(client: AsyncClient):
     """Test that the legacy POST /projects/config/sync endpoint still works for older CLI versions.
 
-    Older versions of basic-memory-cloud CLI call POST /projects/config/sync to synchronize
+    Older versions of memoryhub-cloud CLI call POST /projects/config/sync to synchronize
     projects between config file and database. The route must be reachable.
     """
     response = await client.post("/projects/config/sync")

@@ -3,7 +3,7 @@
 Test script to verify cascade delete behavior on production SQLite database.
 
 This script tests whether foreign key constraints with CASCADE DELETE are properly
-configured in the production database at ~/.basic-memory/memory.db.
+configured in the production database at ~/.memoryhub/memory.db.
 
 Usage: python test_production_cascade_delete.py
 """
@@ -26,7 +26,7 @@ class ProductionCascadeTest:
         if db_path is None:
             # Default to standard Basic Memory location
             home_dir = Path.home()
-            self.db_path = home_dir / ".basic-memory" / "memory.db"
+            self.db_path = home_dir / ".memoryhub" / "memory.db"
         else:
             self.db_path = db_path
 
@@ -330,7 +330,7 @@ async def main():
 
     parser = argparse.ArgumentParser(description="Test cascade delete on production database")
     parser.add_argument(
-        "--db-path", type=Path, help="Path to database file (default: ~/.basic-memory/memory.db)"
+        "--db-path", type=Path, help="Path to database file (default: ~/.memoryhub/memory.db)"
     )
     parser.add_argument("--no-backup", action="store_true", help="Skip creating backup (dangerous)")
 

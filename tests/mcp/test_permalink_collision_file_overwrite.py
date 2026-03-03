@@ -18,11 +18,11 @@ import pytest
 from pathlib import Path
 from textwrap import dedent
 
-from basic_memory.mcp.tools import write_note, read_note
-from basic_memory.sync.sync_service import SyncService
-from basic_memory.config import ProjectConfig
-from basic_memory.services import EntityService
-from basic_memory.utils import generate_permalink
+from memoryhub.mcp.tools import write_note, read_note
+from memoryhub.sync.sync_service import SyncService
+from memoryhub.config import ProjectConfig
+from memoryhub.services import EntityService
+from memoryhub.utils import generate_permalink
 
 
 async def force_full_scan(sync_service: SyncService) -> None:

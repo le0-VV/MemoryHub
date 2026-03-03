@@ -6,11 +6,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from basic_memory.config import BasicMemoryConfig
-from basic_memory.repository.embedding_provider_factory import create_embedding_provider
-from basic_memory.repository.fastembed_provider import FastEmbedEmbeddingProvider
-from basic_memory.repository.openai_provider import OpenAIEmbeddingProvider
-from basic_memory.repository.semantic_errors import SemanticDependenciesMissingError
+from memoryhub.config import BasicMemoryConfig
+from memoryhub.repository.embedding_provider_factory import create_embedding_provider
+from memoryhub.repository.fastembed_provider import FastEmbedEmbeddingProvider
+from memoryhub.repository.openai_provider import OpenAIEmbeddingProvider
+from memoryhub.repository.semantic_errors import SemanticDependenciesMissingError
 
 
 class _StubEmbeddingsApi:
@@ -92,7 +92,7 @@ async def test_openai_provider_missing_dependency_raises_actionable_error(monkey
     with pytest.raises(SemanticDependenciesMissingError) as error:
         await provider.embed_query("test")
 
-    assert "pip install -U basic-memory" in str(error.value)
+    assert "pip install -U memoryhub" in str(error.value)
 
 
 @pytest.mark.asyncio
@@ -114,7 +114,7 @@ def test_embedding_provider_factory_selects_fastembed_by_default():
     """Factory should select fastembed when provider is configured as fastembed."""
     config = BasicMemoryConfig(
         env="test",
-        projects={"test-project": "/tmp/basic-memory-test"},
+        projects={"test-project": "/tmp/memoryhub-test"},
         default_project="test-project",
         semantic_search_enabled=True,
         semantic_embedding_provider="fastembed",
@@ -127,7 +127,7 @@ def test_embedding_provider_factory_selects_openai_and_applies_default_model():
     """Factory should map local default model to OpenAI default when provider is openai."""
     config = BasicMemoryConfig(
         env="test",
-        projects={"test-project": "/tmp/basic-memory-test"},
+        projects={"test-project": "/tmp/memoryhub-test"},
         default_project="test-project",
         semantic_search_enabled=True,
         semantic_embedding_provider="openai",
@@ -142,7 +142,7 @@ def test_embedding_provider_factory_rejects_unknown_provider():
     """Factory should fail fast for unsupported provider names."""
     config = BasicMemoryConfig(
         env="test",
-        projects={"test-project": "/tmp/basic-memory-test"},
+        projects={"test-project": "/tmp/memoryhub-test"},
         default_project="test-project",
         semantic_search_enabled=True,
         semantic_embedding_provider="unknown-provider",
@@ -155,7 +155,7 @@ def test_embedding_provider_factory_passes_custom_dimensions_to_fastembed():
     """Factory should forward semantic_embedding_dimensions to FastEmbed provider."""
     config = BasicMemoryConfig(
         env="test",
-        projects={"test-project": "/tmp/basic-memory-test"},
+        projects={"test-project": "/tmp/memoryhub-test"},
         default_project="test-project",
         semantic_search_enabled=True,
         semantic_embedding_provider="fastembed",
@@ -170,7 +170,7 @@ def test_embedding_provider_factory_passes_custom_dimensions_to_openai():
     """Factory should forward semantic_embedding_dimensions to OpenAI provider."""
     config = BasicMemoryConfig(
         env="test",
-        projects={"test-project": "/tmp/basic-memory-test"},
+        projects={"test-project": "/tmp/memoryhub-test"},
         default_project="test-project",
         semantic_search_enabled=True,
         semantic_embedding_provider="openai",
@@ -185,7 +185,7 @@ def test_embedding_provider_factory_uses_provider_defaults_when_dimensions_not_s
     """Factory should use provider defaults (384/1536) when dimensions is None."""
     fastembed_config = BasicMemoryConfig(
         env="test",
-        projects={"test-project": "/tmp/basic-memory-test"},
+        projects={"test-project": "/tmp/memoryhub-test"},
         default_project="test-project",
         semantic_search_enabled=True,
         semantic_embedding_provider="fastembed",
@@ -196,7 +196,7 @@ def test_embedding_provider_factory_uses_provider_defaults_when_dimensions_not_s
 
     openai_config = BasicMemoryConfig(
         env="test",
-        projects={"test-project": "/tmp/basic-memory-test"},
+        projects={"test-project": "/tmp/memoryhub-test"},
         default_project="test-project",
         semantic_search_enabled=True,
         semantic_embedding_provider="openai",

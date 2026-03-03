@@ -4,8 +4,7 @@
 
 MemoryHub is an experimental fork of Basic Memory.
 
-The repository still uses the inherited Python package and CLI names
-`basic_memory` and `basic-memory`, but the active fork direction is:
+The active fork direction is:
 
 - local-only
 - SQLite-only
@@ -58,15 +57,15 @@ See `docs/ARCHITECTURE.md` for the fuller design write-up.
 
 ### Important Directories
 
-- `/src/basic_memory/api` - FastAPI app and routers
-- `/src/basic_memory/cli` - Typer CLI
-- `/src/basic_memory/importers` - chat/import tooling
-- `/src/basic_memory/markdown` - markdown parsing and formatting
-- `/src/basic_memory/mcp` - MCP server, tools, prompts, typed clients
-- `/src/basic_memory/models` - SQLAlchemy models
-- `/src/basic_memory/repository` - persistence layer
-- `/src/basic_memory/services` - business logic
-- `/src/basic_memory/sync` - file sync/watch logic
+- `/src/memoryhub/api` - FastAPI app and routers
+- `/src/memoryhub/cli` - Typer CLI
+- `/src/memoryhub/importers` - chat/import tooling
+- `/src/memoryhub/markdown` - markdown parsing and formatting
+- `/src/memoryhub/mcp` - MCP server, tools, prompts, typed clients
+- `/src/memoryhub/models` - SQLAlchemy models
+- `/src/memoryhub/repository` - persistence layer
+- `/src/memoryhub/services` - business logic
+- `/src/memoryhub/sync` - file sync/watch logic
 - `/tests` - unit-style tests
 - `/test-int` - integration tests
 
@@ -83,7 +82,7 @@ See `docs/ARCHITECTURE.md` for the fuller design write-up.
 For project-scoped MCP tools:
 
 ```python
-from basic_memory.mcp.project_context import get_project_client
+from memoryhub.mcp.project_context import get_project_client
 
 async with get_project_client(project, context=context) as (client, active_project):
     ...
@@ -92,7 +91,7 @@ async with get_project_client(project, context=context) as (client, active_proje
 For CLI commands or non-project-scoped code:
 
 ```python
-from basic_memory.mcp.async_client import get_client
+from memoryhub.mcp.async_client import get_client
 
 async with get_client(project_name=project_name) as client:
     ...
@@ -131,8 +130,9 @@ or isolating it instead of extending it.
 ## Naming Guidance
 
 - User-facing docs should say `MemoryHub` when referring to the forked product.
-- Code identifiers may still use `basic_memory` or `basic-memory` until the runtime rename is done.
-- Do not do partial branding churn without a deliberate rename pass.
+- Runtime package and CLI names are now `memoryhub`.
+- Some compatibility env vars and historical config helpers may still retain
+  `BASIC_MEMORY_*` names during the transition.
 
 ## Agent Files
 

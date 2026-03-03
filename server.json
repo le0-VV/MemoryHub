@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.le0-vv/memoryhub",
-  "description": "Experimental MemoryHub fork of Basic Memory. The current runtime command remains 'basic-memory mcp' during the rename transition.",
+  "description": "Experimental MemoryHub fork of Basic Memory for local-only multi-project MCP workflows.",
   "repository": {
     "url": "https://github.com/le0-VV/MemoryHub.git",
     "source": "github"
@@ -10,11 +10,11 @@
   "packages": [
     {
       "registryType": "pypi",
-      "identifier": "basic-memory",
+      "identifier": "memoryhub",
       "version": "0.0.0",
       "runtimeHint": "uvx",
       "runtimeArguments": [
-        {"type": "positional", "value": "basic-memory"},
+        {"type": "positional", "value": "memoryhub"},
         {"type": "positional", "value": "mcp"}
       ],
       "transport": {

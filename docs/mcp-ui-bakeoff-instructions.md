@@ -43,15 +43,15 @@ npm run build
 
 This regenerates:
 
-- `src/basic_memory/mcp/ui/html/search-results-tool-ui.html`
-- `src/basic_memory/mcp/ui/html/note-preview-tool-ui.html`
+- `src/memoryhub/mcp/ui/html/search-results-tool-ui.html`
+- `src/memoryhub/mcp/ui/html/note-preview-tool-ui.html`
 
 ---
 
 ## How to Run the MCP Server
 
 ```bash
-basic-memory mcp --transport stdio
+memoryhub mcp --transport stdio
 ```
 
 Optional to pick UI variant for MCP App resources:
@@ -71,15 +71,15 @@ Tools:
 - `read_note`
 
 Expect:
-- Tool meta points to `ui://basic-memory/search-results` and `ui://basic-memory/note-preview`
+- Tool meta points to `ui://memoryhub/search-results` and `ui://memoryhub/note-preview`
 - Resource content differs by `BASIC_MEMORY_MCP_UI_VARIANT`
 - Variant‑specific URIs also available:
-  - `ui://basic-memory/search-results/vanilla`
-  - `ui://basic-memory/search-results/tool-ui`
-  - `ui://basic-memory/search-results/mcp-ui`
-  - `ui://basic-memory/note-preview/vanilla`
-  - `ui://basic-memory/note-preview/tool-ui`
-  - `ui://basic-memory/note-preview/mcp-ui`
+  - `ui://memoryhub/search-results/vanilla`
+  - `ui://memoryhub/search-results/tool-ui`
+  - `ui://memoryhub/search-results/mcp-ui`
+  - `ui://memoryhub/note-preview/vanilla`
+  - `ui://memoryhub/note-preview/tool-ui`
+  - `ui://memoryhub/note-preview/mcp-ui`
 
 Manual check:
 - Trigger tool in MCP‑App‑capable host and confirm UI renders.

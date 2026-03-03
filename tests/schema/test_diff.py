@@ -1,8 +1,8 @@
-"""Tests for basic_memory.schema.diff -- schema drift detection."""
+"""Tests for memoryhub.schema.diff -- schema drift detection."""
 
-from basic_memory.schema.diff import SchemaDrift, diff_schema
-from basic_memory.schema.inference import NoteData, ObservationData, RelationData
-from basic_memory.schema.parser import SchemaDefinition, SchemaField
+from memoryhub.schema.diff import SchemaDrift, diff_schema
+from memoryhub.schema.inference import NoteData, ObservationData, RelationData
+from memoryhub.schema.parser import SchemaDefinition, SchemaField
 
 # Short aliases for test readability
 Obs = ObservationData

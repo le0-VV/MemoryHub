@@ -53,7 +53,7 @@ def test_bm_version_does_not_import_heavy_modules():
 
     The fast-path guard in cli/main.py skips command registration when
     argv is exactly ['--version']. This test verifies that modules like
-    basic_memory.mcp (which pull in FastAPI, SQLAlchemy, etc.) are NOT
+    memoryhub.mcp (which pull in FastAPI, SQLAlchemy, etc.) are NOT
     loaded during a version-only invocation.
     """
     # Run a Python snippet that imports main.py the same way the entrypoint does,
@@ -61,8 +61,8 @@ def test_bm_version_does_not_import_heavy_modules():
     check_script = (
         "import sys; "
         "sys.argv = ['bm', '--version']; "
-        "import basic_memory.cli.main; "
-        "heavy = [m for m in sys.modules if m.startswith('basic_memory.mcp')]; "
+        "import memoryhub.cli.main; "
+        "heavy = [m for m in sys.modules if m.startswith('memoryhub.mcp')]; "
         "print(','.join(heavy) if heavy else 'CLEAN')"
     )
     result = subprocess.run(

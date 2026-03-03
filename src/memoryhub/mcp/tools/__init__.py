@@ -1,0 +1,61 @@
+"""MCP tools for Basic Memory.
+
+This package provides the complete set of tools for interacting with
+Basic Memory through the MCP protocol. Importing this module registers
+all tools with the MCP server.
+"""
+
+# Import tools to register them with MCP
+from memoryhub.mcp.tools.delete_note import delete_note
+from memoryhub.mcp.tools.read_content import read_content
+from memoryhub.mcp.tools.build_context import build_context
+from memoryhub.mcp.tools.recent_activity import recent_activity
+from memoryhub.mcp.tools.read_note import read_note
+
+# TODO: re-enable once MCP client rendering is working
+# from memoryhub.mcp.tools.ui_sdk import read_note_ui, search_notes_ui
+from memoryhub.mcp.tools.view_note import view_note
+from memoryhub.mcp.tools.write_note import write_note
+from memoryhub.mcp.tools.release_notes import release_notes
+from memoryhub.mcp.tools.search import search_notes
+from memoryhub.mcp.tools.canvas import canvas
+from memoryhub.mcp.tools.list_directory import list_directory
+from memoryhub.mcp.tools.edit_note import edit_note
+from memoryhub.mcp.tools.move_note import move_note
+from memoryhub.mcp.tools.project_management import (
+    list_memory_projects,
+    create_memory_project,
+    delete_project,
+)
+
+# ChatGPT-compatible tools
+from memoryhub.mcp.tools.chatgpt_tools import search, fetch
+
+# Schema tools
+from memoryhub.mcp.tools.schema import schema_validate, schema_infer, schema_diff
+
+__all__ = [
+    "build_context",
+    "canvas",
+    "create_memory_project",
+    "delete_note",
+    "delete_project",
+    "edit_note",
+    "fetch",
+    "list_directory",
+    "list_memory_projects",
+    "move_note",
+    "read_content",
+    "read_note",
+    "release_notes",
+    # "read_note_ui",
+    "recent_activity",
+    "schema_diff",
+    "schema_infer",
+    "schema_validate",
+    "search",
+    "search_notes",
+    # "search_notes_ui",
+    "view_note",
+    "write_note",
+]

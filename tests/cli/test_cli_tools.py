@@ -10,7 +10,7 @@ for future use when the CLI initialization issue is fixed.
 
 import pytest
 
-from basic_memory.config import DatabaseBackend
+from memoryhub.config import DatabaseBackend
 
 
 def test_ensure_migrations_functionality(app_config, monkeypatch):
@@ -19,7 +19,7 @@ def test_ensure_migrations_functionality(app_config, monkeypatch):
     ensure_initialization is a SQLite-only code path (Postgres manages its own schema),
     so force SQLite backend regardless of the test environment.
     """
-    import basic_memory.services.initialization as init_mod
+    import memoryhub.services.initialization as init_mod
 
     calls = {"count": 0}
 
@@ -38,7 +38,7 @@ def test_ensure_migrations_propagates_errors(app_config, monkeypatch):
     ensure_initialization is a SQLite-only code path (Postgres manages its own schema),
     so force SQLite backend regardless of the test environment.
     """
-    import basic_memory.services.initialization as init_mod
+    import memoryhub.services.initialization as init_mod
 
     async def fake_initialize_database(*args, **kwargs):
         raise Exception("Test error")

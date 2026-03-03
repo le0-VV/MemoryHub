@@ -7,7 +7,7 @@ import esbuild from "esbuild";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = __dirname;
 const distDir = path.join(rootDir, "dist");
-const htmlDir = path.resolve(rootDir, "..", "..", "src", "basic_memory", "mcp", "ui", "html");
+const htmlDir = path.resolve(rootDir, "..", "..", "src", "memoryhub", "mcp", "ui", "html");
 
 const tailwindBin = path.join(rootDir, "node_modules", ".bin", "tailwindcss");
 const cssInput = path.join(rootDir, "src", "styles.css");

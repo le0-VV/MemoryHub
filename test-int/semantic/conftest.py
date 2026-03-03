@@ -16,21 +16,21 @@ from dotenv import load_dotenv
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from basic_memory import db
-from basic_memory.config import BasicMemoryConfig, DatabaseBackend
-from basic_memory.db import DatabaseType, engine_session_factory
-from basic_memory.markdown import EntityParser
-from basic_memory.markdown.markdown_processor import MarkdownProcessor
-from basic_memory.models.base import Base
-from basic_memory.models.search import (
+from memoryhub import db
+from memoryhub.config import BasicMemoryConfig, DatabaseBackend
+from memoryhub.db import DatabaseType, engine_session_factory
+from memoryhub.markdown import EntityParser
+from memoryhub.markdown.markdown_processor import MarkdownProcessor
+from memoryhub.models.base import Base
+from memoryhub.models.search import (
     CREATE_SEARCH_INDEX,
 )
-from basic_memory.repository.embedding_provider import EmbeddingProvider
-from basic_memory.repository.entity_repository import EntityRepository
-from basic_memory.repository.project_repository import ProjectRepository
-from basic_memory.repository.search_repository import SearchRepository
-from basic_memory.services.file_service import FileService
-from basic_memory.services.search_service import SearchService
+from memoryhub.repository.embedding_provider import EmbeddingProvider
+from memoryhub.repository.entity_repository import EntityRepository
+from memoryhub.repository.project_repository import ProjectRepository
+from memoryhub.repository.search_repository import SearchRepository
+from memoryhub.services.file_service import FileService
+from memoryhub.services.search_service import SearchService
 
 # Load .env so OPENAI_API_KEY (and other keys) are available to providers
 load_dotenv()
@@ -76,7 +76,7 @@ def _openai_key_available() -> bool:
 def skip_if_needed(combo: SearchCombo) -> None:
     """Skip the current test if the combo's requirements aren't met."""
     if combo.provider_name == "fastembed" and not _fastembed_available():
-        pytest.skip("fastembed not installed (install/update basic-memory)")
+        pytest.skip("fastembed not installed (install/update memoryhub)")
 
     if combo.provider_name == "openai":
         if not _fastembed_available():
@@ -119,13 +119,13 @@ async def postgres_engine_factory():
 
 
 def _create_fastembed_provider() -> EmbeddingProvider:
-    from basic_memory.repository.fastembed_provider import FastEmbedEmbeddingProvider
+    from memoryhub.repository.fastembed_provider import FastEmbedEmbeddingProvider
 
     return FastEmbedEmbeddingProvider(model_name="bge-small-en-v1.5", batch_size=64)
 
 
 def _create_openai_provider() -> EmbeddingProvider:
-    from basic_memory.repository.openai_provider import OpenAIEmbeddingProvider
+    from memoryhub.repository.openai_provider import OpenAIEmbeddingProvider
 
     return OpenAIEmbeddingProvider(model_name="text-embedding-3-small", dimensions=1536)
 
@@ -163,7 +163,7 @@ async def create_search_service(
         semantic_search_enabled=semantic_enabled,
     )
 
-    from basic_memory.repository.sqlite_search_repository import SQLiteSearchRepository
+    from memoryhub.repository.sqlite_search_repository import SQLiteSearchRepository
 
     repo = SQLiteSearchRepository(
         session_maker,

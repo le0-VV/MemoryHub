@@ -3,7 +3,7 @@
 import pytest
 from pathlib import Path
 
-from basic_memory.utils import validate_project_path
+from memoryhub.utils import validate_project_path
 
 
 class TestValidateProjectPathSafety:
@@ -20,7 +20,7 @@ class TestValidateProjectPathSafety:
             "folder/subfolder/file.txt",
             "simple-file.md",
             "research/findings-2025.md",
-            "projects/basic-memory/docs.md",
+            "projects/memoryhub/docs.md",
             "deep/nested/directory/structure/file.txt",
             "file-with-hyphens.md",
             "file_with_underscores.txt",

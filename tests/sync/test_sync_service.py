@@ -7,14 +7,14 @@ from textwrap import dedent
 
 import pytest
 
-from basic_memory.config import ProjectConfig, BasicMemoryConfig
-from basic_memory.models import Entity
-from basic_memory.repository import EntityRepository
-from basic_memory.schemas.search import SearchQuery
-from basic_memory.services import EntityService, FileService
-from basic_memory.services.search_service import SearchService
-from basic_memory.sync.sync_service import SyncService
-from basic_memory.utils import generate_permalink
+from memoryhub.config import ProjectConfig, BasicMemoryConfig
+from memoryhub.models import Entity
+from memoryhub.repository import EntityRepository
+from memoryhub.schemas.search import SearchQuery
+from memoryhub.services import EntityService, FileService
+from memoryhub.services.search_service import SearchService
+from memoryhub.sync.sync_service import SyncService
+from memoryhub.utils import generate_permalink
 
 
 async def create_test_file(path: Path, content: str = "test content") -> None:
@@ -118,7 +118,7 @@ async def test_resolve_relations_deletes_duplicate_unresolved_relation(
     When resolving a forward reference would create a duplicate (from_id, to_id, relation_type),
     the unresolved relation should be deleted since a resolved version already exists.
     """
-    from basic_memory.models import Relation
+    from memoryhub.models import Relation
 
     project_dir = project_config.home
 
@@ -1552,7 +1552,7 @@ async def test_scan_directory_respects_ignore_patterns(
     (project_dir / ".gitignore").write_text("*.ignored\n.hidden/\n")
 
     # Reload ignore patterns using project's .gitignore
-    from basic_memory.ignore_utils import load_gitignore_patterns
+    from memoryhub.ignore_utils import load_gitignore_patterns
 
     sync_service._ignore_patterns = load_gitignore_patterns(project_dir)
 
@@ -1607,7 +1607,7 @@ async def test_scan_directory_empty_directory(
     """Test streaming scan on empty directory (ignoring hidden files)."""
     project_dir = project_config.home
 
-    # Directory exists but has no user files (may have .basic-memory config dir)
+    # Directory exists but has no user files (may have .memoryhub config dir)
     assert project_dir.exists()
 
     # Don't create any user files - just scan empty directory
@@ -1768,7 +1768,7 @@ async def test_sync_file_continues_on_semantic_dependency_error(
     """
     from unittest.mock import AsyncMock
 
-    from basic_memory.repository.semantic_errors import SemanticDependenciesMissingError
+    from memoryhub.repository.semantic_errors import SemanticDependenciesMissingError
 
     project_dir = project_config.home
     content = """---

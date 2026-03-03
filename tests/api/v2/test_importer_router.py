@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 from httpx import AsyncClient
 
-from basic_memory.models import Project
-from basic_memory.schemas.importer import (
+from memoryhub.models import Project
+from memoryhub.schemas.importer import (
     ChatImportResult,
     EntityImportResult,
     ProjectImportResult,

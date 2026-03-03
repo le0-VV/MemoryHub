@@ -26,16 +26,16 @@ def test_lifespan_shutdown_awaits_sync_task_cancellation(app, monkeypatch):
       so by the time shutdown_db is called, the task is done (cancelled).
     """
 
-    # Import the *module* (not the package-level FastAPI `basic_memory.api.app` export)
+    # Import the *module* (not the package-level FastAPI `memoryhub.api.app` export)
     # so monkeypatching affects the exact symbols referenced inside lifespan().
     #
-    # Note: `basic_memory/api/__init__.py` re-exports `app`, so `import basic_memory.api.app`
-    # can resolve to the FastAPI instance rather than the `basic_memory.api.app` module.
+    # Note: `memoryhub/api/__init__.py` re-exports `app`, so `import memoryhub.api.app`
+    # can resolve to the FastAPI instance rather than the `memoryhub.api.app` module.
     import importlib
 
-    api_app_module = importlib.import_module("basic_memory.api.app")
-    container_module = importlib.import_module("basic_memory.api.container")
-    init_module = importlib.import_module("basic_memory.services.initialization")
+    api_app_module = importlib.import_module("memoryhub.api.app")
+    container_module = importlib.import_module("memoryhub.api.container")
+    init_module = importlib.import_module("memoryhub.services.initialization")
 
     # Keep startup cheap: we don't need real DB init for this ordering test.
     async def _noop_initialize_app(_app_config):

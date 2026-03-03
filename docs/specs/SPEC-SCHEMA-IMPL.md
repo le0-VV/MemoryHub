@@ -39,7 +39,7 @@ Validation reads observations and relations from existing data.
 
 ### 1. Picoschema Parser
 
-**Location:** `src/basic_memory/schema/parser.py`
+**Location:** `src/memoryhub/schema/parser.py`
 
 Parses Picoschema YAML into an internal representation.
 
@@ -96,7 +96,7 @@ schema:
 
 ### 2. Schema Resolver
 
-**Location:** `src/basic_memory/schema/resolver.py`
+**Location:** `src/memoryhub/schema/resolver.py`
 
 Finds the applicable schema for a note using the resolution order.
 
@@ -117,7 +117,7 @@ async def resolve_schema(
 
 ### 3. Schema Validator
 
-**Location:** `src/basic_memory/schema/validator.py`
+**Location:** `src/memoryhub/schema/validator.py`
 
 Validates a note's observations and relations against a resolved schema.
 
@@ -160,7 +160,7 @@ async def validate_note(
 
 ### 4. Schema Inference Engine
 
-**Location:** `src/basic_memory/schema/inference.py`
+**Location:** `src/memoryhub/schema/inference.py`
 
 Analyzes notes of a given type and suggests a schema based on usage frequency.
 
@@ -199,7 +199,7 @@ async def infer_schema(
 
 ### 5. Schema Diff
 
-**Location:** `src/basic_memory/schema/diff.py`
+**Location:** `src/memoryhub/schema/diff.py`
 
 Compares current note usage against an existing schema definition.
 
@@ -223,7 +223,7 @@ async def diff_schema(
 
 ### CLI Commands
 
-**Location:** `src/basic_memory/cli/schema.py`
+**Location:** `src/memoryhub/cli/schema.py`
 
 ```python
 import typer
@@ -256,7 +256,7 @@ Registered as subcommand: `bm schema validate`, `bm schema infer`, `bm schema di
 
 ### MCP Tools
 
-**Location:** `src/basic_memory/mcp/tools/schema.py`
+**Location:** `src/memoryhub/mcp/tools/schema.py`
 
 ```python
 @mcp_tool
@@ -278,7 +278,7 @@ async def schema_infer(
 
 ### API Endpoints
 
-**Location:** `src/basic_memory/api/schema_router.py`
+**Location:** `src/memoryhub/api/schema_router.py`
 
 ```python
 router = APIRouter(prefix="/schema", tags=["schema"])

@@ -6,7 +6,7 @@ frontmatter fields through note_metadata.
 
 import pytest
 
-from basic_memory.mcp.tools import write_note, read_note
+from memoryhub.mcp.tools import write_note, read_note
 
 
 # --- Positive tests ---

@@ -24,8 +24,6 @@ What has not been implemented yet:
 - Automatic routing by repository root, current working directory, or generic
   request metadata.
 - A dedicated MemoryHub routing layer or project registry/cache.
-- Renamed package, CLI, and MCP server identities. The code still runs under
-  inherited `basic_memory`, `basic-memory`, and `bm` names.
 - A maintained Postgres backend. This fork is standardizing on SQLite only.
 
 ## Fork Goal
@@ -43,34 +41,29 @@ server into a workspace-aware memory hub.
 
 ## Running The Fork Today
 
-Because the package has not been renamed yet, install this fork from the local
-checkout instead of from PyPI.
+Install this fork from the local checkout:
 
 ```bash
 uv tool install -e .
-basic-memory mcp
+memoryhub mcp
 ```
 
 You can also run it directly from the repository:
 
 ```bash
-uv run basic-memory mcp
+uv run memoryhub mcp
 ```
-
-Do not use `uv tool install basic-memory` if you want this fork. That installs
-the upstream package from PyPI.
 
 ## MCP Configuration
 
-Until the rename is complete, your MCP config should still invoke the inherited
-CLI command:
+Your MCP config can invoke the renamed CLI directly:
 
 ```json
 {
   "mcpServers": {
     "memoryhub": {
       "command": "uvx",
-      "args": ["basic-memory", "mcp"]
+      "args": ["memoryhub", "mcp"]
     }
   }
 }
@@ -78,7 +71,7 @@ CLI command:
 
 If you want to ensure you are using this fork rather than the upstream PyPI
 package, prefer a local editable install and reference the installed
-`basic-memory` executable directly.
+`memoryhub` executable directly.
 
 ## Documentation Map
 
@@ -116,5 +109,5 @@ apply, including providing the corresponding source for the modified version.
 Early-stage fork. The documentation now reflects the current reality more
 accurately than the implementation roadmap.
 
-The next major phase is architectural: introduce real project routing and then
-rename the inherited packaging and runtime identity to match MemoryHub.
+The next major phase is architectural: introduce real project routing on top of
+the renamed local-only MemoryHub baseline.

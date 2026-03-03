@@ -2,9 +2,9 @@
 
 import pytest
 
-from basic_memory.schema.parser import parse_schema_note, parse_picoschema, SchemaDefinition
-from basic_memory.schema.validator import validate_note
-from basic_memory.schema.resolver import resolve_schema
+from memoryhub.schema.parser import parse_schema_note, parse_picoschema, SchemaDefinition
+from memoryhub.schema.validator import validate_note
+from memoryhub.schema.resolver import resolve_schema
 
 from test_schema.helpers import (
     parse_frontmatter,

@@ -13,7 +13,7 @@ import pytest
 from fastmcp import Client
 from unittest.mock import patch
 
-from basic_memory.config import ConfigManager, BasicMemoryConfig
+from memoryhub.config import ConfigManager, BasicMemoryConfig
 
 
 @pytest.mark.asyncio
@@ -53,7 +53,7 @@ async def test_explicit_project_overrides_default(
     """Test that explicit project parameter overrides default_project."""
 
     engine, session_maker = engine_factory
-    from basic_memory.repository.project_repository import ProjectRepository
+    from memoryhub.repository.project_repository import ProjectRepository
 
     project_repository = ProjectRepository(session_maker)
 
@@ -127,7 +127,7 @@ async def test_cli_constraint_overrides_default_project(
     """Test that CLI --project constraint overrides default_project."""
 
     engine, session_maker = engine_factory
-    from basic_memory.repository.project_repository import ProjectRepository
+    from memoryhub.repository.project_repository import ProjectRepository
 
     project_repository = ProjectRepository(session_maker)
 
@@ -249,7 +249,7 @@ async def test_project_resolution_hierarchy(
     """Test the complete three-tier project resolution hierarchy."""
 
     engine, session_maker = engine_factory
-    from basic_memory.repository.project_repository import ProjectRepository
+    from memoryhub.repository.project_repository import ProjectRepository
 
     project_repository = ProjectRepository(session_maker)
 

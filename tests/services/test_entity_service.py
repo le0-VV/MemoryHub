@@ -7,16 +7,16 @@ from textwrap import dedent
 import pytest
 import yaml
 
-from basic_memory.config import ProjectConfig, BasicMemoryConfig
-from basic_memory.markdown import EntityParser
-from basic_memory.models import Entity as EntityModel
-from basic_memory.repository import EntityRepository
-from basic_memory.schemas import Entity as EntitySchema
-from basic_memory.services import FileService
-from basic_memory.services.entity_service import EntityService
-from basic_memory.services.exceptions import EntityCreationError, EntityNotFoundError
-from basic_memory.services.search_service import SearchService
-from basic_memory.utils import generate_permalink
+from memoryhub.config import ProjectConfig, BasicMemoryConfig
+from memoryhub.markdown import EntityParser
+from memoryhub.models import Entity as EntityModel
+from memoryhub.repository import EntityRepository
+from memoryhub.schemas import Entity as EntitySchema
+from memoryhub.services import FileService
+from memoryhub.services.entity_service import EntityService
+from memoryhub.services.exceptions import EntityCreationError, EntityNotFoundError
+from memoryhub.services.search_service import SearchService
+from memoryhub.utils import generate_permalink
 
 
 @pytest.mark.asyncio
@@ -956,7 +956,7 @@ async def test_create_entity_from_markdown_with_upsert(
     file_path = Path("test/upsert-test.md")
 
     # Create a mock EntityMarkdown object
-    from basic_memory.markdown.schemas import (
+    from memoryhub.markdown.schemas import (
         EntityFrontmatter,
         EntityMarkdown as RealEntityMarkdown,
     )
@@ -987,12 +987,12 @@ async def test_create_entity_from_markdown_error_handling(
     entity_service: EntityService, file_service: FileService, monkeypatch
 ):
     """Test that create_entity_from_markdown handles repository errors gracefully."""
-    from basic_memory.services.exceptions import EntityCreationError
+    from memoryhub.services.exceptions import EntityCreationError
 
     file_path = Path("test/error-test.md")
 
     # Create a mock EntityMarkdown object
-    from basic_memory.markdown.schemas import (
+    from memoryhub.markdown.schemas import (
         EntityFrontmatter,
         EntityMarkdown as RealEntityMarkdown,
     )
@@ -1912,7 +1912,7 @@ async def test_move_entity_with_null_permalink_generates_permalink(
     assert moved_entity.permalink != ""
 
     # Verify the moved entity can be used to create an EntityResponse without validation errors
-    from basic_memory.schemas.response import EntityResponse
+    from memoryhub.schemas.response import EntityResponse
 
     response = EntityResponse.model_validate(moved_entity)
     assert response.permalink == moved_entity.permalink

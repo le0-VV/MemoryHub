@@ -154,7 +154,7 @@ function SearchResultsApp() {
         <div className="border-border bg-card rounded-2xl border p-3 shadow-sm">
           <DataTableErrorBoundary>
             <DataTable
-              id="basic-memory-search-results"
+              id="memoryhub-search-results"
               rowIdKey="id"
               columns={columns}
               data={rows}

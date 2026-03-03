@@ -12,8 +12,8 @@ from textwrap import dedent
 import pytest
 from httpx import AsyncClient
 
-from basic_memory.models import Project
-from basic_memory.schemas.base import Entity as EntitySchema
+from memoryhub.models import Project
+from memoryhub.schemas.base import Entity as EntitySchema
 
 
 # --- Helpers ---

@@ -3,7 +3,7 @@
 import tempfile
 import pytest
 
-from basic_memory.config import (
+from memoryhub.config import (
     BasicMemoryConfig,
     ConfigManager,
     ProjectEntry,
@@ -14,19 +14,19 @@ from pathlib import Path
 class TestBasicMemoryConfig:
     """Test BasicMemoryConfig behavior with BASIC_MEMORY_HOME environment variable."""
 
-    def test_default_behavior_without_basic_memory_home(self, config_home, monkeypatch):
+    def test_default_behavior_without_memoryhub_home(self, config_home, monkeypatch):
         """Test that config uses default path when BASIC_MEMORY_HOME is not set."""
         # Ensure BASIC_MEMORY_HOME is not set
         monkeypatch.delenv("BASIC_MEMORY_HOME", raising=False)
 
         config = BasicMemoryConfig()
 
-        # Should use the default path (home/basic-memory)
-        expected_path = config_home / "basic-memory"
+        # Should use the default path (home/memoryhub)
+        expected_path = config_home / "memoryhub"
         assert Path(config.projects["main"].path) == expected_path
         assert config.default_project == "main"
 
-    def test_respects_basic_memory_home_environment_variable(self, config_home, monkeypatch):
+    def test_respects_memoryhub_home_environment_variable(self, config_home, monkeypatch):
         """Test that config respects BASIC_MEMORY_HOME environment variable."""
         custom_path = config_home / "app" / "data"
         monkeypatch.setenv("BASIC_MEMORY_HOME", str(custom_path))
@@ -36,7 +36,7 @@ class TestBasicMemoryConfig:
         # Should use the custom path from environment variable
         assert Path(config.projects["main"].path) == custom_path
 
-    def test_model_post_init_respects_basic_memory_home_creates_main(
+    def test_model_post_init_respects_memoryhub_home_creates_main(
         self, config_home, monkeypatch
     ):
         """Test that model_post_init creates main project with BASIC_MEMORY_HOME when missing and no other projects."""
@@ -50,7 +50,7 @@ class TestBasicMemoryConfig:
         assert "main" in config.projects
         assert Path(config.projects["main"].path) == custom_path
 
-    def test_model_post_init_respects_basic_memory_home_sets_non_main_default(
+    def test_model_post_init_respects_memoryhub_home_sets_non_main_default(
         self, config_home, monkeypatch
     ):
         """Test that model_post_init does not create main project with BASIC_MEMORY_HOME when another project exists."""
@@ -66,7 +66,7 @@ class TestBasicMemoryConfig:
         assert Path(config.projects["other"].path) == other_path
         assert config.default_project == "other"
 
-    def test_model_post_init_fallback_without_basic_memory_home(self, config_home, monkeypatch):
+    def test_model_post_init_fallback_without_memoryhub_home(self, config_home, monkeypatch):
         """Test that model_post_init can set a non-main default when BASIC_MEMORY_HOME is not set."""
         # Ensure BASIC_MEMORY_HOME is not set
         monkeypatch.delenv("BASIC_MEMORY_HOME", raising=False)
@@ -80,7 +80,7 @@ class TestBasicMemoryConfig:
         assert Path(config.projects["other"].path) == other_path
         assert config.default_project == "other"
 
-    def test_basic_memory_home_with_relative_path(self, config_home, monkeypatch):
+    def test_memoryhub_home_with_relative_path(self, config_home, monkeypatch):
         """Test that BASIC_MEMORY_HOME works with relative paths."""
         relative_path = "relative/memory/path"
         monkeypatch.setenv("BASIC_MEMORY_HOME", relative_path)
@@ -90,7 +90,7 @@ class TestBasicMemoryConfig:
         # Should normalize to platform-native path format
         assert Path(config.projects["main"].path) == Path(relative_path)
 
-    def test_basic_memory_home_overrides_existing_main_project(self, config_home, monkeypatch):
+    def test_memoryhub_home_overrides_existing_main_project(self, config_home, monkeypatch):
         """Test that BASIC_MEMORY_HOME is not used when a map is passed in the constructor."""
         custom_path = str(config_home / "override" / "memory" / "path")
         monkeypatch.setenv("BASIC_MEMORY_HOME", custom_path)
@@ -115,12 +115,12 @@ class TestBasicMemoryConfig:
         assert config.app_database_path.exists()
 
     def test_app_database_path_defaults_to_home_data_dir(self, config_home, monkeypatch):
-        """Without BASIC_MEMORY_CONFIG_DIR, default DB stays at ~/.basic-memory/memory.db."""
+        """Without BASIC_MEMORY_CONFIG_DIR, default DB stays at ~/.memoryhub/memory.db."""
         monkeypatch.delenv("BASIC_MEMORY_CONFIG_DIR", raising=False)
         config = BasicMemoryConfig()
 
-        assert config.data_dir_path == config_home / ".basic-memory"
-        assert config.app_database_path == config_home / ".basic-memory" / "memory.db"
+        assert config.data_dir_path == config_home / ".memoryhub"
+        assert config.app_database_path == config_home / ".memoryhub" / "memory.db"
 
     def test_explicit_default_project_preserved(self, config_home, monkeypatch):
         """Test that a valid explicit default_project is not overwritten by model_post_init."""
@@ -192,12 +192,12 @@ class TestBasicMemoryConfig:
     def test_stale_default_project_loaded_from_file(self, config_home, monkeypatch):
         """Test that a config file with a stale default_project is corrected on load."""
         import json
-        import basic_memory.config
+        import memoryhub.config
 
         monkeypatch.delenv("BASIC_MEMORY_HOME", raising=False)
 
         config_manager = ConfigManager()
-        config_manager.config_dir = config_home / ".basic-memory"
+        config_manager.config_dir = config_home / ".memoryhub"
         config_manager.config_file = config_manager.config_dir / "config.json"
         config_manager.config_dir.mkdir(parents=True, exist_ok=True)
 
@@ -210,7 +210,7 @@ class TestBasicMemoryConfig:
             "default_project": "deleted-project",
         }
         config_manager.config_file.write_text(json.dumps(config_data, indent=2))
-        basic_memory.config._CONFIG_CACHE = None
+        memoryhub.config._CONFIG_CACHE = None
 
         loaded = config_manager.load_config()
         assert loaded.default_project == "research"
@@ -218,12 +218,12 @@ class TestBasicMemoryConfig:
     def test_config_file_without_default_project_key(self, config_home, monkeypatch):
         """Test that a config file with no default_project key resolves dynamically."""
         import json
-        import basic_memory.config
+        import memoryhub.config
 
         monkeypatch.delenv("BASIC_MEMORY_HOME", raising=False)
 
         config_manager = ConfigManager()
-        config_manager.config_dir = config_home / ".basic-memory"
+        config_manager.config_dir = config_home / ".memoryhub"
         config_manager.config_file = config_manager.config_dir / "config.json"
         config_manager.config_dir.mkdir(parents=True, exist_ok=True)
 
@@ -235,7 +235,7 @@ class TestBasicMemoryConfig:
             },
         }
         config_manager.config_file.write_text(json.dumps(config_data, indent=2))
-        basic_memory.config._CONFIG_CACHE = None
+        memoryhub.config._CONFIG_CACHE = None
 
         loaded = config_manager.load_config()
         assert loaded.default_project == "work"
@@ -253,7 +253,7 @@ class TestConfigManager:
             # Create a test ConfigManager instance
             config_manager = ConfigManager()
             # Override config paths to use temp directory
-            config_manager.config_dir = temp_path / "basic-memory"
+            config_manager.config_dir = temp_path / "memoryhub"
             config_manager.config_file = config_manager.config_dir / "config.yaml"
             config_manager.config_dir.mkdir(parents=True, exist_ok=True)
 
@@ -381,8 +381,8 @@ class TestConfigManager:
         config_manager = ConfigManager()
 
         # Should use default location
-        assert config_manager.config_dir == config_home / ".basic-memory"
-        assert config_manager.config_file == config_home / ".basic-memory" / "config.json"
+        assert config_manager.config_dir == config_home / ".memoryhub"
+        assert config_manager.config_file == config_home / ".memoryhub" / "config.json"
 
     def test_remove_project_with_exact_name_match(self, temp_config_manager):
         """Test remove_project when project name matches config key exactly."""
@@ -454,7 +454,7 @@ class TestConfigManager:
             temp_path = Path(temp_dir)
 
             config_manager = ConfigManager()
-            config_manager.config_dir = temp_path / "basic-memory"
+            config_manager.config_dir = temp_path / "memoryhub"
             config_manager.config_file = config_manager.config_dir / "config.json"
             config_manager.config_dir.mkdir(parents=True, exist_ok=True)
 
@@ -470,9 +470,9 @@ class TestConfigManager:
             config_manager.config_file.write_text(json.dumps(old_config_data, indent=2))
 
             # Clear the config cache to ensure we load from the temp file
-            import basic_memory.config
+            import memoryhub.config
 
-            basic_memory.config._CONFIG_CACHE = None
+            memoryhub.config._CONFIG_CACHE = None
 
             # Should load successfully with migration to ProjectEntry
             config = config_manager.load_config()
@@ -485,7 +485,7 @@ class TestConfigManager:
             temp_path = Path(temp_dir)
 
             config_manager = ConfigManager()
-            config_manager.config_dir = temp_path / "basic-memory"
+            config_manager.config_dir = temp_path / "memoryhub"
             config_manager.config_file = config_manager.config_dir / "config.json"
             config_manager.config_dir.mkdir(parents=True, exist_ok=True)
 
@@ -509,9 +509,9 @@ class TestConfigManager:
             }
             config_manager.config_file.write_text(json.dumps(old_config_data, indent=2))
 
-            import basic_memory.config
+            import memoryhub.config
 
-            basic_memory.config._CONFIG_CACHE = None
+            memoryhub.config._CONFIG_CACHE = None
 
             config = config_manager.load_config()
 
@@ -529,7 +529,7 @@ class TestConfigManager:
             temp_path = Path(temp_dir)
 
             config_manager = ConfigManager()
-            config_manager.config_dir = temp_path / "basic-memory"
+            config_manager.config_dir = temp_path / "memoryhub"
             config_manager.config_file = config_manager.config_dir / "config.json"
             config_manager.config_dir.mkdir(parents=True, exist_ok=True)
 
@@ -543,9 +543,9 @@ class TestConfigManager:
             }
             config_manager.config_file.write_text(json.dumps(legacy_config, indent=2))
 
-            import basic_memory.config
+            import memoryhub.config
 
-            basic_memory.config._CONFIG_CACHE = None
+            memoryhub.config._CONFIG_CACHE = None
 
             loaded = config_manager.load_config()
             assert isinstance(loaded, BasicMemoryConfig)
@@ -559,12 +559,12 @@ class TestConfigManager:
             temp_path = Path(temp_dir)
 
             config_manager = ConfigManager()
-            config_manager.config_dir = temp_path / "basic-memory"
+            config_manager.config_dir = temp_path / "memoryhub"
             config_manager.config_file = config_manager.config_dir / "config.json"
             config_manager.config_dir.mkdir(parents=True, exist_ok=True)
 
             import json
-            import basic_memory.config
+            import memoryhub.config
 
             legacy_config = {
                 "projects": {"main": str(temp_path / "main")},
@@ -572,7 +572,7 @@ class TestConfigManager:
                 "cloud_promo_first_run_shown": True,
             }
             config_manager.config_file.write_text(json.dumps(legacy_config, indent=2))
-            basic_memory.config._CONFIG_CACHE = None
+            memoryhub.config._CONFIG_CACHE = None
 
             loaded = config_manager.load_config()
             assert loaded.init_message_shown is True
@@ -594,7 +594,7 @@ class TestPlatformNativePathSeparators:
 
             # Set up ConfigManager with temp directory
             config_manager = ConfigManager()
-            config_manager.config_dir = temp_path / "basic-memory"
+            config_manager.config_dir = temp_path / "memoryhub"
             config_manager.config_file = config_manager.config_dir / "config.json"
             config_manager.config_dir.mkdir(parents=True, exist_ok=True)
 
@@ -635,7 +635,7 @@ class TestPlatformNativePathSeparators:
 
             # Set up ConfigManager
             config_manager = ConfigManager()
-            config_manager.config_dir = temp_path / "basic-memory"
+            config_manager.config_dir = temp_path / "memoryhub"
             config_manager.config_file = config_manager.config_dir / "config.json"
             config_manager.config_dir.mkdir(parents=True, exist_ok=True)
 
@@ -667,7 +667,7 @@ class TestPlatformNativePathSeparators:
             temp_path = Path(temp_dir)
 
             config_manager = ConfigManager()
-            config_manager.config_dir = temp_path / "basic-memory"
+            config_manager.config_dir = temp_path / "memoryhub"
             config_manager.config_file = config_manager.config_dir / "config.json"
             config_manager.config_dir.mkdir(parents=True, exist_ok=True)
 
@@ -714,7 +714,7 @@ class TestSemanticSearchConfig:
         self, monkeypatch
     ):
         """Semantic search defaults on when fastembed and sqlite_vec are importable."""
-        import basic_memory.config as config_module
+        import memoryhub.config as config_module
 
         monkeypatch.delenv("BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED", raising=False)
         monkeypatch.setattr(
@@ -729,7 +729,7 @@ class TestSemanticSearchConfig:
         self, monkeypatch
     ):
         """Semantic search defaults off when required semantic modules are missing."""
-        import basic_memory.config as config_module
+        import memoryhub.config as config_module
 
         monkeypatch.delenv("BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED", raising=False)
         monkeypatch.setattr(
@@ -742,7 +742,7 @@ class TestSemanticSearchConfig:
 
     def test_semantic_search_enabled_env_var_overrides_dependency_default(self, monkeypatch):
         """Environment overrides should win over dependency-based defaults."""
-        import basic_memory.config as config_module
+        import memoryhub.config as config_module
 
         monkeypatch.setattr(config_module.importlib.util, "find_spec", lambda name: None)
 
@@ -874,7 +874,7 @@ class TestFormattingConfig:
             temp_path = Path(temp_dir)
 
             config_manager = ConfigManager()
-            config_manager.config_dir = temp_path / "basic-memory"
+            config_manager.config_dir = temp_path / "memoryhub"
             config_manager.config_file = config_manager.config_dir / "config.json"
             config_manager.config_dir.mkdir(parents=True, exist_ok=True)
 

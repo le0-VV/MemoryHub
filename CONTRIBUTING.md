@@ -1,6 +1,6 @@
 # Contributing to MemoryHub
 
-MemoryHub is an experimental fork of Basic Memory. This repository is still in the transition phase: most code, modules, and commands still use inherited `basic_memory` / `basic-memory` naming, while the product direction is shifting toward a multi-project MCP hub.
+MemoryHub is an experimental fork of Basic Memory. This repository is still in the transition phase: most code, modules, and commands still use inherited `memoryhub` / `memoryhub` naming, while the product direction is shifting toward a multi-project MCP hub.
 
 This document covers how to contribute to the fork without confusing it with the upstream project.
 
@@ -32,11 +32,11 @@ This document covers how to contribute to the fork without confusing it with the
 
 Until the rename is complete:
 
-- The Python package is still `basic_memory`
-- The CLI entrypoints are still `basic-memory` and `bm`
+- The Python package is still `memoryhub`
+- The CLI entrypoints are still `memoryhub` and `bm`
 - The MCP server still identifies itself as `Basic Memory`
 
-If you want to run this fork, install from the local checkout. Do not use `uv tool install basic-memory`, because that installs the upstream package from PyPI.
+If you want to run this fork, install from the local checkout. Do not use `uv tool install memoryhub`, because that installs the upstream package from PyPI.
 
 ## Development Workflow
 

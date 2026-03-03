@@ -8,13 +8,13 @@ from types import SimpleNamespace
 
 import pytest
 
-from basic_memory.repository.search_repository_base import (
+from memoryhub.repository.search_repository_base import (
     MAX_VECTOR_CHUNK_CHARS,
     SearchRepositoryBase,
 )
-from basic_memory.repository.sqlite_search_repository import SQLiteSearchRepository
-from basic_memory.repository.semantic_errors import SemanticSearchDisabledError
-from basic_memory.schemas.search import SearchItemType, SearchRetrievalMode
+from memoryhub.repository.sqlite_search_repository import SQLiteSearchRepository
+from memoryhub.repository.semantic_errors import SemanticSearchDisabledError
+from memoryhub.schemas.search import SearchItemType, SearchRetrievalMode
 
 
 # --- Helpers ---

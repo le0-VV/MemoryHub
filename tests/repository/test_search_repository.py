@@ -6,11 +6,11 @@ import pytest
 import pytest_asyncio
 from sqlalchemy import text
 
-from basic_memory import db
-from basic_memory.models import Entity
-from basic_memory.models.project import Project
-from basic_memory.repository.search_repository import SearchIndexRow
-from basic_memory.schemas.search import SearchItemType
+from memoryhub import db
+from memoryhub.models import Entity
+from memoryhub.models.project import Project
+from memoryhub.repository.search_repository import SearchIndexRow
+from memoryhub.schemas.search import SearchItemType
 
 
 @pytest_asyncio.fixture

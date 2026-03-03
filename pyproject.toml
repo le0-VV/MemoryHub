@@ -1,5 +1,5 @@
 [project]
-name = "basic-memory"
+name = "memoryhub"
 dynamic = ["version"]
 description = "Experimental MemoryHub fork of Basic Memory focused on multi-project MCP workflows"
 readme = "README.md"
@@ -53,8 +53,8 @@ Repository = "https://github.com/le0-VV/MemoryHub"
 Documentation = "https://github.com/le0-VV/MemoryHub#readme"
 
 [project.scripts]
-basic-memory = "basic_memory.cli.main:app"
-bm = "basic_memory.cli.main:app"
+memoryhub = "memoryhub.cli.main:app"
+bm = "memoryhub.cli.main:app"
 
 [build-system]
 requires = ["hatchling", "uv-dynamic-versioning>=0.7.0"]
@@ -62,7 +62,7 @@ build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "tests"]
-addopts = "--cov=basic_memory --cov-report term-missing"
+addopts = "--cov=memoryhub --cov-report term-missing"
 testpaths = ["tests", "test-int"]
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
@@ -120,7 +120,7 @@ pythonVersion = "3.12"
 [tool.coverage.run]
 concurrency = ["thread", "gevent"]
 parallel = true
-source = ["basic_memory"]
+source = ["memoryhub"]
 
 [tool.coverage.report]
 exclude_lines = [

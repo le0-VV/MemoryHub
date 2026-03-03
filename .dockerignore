@@ -45,7 +45,7 @@ CONTRIBUTING.md
 examples/
 
 # Local development files
-.basic-memory/
+.memoryhub/
 *.db
 *.sqlite3
 

@@ -14,7 +14,7 @@ a personal knowledge graph.
 - [name] Basic Memory
 - [language] Python
 - [license] MIT
-- [repo_url] https://github.com/basicmachines-co/basic-memory
+- [repo_url] https://github.com/basicmachines-co/memoryhub
 - [fact] Uses SQLite for indexing and markdown files as source of truth
 - [fact] Provides 17 MCP tools for AI integration
 - [version] 0.13.8

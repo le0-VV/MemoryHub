@@ -6,10 +6,10 @@ import pytest
 import pytest_asyncio
 from sqlalchemy import select
 
-from basic_memory import db
-from basic_memory.models import Entity, Observation, Relation, Project
-from basic_memory.repository.entity_repository import EntityRepository
-from basic_memory.utils import generate_permalink
+from memoryhub import db
+from memoryhub.models import Entity, Observation, Relation, Project
+from memoryhub.repository.entity_repository import EntityRepository
+from memoryhub.utils import generate_permalink
 
 
 @pytest_asyncio.fixture

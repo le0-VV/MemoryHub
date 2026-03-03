@@ -3,8 +3,8 @@ from contextlib import asynccontextmanager
 import httpx
 import pytest
 
-from basic_memory.mcp import async_client as async_client_module
-from basic_memory.mcp.async_client import (
+from memoryhub.mcp import async_client as async_client_module
+from memoryhub.mcp.async_client import (
     get_client,
     set_client_factory,
 )

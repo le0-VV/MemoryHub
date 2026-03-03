@@ -2,7 +2,7 @@
 
 import pytest
 
-from basic_memory.mcp.tools import write_note
+from memoryhub.mcp.tools import write_note
 
 
 @pytest.mark.asyncio

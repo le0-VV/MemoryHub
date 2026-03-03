@@ -5,7 +5,7 @@ Covers get_ui_variant(), load_html(), and load_variant_html().
 
 import pytest
 
-from basic_memory.mcp.ui.templates import (
+from memoryhub.mcp.ui.templates import (
     get_ui_variant,
     load_html,
     load_variant_html,

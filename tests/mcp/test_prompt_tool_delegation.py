@@ -7,9 +7,9 @@ using monkeypatching (no real services needed).
 
 import pytest
 
-from basic_memory.mcp.prompts.search import search_prompt
-from basic_memory.mcp.prompts.continue_conversation import continue_conversation
-from basic_memory.schemas.search import SearchResponse, SearchResult
+from memoryhub.mcp.prompts.search import search_prompt
+from memoryhub.mcp.prompts.continue_conversation import continue_conversation
+from memoryhub.schemas.search import SearchResponse, SearchResult
 
 
 # --- search_prompt ---
@@ -38,7 +38,7 @@ async def test_search_prompt_delegates_to_search_notes(monkeypatch):
         captured_kwargs.update(kwargs)
         return fake_result
 
-    monkeypatch.setattr("basic_memory.mcp.prompts.search.search_notes", fake_search_notes)
+    monkeypatch.setattr("memoryhub.mcp.prompts.search.search_notes", fake_search_notes)
 
     out = await search_prompt("my query", timeframe="1w")  # pyright: ignore[reportGeneralTypeIssues]
 
@@ -60,7 +60,7 @@ async def test_search_prompt_handles_no_results(monkeypatch):
     async def fake_search_notes(**kwargs):
         return fake_result
 
-    monkeypatch.setattr("basic_memory.mcp.prompts.search.search_notes", fake_search_notes)
+    monkeypatch.setattr("memoryhub.mcp.prompts.search.search_notes", fake_search_notes)
 
     out = await search_prompt("nonexistent")  # pyright: ignore[reportGeneralTypeIssues]
 
@@ -75,7 +75,7 @@ async def test_search_prompt_handles_error_string(monkeypatch):
     async def fake_search_notes(**kwargs):
         return "# Search Failed - Invalid Syntax\n\nThe query contains errors."
 
-    monkeypatch.setattr("basic_memory.mcp.prompts.search.search_notes", fake_search_notes)
+    monkeypatch.setattr("memoryhub.mcp.prompts.search.search_notes", fake_search_notes)
 
     out = await search_prompt("bad(query")  # pyright: ignore[reportGeneralTypeIssues]
 
@@ -110,7 +110,7 @@ async def test_continue_conversation_delegates_to_search_notes(monkeypatch):
         return fake_result
 
     monkeypatch.setattr(
-        "basic_memory.mcp.prompts.continue_conversation.search_notes", fake_search_notes
+        "memoryhub.mcp.prompts.continue_conversation.search_notes", fake_search_notes
     )
 
     out = await continue_conversation(topic="my topic", timeframe="3d")  # pyright: ignore[reportGeneralTypeIssues]
@@ -133,7 +133,7 @@ async def test_continue_conversation_delegates_to_recent_activity(monkeypatch):
         return "## Recent Activity: test-project (7d)\n\n**Items:** 3 found"
 
     monkeypatch.setattr(
-        "basic_memory.mcp.prompts.continue_conversation.recent_activity", fake_recent_activity
+        "memoryhub.mcp.prompts.continue_conversation.recent_activity", fake_recent_activity
     )
 
     out = await continue_conversation(timeframe="7d")  # pyright: ignore[reportGeneralTypeIssues]
@@ -153,7 +153,7 @@ async def test_continue_conversation_no_topic_default_timeframe(monkeypatch):
         return "## Recent Activity Summary"
 
     monkeypatch.setattr(
-        "basic_memory.mcp.prompts.continue_conversation.recent_activity", fake_recent_activity
+        "memoryhub.mcp.prompts.continue_conversation.recent_activity", fake_recent_activity
     )
 
     await continue_conversation()  # pyright: ignore[reportGeneralTypeIssues]
@@ -170,7 +170,7 @@ async def test_continue_conversation_no_results_for_topic(monkeypatch):
         return fake_result
 
     monkeypatch.setattr(
-        "basic_memory.mcp.prompts.continue_conversation.search_notes", fake_search_notes
+        "memoryhub.mcp.prompts.continue_conversation.search_notes", fake_search_notes
     )
 
     out = await continue_conversation(topic="unknown topic")  # pyright: ignore[reportGeneralTypeIssues]

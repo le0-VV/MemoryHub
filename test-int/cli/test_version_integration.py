@@ -2,8 +2,8 @@
 
 from typer.testing import CliRunner
 
-from basic_memory.cli.main import app
-import basic_memory
+from memoryhub.cli.main import app
+import memoryhub
 
 
 def test_version_command():
@@ -12,4 +12,4 @@ def test_version_command():
     result = runner.invoke(app, ["--version"])
 
     assert result.exit_code == 0
-    assert basic_memory.__version__ in result.stdout
+    assert memoryhub.__version__ in result.stdout

@@ -6,14 +6,14 @@ from pathlib import Path
 
 import pytest
 
-from basic_memory.schemas import (
+from memoryhub.schemas import (
     ProjectInfoResponse,
     ProjectStatistics,
     ActivityMetrics,
     SystemStatus,
 )
-from basic_memory.services.project_service import ProjectService
-from basic_memory.config import ConfigManager
+from memoryhub.services.project_service import ProjectService
+from memoryhub.config import ConfigManager
 
 
 def test_projects_property(project_service: ProjectService):
@@ -513,7 +513,7 @@ async def test_synchronize_projects_normalizes_project_names(project_service: Pr
 
             # Add project with unnormalized name directly to config
             config = config_manager.load_config()
-            from basic_memory.config import ProjectEntry
+            from memoryhub.config import ProjectEntry
 
             config.projects[unnormalized_name] = ProjectEntry(path=test_project_path)
             config_manager.save_config(config)
@@ -706,7 +706,7 @@ async def test_synchronize_projects_handles_case_sensitivity_bug(project_service
         try:
             # Add project with uppercase name to config (simulating the bug scenario)
             config = config_manager.load_config()
-            from basic_memory.config import ProjectEntry
+            from memoryhub.config import ProjectEntry
 
             config.projects[config_name] = ProjectEntry(path=test_project_path)
             config_manager.save_config(config)
@@ -775,7 +775,7 @@ async def test_add_project_with_project_root_sanitizes_paths(
         monkeypatch.setenv("BASIC_MEMORY_PROJECT_ROOT", str(project_root_path))
 
         # Invalidate config cache so it picks up the new env var
-        from basic_memory import config as config_module
+        from memoryhub import config as config_module
 
         config_module._CONFIG_CACHE = None
 
@@ -842,7 +842,7 @@ async def test_add_project_with_project_root_rejects_escape_attempts(
         monkeypatch.setenv("BASIC_MEMORY_PROJECT_ROOT", str(project_root_path))
 
         # Invalidate config cache so it picks up the new env var
-        from basic_memory import config as config_module
+        from memoryhub import config as config_module
 
         config_module._CONFIG_CACHE = None
 
@@ -928,7 +928,7 @@ async def test_add_project_with_project_root_normalizes_case(
         monkeypatch.setenv("BASIC_MEMORY_PROJECT_ROOT", str(project_root_path))
 
         # Invalidate config cache so it picks up the new env var
-        from basic_memory import config as config_module
+        from memoryhub import config as config_module
 
         config_module._CONFIG_CACHE = None
 
@@ -982,20 +982,20 @@ async def test_add_project_with_project_root_detects_case_collisions(
         monkeypatch.setenv("BASIC_MEMORY_PROJECT_ROOT", str(project_root_path))
 
         # Invalidate config cache so it picks up the new env var
-        from basic_memory import config as config_module
+        from memoryhub import config as config_module
 
         config_module._CONFIG_CACHE = None
 
         # First, create a project with lowercase path
         first_project = "documents-project"
-        await project_service.add_project(first_project, "documents/basic-memory")
+        await project_service.add_project(first_project, "documents/memoryhub")
 
         # Verify it was created with normalized lowercase path (resolve to handle macOS /private/var)
         assert first_project in project_service.projects
         first_path = project_service.projects[first_project]
         assert (
             Path(first_path).resolve()
-            == (project_root_path / "documents" / "basic-memory").resolve()
+            == (project_root_path / "documents" / "memoryhub").resolve()
         )
 
         # Now try to create a project with the same path but different case
@@ -1004,7 +1004,7 @@ async def test_add_project_with_project_root_detects_case_collisions(
         second_project = "documents-project-2"
         try:
             # This should succeed because both get normalized to the same lowercase path
-            await project_service.add_project(second_project, "documents/basic-memory")
+            await project_service.add_project(second_project, "documents/memoryhub")
             # If we get here, both should have the exact same path
             second_path = project_service.projects[second_project]
             assert second_path == first_path
@@ -1156,7 +1156,7 @@ async def test_add_project_nested_validation_with_project_root(
         monkeypatch.setenv("BASIC_MEMORY_PROJECT_ROOT", str(project_root_path))
 
         # Invalidate config cache
-        from basic_memory import config as config_module
+        from memoryhub import config as config_module
 
         config_module._CONFIG_CACHE = None
 

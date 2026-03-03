@@ -35,7 +35,7 @@ Useful current commands:
 
 - `just fast-check`
 - `just coverage`
-- `basic-memory doctor`
+- `memoryhub doctor`
 - `pytest tests -q`
 - `pytest test-int -q`
 

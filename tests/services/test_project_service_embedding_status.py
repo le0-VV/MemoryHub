@@ -5,8 +5,8 @@ from unittest.mock import patch
 import pytest
 from sqlalchemy import text
 
-from basic_memory.schemas.project_info import EmbeddingStatus
-from basic_memory.services.project_service import ProjectService
+from memoryhub.schemas.project_info import EmbeddingStatus
+from memoryhub.services.project_service import ProjectService
 
 
 @pytest.mark.asyncio
@@ -213,7 +213,7 @@ async def test_get_project_info_includes_embedding_status(
 
 def _config_manager_with(semantic_search_enabled: bool):
     """Create a ConfigManager whose config has the given semantic_search_enabled value."""
-    from basic_memory.config import ConfigManager
+    from memoryhub.config import ConfigManager
 
     cm = ConfigManager()
     # Patch the config object in-place

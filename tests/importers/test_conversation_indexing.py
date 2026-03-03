@@ -5,16 +5,16 @@ This test verifies issue #452 - Imported conversations not indexed correctly.
 
 import pytest
 
-from basic_memory.config import ProjectConfig
-from basic_memory.importers.claude_conversations_importer import ClaudeConversationsImporter
-from basic_memory.markdown import EntityParser
-from basic_memory.markdown.markdown_processor import MarkdownProcessor
-from basic_memory.repository import EntityRepository
-from basic_memory.services import EntityService
-from basic_memory.services.file_service import FileService
-from basic_memory.services.search_service import SearchService
-from basic_memory.schemas.search import SearchQuery
-from basic_memory.sync.sync_service import SyncService
+from memoryhub.config import ProjectConfig
+from memoryhub.importers.claude_conversations_importer import ClaudeConversationsImporter
+from memoryhub.markdown import EntityParser
+from memoryhub.markdown.markdown_processor import MarkdownProcessor
+from memoryhub.repository import EntityRepository
+from memoryhub.services import EntityService
+from memoryhub.services.file_service import FileService
+from memoryhub.services.search_service import SearchService
+from memoryhub.schemas.search import SearchQuery
+from memoryhub.sync.sync_service import SyncService
 
 
 @pytest.mark.asyncio

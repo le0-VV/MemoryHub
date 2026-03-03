@@ -2,7 +2,7 @@
 
 Every document in MemoryHub is a plain Markdown file. Files are the source of truth: the SQLite
 index is derived from them, not the other way around. This fork still uses the inherited
-`basic-memory` command and `basic_memory` package names in the current codebase.
+`memoryhub` command and `memoryhub` package names in the current codebase.
 
 ## Document Structure
 

@@ -3,8 +3,8 @@
 import typer
 from typer.testing import CliRunner
 
-from basic_memory.cli.app import app
-import basic_memory.cli.commands.project as project_cmd  # noqa: F401
+from memoryhub.cli.app import app
+import memoryhub.cli.commands.project as project_cmd  # noqa: F401
 
 runner = CliRunner()
 

@@ -4,9 +4,9 @@ import pytest
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 
-from basic_memory.mcp.tools import write_note
-from basic_memory.mcp.tools.search import search_notes, _format_search_error_response
-from basic_memory.schemas.search import SearchResponse
+from memoryhub.mcp.tools import write_note
+from memoryhub.mcp.tools.search import search_notes, _format_search_error_response
+from memoryhub.schemas.search import SearchResponse
 
 
 @pytest.mark.asyncio
@@ -327,13 +327,13 @@ class TestSearchErrorFormatting:
         """Test formatting for missing semantic dependencies."""
         result = _format_search_error_response(
             "test-project",
-            "fastembed package is missing. Install/update basic-memory to include semantic dependencies: pip install -U basic-memory",
+            "fastembed package is missing. Install/update memoryhub to include semantic dependencies: pip install -U memoryhub",
             "semantic query",
             "hybrid",
         )
 
         assert "# Search Failed - Semantic Dependencies Missing" in result
-        assert "pip install -U basic-memory" in result
+        assert "pip install -U memoryhub" in result
 
     def test_format_search_error_generic(self):
         """Test formatting for generic errors."""
@@ -352,8 +352,8 @@ class TestSearchToolErrorHandling:
         """Test exception handling in search_notes."""
         import importlib
 
-        search_mod = importlib.import_module("basic_memory.mcp.tools.search")
-        clients_mod = importlib.import_module("basic_memory.mcp.clients")
+        search_mod = importlib.import_module("memoryhub.mcp.tools.search")
+        clients_mod = importlib.import_module("memoryhub.mcp.clients")
 
         class StubProject:
             name = "test-project"
@@ -390,8 +390,8 @@ class TestSearchToolErrorHandling:
         """Test search_notes with permission error."""
         import importlib
 
-        search_mod = importlib.import_module("basic_memory.mcp.tools.search")
-        clients_mod = importlib.import_module("basic_memory.mcp.clients")
+        search_mod = importlib.import_module("memoryhub.mcp.tools.search")
+        clients_mod = importlib.import_module("memoryhub.mcp.clients")
 
         class StubProject:
             name = "test-project"
@@ -430,8 +430,8 @@ async def test_search_notes_sets_retrieval_mode_for_semantic_types(monkeypatch, 
     """Vector/hybrid search types should populate retrieval_mode in API payload."""
     import importlib
 
-    search_mod = importlib.import_module("basic_memory.mcp.tools.search")
-    clients_mod = importlib.import_module("basic_memory.mcp.clients")
+    search_mod = importlib.import_module("memoryhub.mcp.tools.search")
+    clients_mod = importlib.import_module("memoryhub.mcp.clients")
 
     class StubProject:
         project_url = "http://test"
@@ -483,8 +483,8 @@ async def test_search_notes_passes_metadata_filters(monkeypatch):
     """metadata_filters param propagates to the search query."""
     import importlib
 
-    search_mod = importlib.import_module("basic_memory.mcp.tools.search")
-    clients_mod = importlib.import_module("basic_memory.mcp.clients")
+    search_mod = importlib.import_module("memoryhub.mcp.tools.search")
+    clients_mod = importlib.import_module("memoryhub.mcp.clients")
 
     class StubProject:
         name = "test-project"
@@ -534,8 +534,8 @@ async def test_search_notes_filter_only_metadata(monkeypatch):
     """search_notes with metadata_filters only (no query) sends correct payload."""
     import importlib
 
-    search_mod = importlib.import_module("basic_memory.mcp.tools.search")
-    clients_mod = importlib.import_module("basic_memory.mcp.clients")
+    search_mod = importlib.import_module("memoryhub.mcp.tools.search")
+    clients_mod = importlib.import_module("memoryhub.mcp.clients")
 
     class StubProject:
         name = "test-project"
@@ -576,8 +576,8 @@ async def test_search_notes_filter_only_tags(monkeypatch):
     """search_notes with tags only (no query) sends correct payload."""
     import importlib
 
-    search_mod = importlib.import_module("basic_memory.mcp.tools.search")
-    clients_mod = importlib.import_module("basic_memory.mcp.clients")
+    search_mod = importlib.import_module("memoryhub.mcp.tools.search")
+    clients_mod = importlib.import_module("memoryhub.mcp.clients")
 
     class StubProject:
         name = "test-project"
@@ -615,7 +615,7 @@ async def test_search_notes_no_criteria_returns_error(monkeypatch):
     """search_notes with no args at all returns a helpful error string."""
     import importlib
 
-    search_mod = importlib.import_module("basic_memory.mcp.tools.search")
+    search_mod = importlib.import_module("memoryhub.mcp.tools.search")
 
     class StubProject:
         name = "test-project"
@@ -638,8 +638,8 @@ async def test_search_notes_invalid_search_type_returns_error(monkeypatch):
     """Invalid search_type values should return an error message listing valid options."""
     import importlib
 
-    search_mod = importlib.import_module("basic_memory.mcp.tools.search")
-    clients_mod = importlib.import_module("basic_memory.mcp.clients")
+    search_mod = importlib.import_module("memoryhub.mcp.tools.search")
+    clients_mod = importlib.import_module("memoryhub.mcp.clients")
 
     class StubProject:
         name = "test-project"
@@ -682,8 +682,8 @@ async def test_search_notes_passes_min_similarity(monkeypatch):
     """min_similarity param propagates to the SearchQuery payload."""
     import importlib
 
-    search_mod = importlib.import_module("basic_memory.mcp.tools.search")
-    clients_mod = importlib.import_module("basic_memory.mcp.clients")
+    search_mod = importlib.import_module("memoryhub.mcp.tools.search")
+    clients_mod = importlib.import_module("memoryhub.mcp.clients")
 
     class StubProject:
         name = "test-project"
@@ -729,8 +729,8 @@ async def test_search_notes_defaults_to_hybrid_when_semantic_enabled(monkeypatch
     import importlib
     from dataclasses import dataclass
 
-    search_mod = importlib.import_module("basic_memory.mcp.tools.search")
-    clients_mod = importlib.import_module("basic_memory.mcp.clients")
+    search_mod = importlib.import_module("memoryhub.mcp.tools.search")
+    clients_mod = importlib.import_module("memoryhub.mcp.clients")
 
     class StubProject:
         name = "test-project"
@@ -790,8 +790,8 @@ async def test_search_notes_defaults_to_fts_when_semantic_disabled(monkeypatch):
     import importlib
     from dataclasses import dataclass
 
-    search_mod = importlib.import_module("basic_memory.mcp.tools.search")
-    clients_mod = importlib.import_module("basic_memory.mcp.clients")
+    search_mod = importlib.import_module("memoryhub.mcp.tools.search")
+    clients_mod = importlib.import_module("memoryhub.mcp.clients")
 
     class StubProject:
         name = "test-project"
@@ -851,8 +851,8 @@ async def test_search_notes_explicit_text_stays_fts_when_semantic_enabled(monkey
     import importlib
     from dataclasses import dataclass
 
-    search_mod = importlib.import_module("basic_memory.mcp.tools.search")
-    clients_mod = importlib.import_module("basic_memory.mcp.clients")
+    search_mod = importlib.import_module("memoryhub.mcp.tools.search")
+    clients_mod = importlib.import_module("memoryhub.mcp.clients")
 
     class StubProject:
         name = "test-project"
@@ -910,8 +910,8 @@ async def test_search_notes_defaults_to_hybrid_when_container_not_initialized(mo
     """CLI fallback config should still default omitted search_type to hybrid."""
     import importlib
 
-    search_mod = importlib.import_module("basic_memory.mcp.tools.search")
-    clients_mod = importlib.import_module("basic_memory.mcp.clients")
+    search_mod = importlib.import_module("memoryhub.mcp.tools.search")
+    clients_mod = importlib.import_module("memoryhub.mcp.clients")
 
     class StubProject:
         name = "test-project"
@@ -972,8 +972,8 @@ async def test_search_notes_defaults_to_fts_when_container_not_initialized_and_s
     """CLI fallback config should default omitted search_type to FTS when semantic is disabled."""
     import importlib
 
-    search_mod = importlib.import_module("basic_memory.mcp.tools.search")
-    clients_mod = importlib.import_module("basic_memory.mcp.clients")
+    search_mod = importlib.import_module("memoryhub.mcp.tools.search")
+    clients_mod = importlib.import_module("memoryhub.mcp.clients")
 
     class StubProject:
         name = "test-project"

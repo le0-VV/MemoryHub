@@ -3,7 +3,7 @@
 import os
 
 
-from basic_memory.mcp.async_client import _force_local_mode
+from memoryhub.mcp.async_client import _force_local_mode
 
 
 class TestForceLocalMode:

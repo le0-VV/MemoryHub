@@ -48,14 +48,14 @@ Permalink: "finance/my-investment-strategy"
 
 **Example:**
 ```
-File 1: "basic memory bug.md"     → permalink: "basic-memory-bug"
-File 2: "basic-memory-bug.md"    → permalink: "basic-memory-bug" (CONFLICT!)
+File 1: "basic memory bug.md"     → permalink: "memoryhub-bug"
+File 2: "memoryhub-bug.md"    → permalink: "memoryhub-bug" (CONFLICT!)
 ```
 
 **Resolution:** The system automatically resolves this by adding suffixes:
 ```
-File 1: "basic memory bug.md"     → permalink: "basic-memory-bug"
-File 2: "basic-memory-bug.md"    → permalink: "basic-memory-bug-1"
+File 1: "basic memory bug.md"     → permalink: "memoryhub-bug"
+File 2: "memoryhub-bug.md"    → permalink: "memoryhub-bug-1"
 ```
 
 **Best Practice:** Choose consistent naming conventions within your project.
@@ -189,10 +189,10 @@ finance/           (lowercase f)
 Use the built-in consistency checks:
 
 ```bash
-basic-memory status
+memoryhub status
 
 # Run an end-to-end file <-> database check in a temp project
-basic-memory doctor
+memoryhub doctor
 ```
 
 ### Resolving Existing Conflicts

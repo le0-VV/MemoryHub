@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from basic_memory.config import BasicMemoryConfig, ProjectConfig
-from basic_memory.deps.services import get_task_scheduler
+from memoryhub.config import BasicMemoryConfig, ProjectConfig
+from memoryhub.deps.services import get_task_scheduler
 
 
 class StubEntityService:

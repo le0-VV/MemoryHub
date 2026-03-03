@@ -12,9 +12,9 @@ from dataclasses import dataclass
 
 import pytest
 
-from basic_memory.config import BasicMemoryConfig
-from basic_memory.models.project import Project
-from basic_memory.sync.watch_service import WatchService
+from memoryhub.config import BasicMemoryConfig
+from memoryhub.models.project import Project
+from memoryhub.sync.watch_service import WatchService
 
 
 @dataclass
@@ -72,7 +72,7 @@ async def test_watch_projects_cycle_handles_empty_project_list(monkeypatch):
             yield None
         return
 
-    monkeypatch.setattr("basic_memory.sync.watch_service.awatch", awatch_stub)
+    monkeypatch.setattr("memoryhub.sync.watch_service.awatch", awatch_stub)
 
     await watch_service._watch_projects_cycle([], stop_event)
 

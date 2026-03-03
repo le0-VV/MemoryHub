@@ -5,10 +5,10 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from sqlalchemy import select
 
-from basic_memory import db
-from basic_memory.mcp.tools import create_memory_project, delete_project, list_memory_projects
-from basic_memory.models.project import Project
-from basic_memory.schemas.project_info import ProjectItem, ProjectList
+from memoryhub import db
+from memoryhub.mcp.tools import create_memory_project, delete_project, list_memory_projects
+from memoryhub.models.project import Project
+from memoryhub.schemas.project_info import ProjectItem, ProjectList
 
 
 def _make_project(
@@ -62,7 +62,7 @@ async def test_list_memory_projects_shows_display_name(app, client, test_project
     mock_list = _make_list([regular_project, mock_project], default="main")
 
     with patch(
-        "basic_memory.mcp.clients.project.ProjectClient.list_projects",
+        "memoryhub.mcp.clients.project.ProjectClient.list_projects",
         new_callable=AsyncMock,
         return_value=mock_list,
     ):
@@ -88,7 +88,7 @@ async def test_list_memory_projects_json_output(app):
     )
 
     with patch(
-        "basic_memory.mcp.clients.project.ProjectClient.list_projects",
+        "memoryhub.mcp.clients.project.ProjectClient.list_projects",
         new_callable=AsyncMock,
         return_value=mock_list,
     ):

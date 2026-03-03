@@ -5,8 +5,8 @@ import asyncio
 import pytest
 from unittest.mock import AsyncMock, patch
 
-from basic_memory.config import BasicMemoryConfig
-from basic_memory.sync.coordinator import SyncCoordinator, SyncStatus
+from memoryhub.config import BasicMemoryConfig
+from memoryhub.sync.coordinator import SyncCoordinator, SyncStatus
 
 
 class TestSyncCoordinator:
@@ -108,7 +108,7 @@ class TestSyncCoordinator:
         # Mock initialize_file_sync to avoid actually starting sync
         # The import happens inside start(), so patch at the source module
         with patch(
-            "basic_memory.services.initialization.initialize_file_sync",
+            "memoryhub.services.initialization.initialize_file_sync",
             new_callable=AsyncMock,
         ):
             # Start coordinator
@@ -135,7 +135,7 @@ class TestSyncCoordinator:
         )
 
         with patch(
-            "basic_memory.services.initialization.initialize_file_sync",
+            "memoryhub.services.initialization.initialize_file_sync",
             new_callable=AsyncMock,
         ) as mock_init:
             await coordinator.start()
@@ -155,7 +155,7 @@ class TestSyncCoordinator:
         )
 
         with patch(
-            "basic_memory.services.initialization.initialize_file_sync",
+            "memoryhub.services.initialization.initialize_file_sync",
             new_callable=AsyncMock,
         ):
             await coordinator.start()

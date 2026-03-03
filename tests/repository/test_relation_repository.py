@@ -6,9 +6,9 @@ import pytest
 import pytest_asyncio
 import sqlalchemy
 
-from basic_memory import db
-from basic_memory.models import Entity, Relation, Project
-from basic_memory.repository.relation_repository import RelationRepository
+from memoryhub import db
+from memoryhub.models import Entity, Relation, Project
+from memoryhub.repository.relation_repository import RelationRepository
 
 
 @pytest_asyncio.fixture

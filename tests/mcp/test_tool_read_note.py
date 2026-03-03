@@ -4,8 +4,8 @@ from textwrap import dedent
 
 import pytest
 
-from basic_memory.mcp.tools import write_note, read_note
-from basic_memory.utils import normalize_newlines
+from memoryhub.mcp.tools import write_note, read_note
+from memoryhub.utils import normalize_newlines
 
 
 @pytest.mark.asyncio
@@ -35,9 +35,9 @@ async def test_read_note_title_search_fallback_fetches_by_permalink(monkeypatch,
     )
 
     import importlib
-    from basic_memory.schemas.memory import memory_url_path
+    from memoryhub.schemas.memory import memory_url_path
 
-    clients_mod = importlib.import_module("basic_memory.mcp.clients")
+    clients_mod = importlib.import_module("memoryhub.mcp.clients")
     OriginalKnowledgeClient = clients_mod.KnowledgeClient
     direct_identifier = memory_url_path("Fallback Title Note")
 
@@ -61,8 +61,8 @@ async def test_read_note_returns_related_results_when_text_search_finds_matches(
     """Exercise the related-results message when no exact note match exists."""
     import importlib
 
-    read_note_module = importlib.import_module("basic_memory.mcp.tools.read_note")
-    clients_mod = importlib.import_module("basic_memory.mcp.clients")
+    read_note_module = importlib.import_module("memoryhub.mcp.tools.read_note")
+    clients_mod = importlib.import_module("memoryhub.mcp.clients")
     OriginalKnowledgeClient = clients_mod.KnowledgeClient
 
     async def fake_search_notes_fn(*, query, search_type, **kwargs):
@@ -118,8 +118,8 @@ async def test_read_note_title_fallback_requires_exact_title_match(monkeypatch, 
 
     import importlib
 
-    read_note_module = importlib.import_module("basic_memory.mcp.tools.read_note")
-    clients_mod = importlib.import_module("basic_memory.mcp.clients")
+    read_note_module = importlib.import_module("memoryhub.mcp.tools.read_note")
+    clients_mod = importlib.import_module("memoryhub.mcp.clients")
     OriginalKnowledgeClient = clients_mod.KnowledgeClient
 
     class StrictFailingKnowledgeClient(OriginalKnowledgeClient):

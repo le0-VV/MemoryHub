@@ -1,4 +1,4 @@
-# Basic Memory - Modern Command Runner
+# MemoryHub - Modern Command Runner
 
 # Install dependencies
 install:
@@ -93,7 +93,7 @@ coverage:
     uv run coverage erase
     
     echo "🔎 Coverage..."
-    BASIC_MEMORY_ENV=test uv run coverage run --source=basic_memory -m pytest -p pytest_mock -v --no-cov tests test-int
+    BASIC_MEMORY_ENV=test uv run coverage run --source=memoryhub -m pytest -p pytest_mock -v --no-cov tests test-int
     uv run coverage report -m
     uv run coverage html
     echo "Coverage report generated in htmlcov/index.html"
@@ -136,9 +136,9 @@ doctor:
     TMP_CONFIG=$(mktemp -d)
     HOME="$TMP_HOME" \
     BASIC_MEMORY_ENV=test \
-    BASIC_MEMORY_HOME="$TMP_HOME/basic-memory" \
+    BASIC_MEMORY_HOME="$TMP_HOME/memoryhub" \
     BASIC_MEMORY_CONFIG_DIR="$TMP_CONFIG" \
-    ./.venv/bin/python -m basic_memory.cli.main doctor --local
+    ./.venv/bin/python -m memoryhub.cli.main doctor --local
 
 
 # Update all dependencies to latest versions
@@ -153,7 +153,7 @@ check-all: lint format typecheck test test-semantic
 
 # Generate Alembic migration with descriptive message
 migration message:
-    cd src/basic_memory/alembic && alembic revision --autogenerate -m "{{message}}"
+    cd src/memoryhub/alembic && alembic revision --autogenerate -m "{{message}}"
 
 # Create a stable release (e.g., just release v0.13.2)
 release version:
@@ -196,8 +196,8 @@ release version:
     
     # Update version in __init__.py
     echo "📝 Updating version in __init__.py..."
-    sed -i.bak "s/__version__ = \".*\"/__version__ = \"$VERSION_NUM\"/" src/basic_memory/__init__.py
-    rm -f src/basic_memory/__init__.py.bak
+    sed -i.bak "s/__version__ = \".*\"/__version__ = \"$VERSION_NUM\"/" src/memoryhub/__init__.py
+    rm -f src/memoryhub/__init__.py.bak
 
     # Update version in server.json (MCP registry metadata)
     echo "📝 Updating version in server.json..."
@@ -205,7 +205,7 @@ release version:
     rm -f server.json.bak
 
     # Commit version update
-    git add src/basic_memory/__init__.py server.json
+    git add src/memoryhub/__init__.py server.json
     git commit -m "chore: update version to $VERSION_NUM for {{version}} release"
     
     # Create and push tag
@@ -267,8 +267,8 @@ beta version:
     
     # Update version in __init__.py
     echo "📝 Updating version in __init__.py..."
-    sed -i.bak "s/__version__ = \".*\"/__version__ = \"$VERSION_NUM\"/" src/basic_memory/__init__.py
-    rm -f src/basic_memory/__init__.py.bak
+    sed -i.bak "s/__version__ = \".*\"/__version__ = \"$VERSION_NUM\"/" src/memoryhub/__init__.py
+    rm -f src/memoryhub/__init__.py.bak
 
     # Update version in server.json (MCP registry metadata)
     echo "📝 Updating version in server.json..."
@@ -276,7 +276,7 @@ beta version:
     rm -f server.json.bak
 
     # Commit version update
-    git add src/basic_memory/__init__.py server.json
+    git add src/memoryhub/__init__.py server.json
     git commit -m "chore: update version to $VERSION_NUM for {{version}} beta release"
     
     # Create and push tag

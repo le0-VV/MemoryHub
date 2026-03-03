@@ -19,7 +19,7 @@ import time
 
 import pytest
 
-from basic_memory.schemas.search import SearchItemType, SearchQuery, SearchRetrievalMode
+from memoryhub.schemas.search import SearchItemType, SearchQuery, SearchRetrievalMode
 
 from semantic.conftest import (
     ALL_COMBOS,
@@ -94,7 +94,7 @@ async def test_semantic_quality(
     skip_if_needed(combo)
 
     # Pick the right engine factory
-    from basic_memory.config import DatabaseBackend
+    from memoryhub.config import DatabaseBackend
 
     if combo.backend == DatabaseBackend.SQLITE:
         engine_factory_result = sqlite_engine_factory

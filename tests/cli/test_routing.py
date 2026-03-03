@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from basic_memory.cli.commands.routing import force_routing, validate_routing_flags
+from memoryhub.cli.commands.routing import force_routing, validate_routing_flags
 
 
 class TestValidateRoutingFlags:

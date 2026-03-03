@@ -5,10 +5,10 @@ from datetime import datetime
 import pytest
 from sqlalchemy import text
 
-from basic_memory import db
-from basic_memory.repository.search_index_row import SearchIndexRow
-from basic_memory.schemas.search import SearchQuery, SearchItemType, SearchRetrievalMode
-from basic_memory.services.search_service import _strip_nul
+from memoryhub import db
+from memoryhub.repository.search_index_row import SearchIndexRow
+from memoryhub.schemas.search import SearchQuery, SearchItemType, SearchRetrievalMode
+from memoryhub.services.search_service import _strip_nul
 
 
 @pytest.mark.asyncio
@@ -217,7 +217,7 @@ async def test_search_entity_type(search_service, test_graph):
 @pytest.mark.asyncio
 async def test_extract_entity_tags_exception_handling(search_service):
     """Test the _extract_entity_tags method exception handling (lines 147-151)."""
-    from basic_memory.models.knowledge import Entity
+    from memoryhub.models.knowledge import Entity
 
     # Create entity with string tags that will cause parsing to fail and fall back to single tag
     entity_with_invalid_tags = Entity(
@@ -548,7 +548,7 @@ async def test_no_relax_for_vector_or_hybrid_modes(search_service, monkeypatch, 
 @pytest.mark.asyncio
 async def test_extract_entity_tags_list_format(search_service, session_maker):
     """Test tag extraction from list format in entity metadata."""
-    from basic_memory.models import Entity
+    from memoryhub.models import Entity
 
     entity = Entity(
         title="Test Entity",
@@ -566,7 +566,7 @@ async def test_extract_entity_tags_list_format(search_service, session_maker):
 @pytest.mark.asyncio
 async def test_extract_entity_tags_string_format(search_service, session_maker):
     """Test tag extraction from string format in entity metadata."""
-    from basic_memory.models import Entity
+    from memoryhub.models import Entity
 
     entity = Entity(
         title="Test Entity",
@@ -584,7 +584,7 @@ async def test_extract_entity_tags_string_format(search_service, session_maker):
 @pytest.mark.asyncio
 async def test_extract_entity_tags_empty_list(search_service, session_maker):
     """Test tag extraction from empty list in entity metadata."""
-    from basic_memory.models import Entity
+    from memoryhub.models import Entity
 
     entity = Entity(
         title="Test Entity",
@@ -602,7 +602,7 @@ async def test_extract_entity_tags_empty_list(search_service, session_maker):
 @pytest.mark.asyncio
 async def test_extract_entity_tags_empty_string(search_service, session_maker):
     """Test tag extraction from empty string in entity metadata."""
-    from basic_memory.models import Entity
+    from memoryhub.models import Entity
 
     entity = Entity(
         title="Test Entity",
@@ -620,7 +620,7 @@ async def test_extract_entity_tags_empty_string(search_service, session_maker):
 @pytest.mark.asyncio
 async def test_extract_entity_tags_no_metadata(search_service, session_maker):
     """Test tag extraction when entity has no metadata."""
-    from basic_memory.models import Entity
+    from memoryhub.models import Entity
 
     entity = Entity(
         title="Test Entity",
@@ -638,7 +638,7 @@ async def test_extract_entity_tags_no_metadata(search_service, session_maker):
 @pytest.mark.asyncio
 async def test_extract_entity_tags_no_tags_key(search_service, session_maker):
     """Test tag extraction when metadata exists but has no tags key."""
-    from basic_memory.models import Entity
+    from memoryhub.models import Entity
 
     entity = Entity(
         title="Test Entity",
@@ -656,7 +656,7 @@ async def test_extract_entity_tags_no_tags_key(search_service, session_maker):
 @pytest.mark.asyncio
 async def test_search_tag_prefix_maps_to_tags_filter(search_service, entity_service):
     """`tag:foo` prefix should translate to tags filter and return tagged entities."""
-    from basic_memory.schemas import Entity as EntitySchema
+    from memoryhub.schemas import Entity as EntitySchema
 
     tagged_entity, _ = await entity_service.create_or_update_entity(
         EntitySchema(
@@ -678,7 +678,7 @@ async def test_search_tag_prefix_maps_to_tags_filter(search_service, entity_serv
 @pytest.mark.asyncio
 async def test_search_tag_prefix_with_nonexistent_tag_returns_empty(search_service, entity_service):
     """`tag:missing` should return no results when tags do not match."""
-    from basic_memory.schemas import Entity as EntitySchema
+    from memoryhub.schemas import Entity as EntitySchema
 
     tagged_entity, _ = await entity_service.create_or_update_entity(
         EntitySchema(
@@ -700,7 +700,7 @@ async def test_search_tag_prefix_with_nonexistent_tag_returns_empty(search_servi
 @pytest.mark.asyncio
 async def test_search_tag_prefix_multiple_tags_requires_all(search_service, entity_service):
     """`tag:tier1,alpha` should match entities containing all listed tags."""
-    from basic_memory.schemas import Entity as EntitySchema
+    from memoryhub.schemas import Entity as EntitySchema
 
     tagged_entity, _ = await entity_service.create_or_update_entity(
         EntitySchema(
@@ -722,7 +722,7 @@ async def test_search_tag_prefix_multiple_tags_requires_all(search_service, enti
 @pytest.mark.asyncio
 async def test_search_by_frontmatter_tags(search_service, session_maker, test_project):
     """Test that entities can be found by searching for their frontmatter tags."""
-    from basic_memory.repository import EntityRepository
+    from memoryhub.repository import EntityRepository
 
     entity_repo = EntityRepository(session_maker, project_id=test_project.id)
 
@@ -774,7 +774,7 @@ async def test_search_by_frontmatter_tags_string_format(
     search_service, session_maker, test_project
 ):
     """Test that entities with string format tags can be found in search."""
-    from basic_memory.repository import EntityRepository
+    from memoryhub.repository import EntityRepository
 
     entity_repo = EntityRepository(session_maker, project_id=test_project.id)
 
@@ -813,7 +813,7 @@ async def test_search_by_frontmatter_tags_string_format(
 @pytest.mark.asyncio
 async def test_search_special_characters_in_title(search_service, session_maker, test_project):
     """Test that entities with special characters in titles can be searched without FTS5 syntax errors."""
-    from basic_memory.repository import EntityRepository
+    from memoryhub.repository import EntityRepository
 
     entity_repo = EntityRepository(session_maker, project_id=test_project.id)
 
@@ -870,7 +870,7 @@ async def test_search_special_characters_in_title(search_service, session_maker,
 @pytest.mark.asyncio
 async def test_search_title_with_parentheses_specific(search_service, session_maker, test_project):
     """Test searching specifically for title with parentheses to reproduce FTS5 error."""
-    from basic_memory.repository import EntityRepository
+    from memoryhub.repository import EntityRepository
 
     entity_repo = EntityRepository(session_maker, project_id=test_project.id)
 
@@ -906,7 +906,7 @@ async def test_search_title_with_parentheses_specific(search_service, session_ma
 @pytest.mark.asyncio
 async def test_search_title_via_repository_direct(search_service, session_maker, test_project):
     """Test searching via search repository directly to isolate the FTS5 error."""
-    from basic_memory.repository import EntityRepository
+    from memoryhub.repository import EntityRepository
 
     entity_repo = EntityRepository(session_maker, project_id=test_project.id)
 
@@ -954,7 +954,7 @@ async def test_index_entity_with_duplicate_observations(
     Two observations with the same category and content generate identical permalinks,
     which would violate the unique constraint on the search_index table.
     """
-    from basic_memory.repository import EntityRepository, ObservationRepository
+    from memoryhub.repository import EntityRepository, ObservationRepository
     from datetime import datetime
 
     entity_repo = EntityRepository(session_maker, project_id=test_project.id)
@@ -1009,7 +1009,7 @@ async def test_index_entity_dedupes_observations_by_permalink(
     When an entity has observations with identical permalinks, only the first one
     should be indexed to avoid unique constraint violations.
     """
-    from basic_memory.repository import EntityRepository, ObservationRepository
+    from memoryhub.repository import EntityRepository, ObservationRepository
     from datetime import datetime
 
     entity_repo = EntityRepository(session_maker, project_id=test_project.id)
@@ -1067,7 +1067,7 @@ async def test_index_entity_multiple_categories_same_content(
     The permalink includes the category, so observations with different categories
     but same content should have different permalinks and both be indexed.
     """
-    from basic_memory.repository import EntityRepository, ObservationRepository
+    from memoryhub.repository import EntityRepository, ObservationRepository
     from datetime import datetime
 
     entity_repo = EntityRepository(session_maker, project_id=test_project.id)
@@ -1129,8 +1129,8 @@ async def test_index_entity_markdown_strips_nul_bytes(search_service, session_ma
     Note: NUL bytes arrive via file content read from disk, not from the database,
     so we only test the content path passed to `index_entity`.
     """
-    from basic_memory.repository import EntityRepository
-    from basic_memory.repository.search_repository import SearchRepository
+    from memoryhub.repository import EntityRepository
+    from memoryhub.repository.search_repository import SearchRepository
 
     entity_repo = EntityRepository(session_maker, project_id=test_project.id)
 
@@ -1165,7 +1165,7 @@ async def test_index_entity_markdown_strips_nul_bytes(search_service, session_ma
 @pytest.mark.asyncio
 async def test_reindex_vectors(search_service, session_maker, test_project):
     """Test that reindex_vectors processes all entities and reports stats."""
-    from basic_memory.repository import EntityRepository
+    from memoryhub.repository import EntityRepository
     from datetime import datetime
 
     entity_repo = EntityRepository(session_maker, project_id=test_project.id)
@@ -1210,7 +1210,7 @@ async def test_reindex_vectors(search_service, session_maker, test_project):
 @pytest.mark.asyncio
 async def test_reindex_vectors_no_callback(search_service, session_maker, test_project):
     """Test reindex_vectors works without a progress callback."""
-    from basic_memory.repository import EntityRepository
+    from memoryhub.repository import EntityRepository
     from datetime import datetime
 
     entity_repo = EntityRepository(session_maker, project_id=test_project.id)

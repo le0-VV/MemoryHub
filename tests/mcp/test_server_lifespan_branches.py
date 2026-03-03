@@ -1,7 +1,7 @@
 import pytest
 
-from basic_memory import db
-from basic_memory.mcp.server import lifespan, mcp
+from memoryhub import db
+from memoryhub.mcp.server import lifespan, mcp
 
 
 @pytest.mark.asyncio

@@ -4,10 +4,10 @@ from textwrap import dedent
 import pytest
 import yaml
 
-from basic_memory.config import BasicMemoryConfig
-from basic_memory.schemas import Entity as EntitySchema
-from basic_memory.services import FileService
-from basic_memory.services.entity_service import EntityService
+from memoryhub.config import BasicMemoryConfig
+from memoryhub.schemas import Entity as EntitySchema
+from memoryhub.services import FileService
+from memoryhub.services.entity_service import EntityService
 
 
 @pytest.mark.asyncio

@@ -20,7 +20,7 @@ class _ContextState:
 
 @pytest.mark.asyncio
 async def test_returns_none_when_no_default_and_no_project(config_manager, monkeypatch):
-    from basic_memory.mcp.project_context import resolve_project_parameter
+    from memoryhub.mcp.project_context import resolve_project_parameter
 
     cfg = config_manager.load_config()
     cfg.default_project = None
@@ -32,7 +32,7 @@ async def test_returns_none_when_no_default_and_no_project(config_manager, monke
 
 @pytest.mark.asyncio
 async def test_allows_discovery_when_enabled(config_manager):
-    from basic_memory.mcp.project_context import resolve_project_parameter
+    from memoryhub.mcp.project_context import resolve_project_parameter
 
     cfg = config_manager.load_config()
     cfg.default_project = None
@@ -43,14 +43,14 @@ async def test_allows_discovery_when_enabled(config_manager):
 
 @pytest.mark.asyncio
 async def test_returns_project_when_specified():
-    from basic_memory.mcp.project_context import resolve_project_parameter
+    from memoryhub.mcp.project_context import resolve_project_parameter
 
     assert await resolve_project_parameter(project="my-project") == "my-project"
 
 
 @pytest.mark.asyncio
 async def test_uses_env_var_priority(monkeypatch):
-    from basic_memory.mcp.project_context import resolve_project_parameter
+    from memoryhub.mcp.project_context import resolve_project_parameter
 
     monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", "env-project")
     assert await resolve_project_parameter(project="explicit-project") == "env-project"
@@ -58,8 +58,8 @@ async def test_uses_env_var_priority(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_uses_default_project(config_manager, config_home, monkeypatch):
-    from basic_memory.mcp.project_context import resolve_project_parameter
-    from basic_memory.config import ProjectEntry
+    from memoryhub.mcp.project_context import resolve_project_parameter
+    from memoryhub.config import ProjectEntry
 
     cfg = config_manager.load_config()
     (config_home / "default-project").mkdir(parents=True, exist_ok=True)
@@ -73,8 +73,8 @@ async def test_uses_default_project(config_manager, config_home, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_uses_cwd_project_when_default_missing(config_manager, config_home, monkeypatch):
-    from basic_memory.mcp.project_context import resolve_project_parameter
-    from basic_memory.config import ProjectEntry
+    from memoryhub.mcp.project_context import resolve_project_parameter
+    from memoryhub.config import ProjectEntry
 
     project_root = config_home / "cwd-project"
     nested_dir = project_root / "nested" / "worktree"
@@ -93,43 +93,43 @@ async def test_uses_cwd_project_when_default_missing(config_manager, config_home
 
 class TestDetectProjectFromUrlPrefix:
     def test_detects_project_from_memory_url(self, config_manager):
-        from basic_memory.mcp.project_context import detect_project_from_url_prefix
+        from memoryhub.mcp.project_context import detect_project_from_url_prefix
 
         config = config_manager.load_config()
         result = detect_project_from_url_prefix("memory://test-project/some-note", config)
         assert result == "test-project"
 
     def test_detects_project_from_plain_path(self, config_manager):
-        from basic_memory.mcp.project_context import detect_project_from_url_prefix
+        from memoryhub.mcp.project_context import detect_project_from_url_prefix
 
         config = config_manager.load_config()
         result = detect_project_from_url_prefix("test-project/some-note", config)
         assert result == "test-project"
 
     def test_returns_none_for_unknown_prefix(self, config_manager):
-        from basic_memory.mcp.project_context import detect_project_from_url_prefix
+        from memoryhub.mcp.project_context import detect_project_from_url_prefix
 
         config = config_manager.load_config()
         result = detect_project_from_url_prefix("memory://unknown-project/note", config)
         assert result is None
 
     def test_returns_none_for_no_slash(self, config_manager):
-        from basic_memory.mcp.project_context import detect_project_from_url_prefix
+        from memoryhub.mcp.project_context import detect_project_from_url_prefix
 
         config = config_manager.load_config()
         result = detect_project_from_url_prefix("memory://single-segment", config)
         assert result is None
 
     def test_returns_none_for_wildcard_prefix(self, config_manager):
-        from basic_memory.mcp.project_context import detect_project_from_url_prefix
+        from memoryhub.mcp.project_context import detect_project_from_url_prefix
 
         config = config_manager.load_config()
         result = detect_project_from_url_prefix("memory://*/notes", config)
         assert result is None
 
     def test_matches_case_insensitive_via_permalink(self, config_manager):
-        from basic_memory.config import ProjectEntry
-        from basic_memory.mcp.project_context import detect_project_from_url_prefix
+        from memoryhub.config import ProjectEntry
+        from memoryhub.mcp.project_context import detect_project_from_url_prefix
 
         config = config_manager.load_config()
         (config_manager.config_dir.parent / "My Research").mkdir(parents=True, exist_ok=True)

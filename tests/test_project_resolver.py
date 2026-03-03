@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from basic_memory.project_resolver import (
+from memoryhub.project_resolver import (
     ProjectResolver,
     ResolvedProject,
     ResolutionMode,

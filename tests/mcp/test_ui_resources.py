@@ -5,12 +5,12 @@ We call the underlying () to exercise the template loading logic.
 
 NOTE: UI resources are temporarily disabled (not registered with MCP server)
 while MCP client rendering is being sorted out. These tests are skipped
-until the resources are re-enabled in basic_memory.mcp.resources.__init__.
+until the resources are re-enabled in memoryhub.mcp.resources.__init__.
 """
 
 import pytest
 
-from basic_memory.mcp.resources.ui import (
+from memoryhub.mcp.resources.ui import (
     search_results_ui,
     note_preview_ui,
     search_results_ui_vanilla,

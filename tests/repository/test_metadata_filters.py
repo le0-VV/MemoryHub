@@ -4,7 +4,7 @@ from datetime import date
 
 import pytest
 
-from basic_memory.repository.metadata_filters import (
+from memoryhub.repository.metadata_filters import (
     ParsedMetadataFilter,
     _is_numeric_collection,
     _is_numeric_value,

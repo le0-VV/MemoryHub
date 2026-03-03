@@ -2,7 +2,7 @@
 
 import pytest
 
-from basic_memory.repository.sqlite_search_repository import SQLiteSearchRepository
+from memoryhub.repository.sqlite_search_repository import SQLiteSearchRepository
 
 
 def test_sqlite_distance_to_similarity_formula():

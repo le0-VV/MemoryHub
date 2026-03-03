@@ -3,8 +3,8 @@
 import pytest
 from httpx import AsyncClient
 
-from basic_memory.models import Project
-from basic_memory.schemas.v2.resource import ResourceResponse
+from memoryhub.models import Project
+from memoryhub.schemas.v2.resource import ResourceResponse
 
 
 @pytest.mark.asyncio

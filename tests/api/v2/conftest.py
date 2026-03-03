@@ -7,15 +7,15 @@ import pytest_asyncio
 from fastapi import FastAPI
 from httpx import AsyncClient, ASGITransport
 
-from basic_memory.deps import get_app_config, get_engine_factory
-from basic_memory.deps.services import get_task_scheduler
-from basic_memory.models import Project
+from memoryhub.deps import get_app_config, get_engine_factory
+from memoryhub.deps.services import get_task_scheduler
+from memoryhub.models import Project
 
 
 @pytest_asyncio.fixture
 async def app(test_config, engine_factory, app_config) -> FastAPI:
     """Create FastAPI test application."""
-    from basic_memory.api.app import app
+    from memoryhub.api.app import app
 
     app.dependency_overrides[get_app_config] = lambda: app_config
     app.dependency_overrides[get_engine_factory] = lambda: engine_factory

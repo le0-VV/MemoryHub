@@ -1,8 +1,8 @@
-"""Tests for basic_memory.schema.parser -- Picoschema parsing."""
+"""Tests for memoryhub.schema.parser -- Picoschema parsing."""
 
 import pytest
 
-from basic_memory.schema.parser import (
+from memoryhub.schema.parser import (
     SchemaDefinition,
     parse_picoschema,
     parse_schema_note,

@@ -80,7 +80,7 @@ export BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED=true
 3. Build vector embeddings for your existing content:
 
 ```bash
-basic-memory reindex --embeddings
+memoryhub reindex --embeddings
 ```
 
 4. Search using semantic modes:
@@ -145,7 +145,7 @@ export OPENAI_API_KEY=sk-...
 When switching from FastEmbed to OpenAI (or vice versa), you must rebuild embeddings since the vector dimensions differ:
 
 ```bash
-basic-memory reindex --embeddings
+memoryhub reindex --embeddings
 ```
 
 ## Search Modes
@@ -195,16 +195,16 @@ The reindex flow rebuilds search indexes without dropping the database.
 
 ```bash
 # Rebuild everything (FTS + embeddings if semantic is enabled)
-basic-memory reindex
+memoryhub reindex
 
 # Only rebuild vector embeddings
-basic-memory reindex --embeddings
+memoryhub reindex --embeddings
 
 # Only rebuild the full-text search index
-basic-memory reindex --search
+memoryhub reindex --search
 
 # Target a specific project
-basic-memory reindex --project my-project
+memoryhub reindex --project my-project
 ```
 
 ### When You Need to Reindex

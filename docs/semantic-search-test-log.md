@@ -8,7 +8,7 @@
 
 Manual test session for semantic (vector) search on the main project.
 - Date: 2026-02-15
-- Database: ~/.basic-memory/memory.db (SQLite)
+- Database: ~/.memoryhub/memory.db (SQLite)
 - Entities: 456 embedded, 2714 vector chunks
 - Search index: 2390 FTS entries
 - Embedding model: default (384-dim, sqlite-vec)

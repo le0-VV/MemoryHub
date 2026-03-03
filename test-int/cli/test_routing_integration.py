@@ -14,7 +14,7 @@ import os
 import pytest
 from typer.testing import CliRunner
 
-from basic_memory.cli.main import app as cli_app
+from memoryhub.cli.main import app as cli_app
 
 
 runner = CliRunner()
@@ -53,7 +53,7 @@ class TestMcpCommandRouting:
 
         env_at_run = {}
 
-        import basic_memory.cli.commands.mcp as mcp_mod
+        import memoryhub.cli.commands.mcp as mcp_mod
 
         def mock_run(*args, **kwargs):
             env_at_run["FORCE_LOCAL"] = os.environ.get("BASIC_MEMORY_FORCE_LOCAL")
@@ -76,7 +76,7 @@ class TestMcpCommandRouting:
 
         env_at_run = {}
 
-        import basic_memory.cli.commands.mcp as mcp_mod
+        import memoryhub.cli.commands.mcp as mcp_mod
 
         def mock_run(*args, **kwargs):
             env_at_run["FORCE_LOCAL"] = os.environ.get("BASIC_MEMORY_FORCE_LOCAL")
@@ -96,7 +96,7 @@ class TestMcpCommandRouting:
         """Streamable-HTTP transport should force local routing."""
         env_at_run = {}
 
-        import basic_memory.cli.commands.mcp as mcp_mod
+        import memoryhub.cli.commands.mcp as mcp_mod
 
         def mock_run(*args, **kwargs):
             env_at_run["FORCE_LOCAL"] = os.environ.get("BASIC_MEMORY_FORCE_LOCAL")
@@ -115,7 +115,7 @@ class TestMcpCommandRouting:
         """SSE transport should force local routing."""
         env_at_run = {}
 
-        import basic_memory.cli.commands.mcp as mcp_mod
+        import memoryhub.cli.commands.mcp as mcp_mod
 
         def mock_run(*args, **kwargs):
             env_at_run["FORCE_LOCAL"] = os.environ.get("BASIC_MEMORY_FORCE_LOCAL")

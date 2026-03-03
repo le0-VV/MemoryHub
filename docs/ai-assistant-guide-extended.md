@@ -1,7 +1,7 @@
 # AI Assistant Guide for MemoryHub
 
 This guide describes how an AI assistant should work with MemoryHub through MCP. The current code
-still exposes the inherited `basic-memory` command and `basic_memory` package name, but the fork's
+still exposes the inherited `memoryhub` command and `memoryhub` package name, but the fork's
 intended product identity is MemoryHub.
 
 ## Mental Model

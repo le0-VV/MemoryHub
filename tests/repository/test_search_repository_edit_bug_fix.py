@@ -9,10 +9,10 @@ from datetime import datetime, timezone
 import pytest
 import pytest_asyncio
 
-from basic_memory.models.project import Project
-from basic_memory.repository.search_index_row import SearchIndexRow
-from basic_memory.repository.sqlite_search_repository import SQLiteSearchRepository
-from basic_memory.schemas.search import SearchItemType
+from memoryhub.models.project import Project
+from memoryhub.repository.search_index_row import SearchIndexRow
+from memoryhub.repository.sqlite_search_repository import SQLiteSearchRepository
+from memoryhub.schemas.search import SearchItemType
 
 
 @pytest_asyncio.fixture
@@ -42,9 +42,9 @@ async def test_index_item_respects_project_isolation_during_edit():
     would delete search index entries with the same permalink from ALL projects,
     causing notes to disappear from the search index.
     """
-    from basic_memory import db
-    from basic_memory.models.base import Base
-    from basic_memory.repository.sqlite_search_repository import SQLiteSearchRepository
+    from memoryhub import db
+    from memoryhub.models.base import Base
+    from memoryhub.repository.sqlite_search_repository import SQLiteSearchRepository
     from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
     # Create a separate in-memory database for this test
@@ -179,9 +179,9 @@ async def test_index_item_respects_project_isolation_during_edit():
 @pytest.mark.asyncio
 async def test_index_item_updates_existing_record_same_project():
     """Test that index_item() correctly updates existing records within the same project."""
-    from basic_memory import db
-    from basic_memory.models.base import Base
-    from basic_memory.repository.sqlite_search_repository import SQLiteSearchRepository
+    from memoryhub import db
+    from memoryhub.models.base import Base
+    from memoryhub.repository.sqlite_search_repository import SQLiteSearchRepository
     from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
     # Create a separate in-memory database for this test

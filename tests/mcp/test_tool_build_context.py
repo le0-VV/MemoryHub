@@ -4,7 +4,7 @@ import pytest
 
 from mcp.server.fastmcp.exceptions import ToolError
 
-from basic_memory.mcp.tools import build_context
+from memoryhub.mcp.tools import build_context
 
 
 @pytest.mark.asyncio

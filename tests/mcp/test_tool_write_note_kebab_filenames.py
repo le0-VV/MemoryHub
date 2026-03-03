@@ -15,8 +15,8 @@ Key behaviors tested:
 """
 
 import pytest
-from basic_memory.mcp.tools import write_note
-from basic_memory.config import ConfigManager
+from memoryhub.mcp.tools import write_note
+from memoryhub.config import ConfigManager
 
 
 # =============================================================================

@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from statistics import mean
 
-from basic_memory.repository.search_index_row import SearchIndexRow
+from memoryhub.repository.search_index_row import SearchIndexRow
 
 
 # --- Relevance helpers ---

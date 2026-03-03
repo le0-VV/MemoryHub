@@ -11,10 +11,10 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from basic_memory import db
-from basic_memory.config import BasicMemoryConfig
-from basic_memory.repository.project_repository import ProjectRepository
-from basic_memory.services.initialization import (
+from memoryhub import db
+from memoryhub.config import BasicMemoryConfig
+from memoryhub.repository.project_repository import ProjectRepository
+from memoryhub.services.initialization import (
     ensure_initialization,
     initialize_app,
     initialize_database,
@@ -69,7 +69,7 @@ async def test_reconcile_projects_with_config_creates_projects_and_default(
         proj_a.mkdir(parents=True, exist_ok=True)
         proj_b.mkdir(parents=True, exist_ok=True)
 
-        from basic_memory.config import ProjectEntry
+        from memoryhub.config import ProjectEntry
 
         updated = app_config.model_copy(
             update={
@@ -115,7 +115,7 @@ async def test_reconcile_projects_with_config_swallow_errors(
             raise ValueError("Project synchronization error")
 
         monkeypatch.setattr(
-            "basic_memory.services.project_service.ProjectService.synchronize_projects",
+            "memoryhub.services.project_service.ProjectService.synchronize_projects",
             boom,
         )
 
@@ -143,9 +143,9 @@ async def test_initialize_app_warns_on_frontmatter_permalink_precedence(
 
     init_db_mock = AsyncMock()
     reconcile_mock = AsyncMock()
-    monkeypatch.setattr("basic_memory.services.initialization.initialize_database", init_db_mock)
+    monkeypatch.setattr("memoryhub.services.initialization.initialize_database", init_db_mock)
     monkeypatch.setattr(
-        "basic_memory.services.initialization.reconcile_projects_with_config",
+        "memoryhub.services.initialization.reconcile_projects_with_config",
         reconcile_mock,
     )
 
@@ -154,7 +154,7 @@ async def test_initialize_app_warns_on_frontmatter_permalink_precedence(
     def capture_warning(message: str) -> None:
         warnings.append(message)
 
-    monkeypatch.setattr("basic_memory.services.initialization.logger.warning", capture_warning)
+    monkeypatch.setattr("memoryhub.services.initialization.logger.warning", capture_warning)
 
     await initialize_app(app_config)
 
@@ -174,11 +174,11 @@ async def test_initialize_app_no_precedence_warning_when_not_conflicting(
     app_config.disable_permalinks = True
 
     monkeypatch.setattr(
-        "basic_memory.services.initialization.initialize_database",
+        "memoryhub.services.initialization.initialize_database",
         AsyncMock(),
     )
     monkeypatch.setattr(
-        "basic_memory.services.initialization.reconcile_projects_with_config",
+        "memoryhub.services.initialization.reconcile_projects_with_config",
         AsyncMock(),
     )
 
@@ -187,7 +187,7 @@ async def test_initialize_app_no_precedence_warning_when_not_conflicting(
     def capture_warning(message: str) -> None:
         warnings.append(message)
 
-    monkeypatch.setattr("basic_memory.services.initialization.logger.warning", capture_warning)
+    monkeypatch.setattr("memoryhub.services.initialization.logger.warning", capture_warning)
 
     await initialize_app(app_config)
 
@@ -216,10 +216,10 @@ async def test_run_migrations_triggers_embedding_backfill_on_new_revision(
         db._session_maker = session_marker  # pyright: ignore [reportPrivateUsage]
 
         monkeypatch.setattr(
-            "basic_memory.db.command.upgrade",
+            "memoryhub.db.command.upgrade",
             lambda *args, **kwargs: None,
         )
-        monkeypatch.setattr("basic_memory.db.SQLiteSearchRepository", StubSearchRepository)
+        monkeypatch.setattr("memoryhub.db.SQLiteSearchRepository", StubSearchRepository)
         load_revisions_mock = AsyncMock(
             side_effect=[
                 set(),
@@ -227,8 +227,8 @@ async def test_run_migrations_triggers_embedding_backfill_on_new_revision(
             ]
         )
         backfill_mock = AsyncMock()
-        monkeypatch.setattr("basic_memory.db._load_applied_alembic_revisions", load_revisions_mock)
-        monkeypatch.setattr("basic_memory.db._run_semantic_embedding_backfill", backfill_mock)
+        monkeypatch.setattr("memoryhub.db._load_applied_alembic_revisions", load_revisions_mock)
+        monkeypatch.setattr("memoryhub.db._run_semantic_embedding_backfill", backfill_mock)
 
         await db.run_migrations(app_config)
 
@@ -257,10 +257,10 @@ async def test_run_migrations_skips_embedding_backfill_when_revision_already_app
         db._session_maker = session_marker  # pyright: ignore [reportPrivateUsage]
 
         monkeypatch.setattr(
-            "basic_memory.db.command.upgrade",
+            "memoryhub.db.command.upgrade",
             lambda *args, **kwargs: None,
         )
-        monkeypatch.setattr("basic_memory.db.SQLiteSearchRepository", StubSearchRepository)
+        monkeypatch.setattr("memoryhub.db.SQLiteSearchRepository", StubSearchRepository)
         load_revisions_mock = AsyncMock(
             side_effect=[
                 {db.SEMANTIC_EMBEDDING_BACKFILL_REVISION},
@@ -268,8 +268,8 @@ async def test_run_migrations_skips_embedding_backfill_when_revision_already_app
             ]
         )
         backfill_mock = AsyncMock()
-        monkeypatch.setattr("basic_memory.db._load_applied_alembic_revisions", load_revisions_mock)
-        monkeypatch.setattr("basic_memory.db._run_semantic_embedding_backfill", backfill_mock)
+        monkeypatch.setattr("memoryhub.db._load_applied_alembic_revisions", load_revisions_mock)
+        monkeypatch.setattr("memoryhub.db._run_semantic_embedding_backfill", backfill_mock)
 
         await db.run_migrations(app_config)
 
@@ -287,7 +287,7 @@ async def test_semantic_embedding_backfill_syncs_each_entity(
     test_project,
 ):
     """Automatic backfill should run sync_entity_vectors for every entity in active projects."""
-    from basic_memory.repository.entity_repository import EntityRepository
+    from memoryhub.repository.entity_repository import EntityRepository
 
     entity_repository = EntityRepository(session_maker, project_id=test_project.id)
     created_entity_ids: list[int] = []
@@ -316,7 +316,7 @@ async def test_semantic_embedding_backfill_syncs_each_entity(
         async def sync_entity_vectors(self, entity_id: int) -> None:
             synced_pairs.append((self.project_id, entity_id))
 
-    monkeypatch.setattr("basic_memory.db.SQLiteSearchRepository", StubSearchRepository)
+    monkeypatch.setattr("memoryhub.db.SQLiteSearchRepository", StubSearchRepository)
     app_config.semantic_search_enabled = True
 
     await db._run_semantic_embedding_backfill(app_config, session_maker)  # pyright: ignore [reportPrivateUsage]
@@ -342,7 +342,7 @@ async def test_semantic_embedding_backfill_skips_when_semantic_disabled(
         async def sync_entity_vectors(self, entity_id: int) -> None:  # pragma: no cover
             return None
 
-    monkeypatch.setattr("basic_memory.db.SQLiteSearchRepository", StubSearchRepository)
+    monkeypatch.setattr("memoryhub.db.SQLiteSearchRepository", StubSearchRepository)
     app_config.semantic_search_enabled = False
     await db._run_semantic_embedding_backfill(app_config, session_maker)  # pyright: ignore [reportPrivateUsage]
     assert called is False

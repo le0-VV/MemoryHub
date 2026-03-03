@@ -1,7 +1,7 @@
 # MemoryHub Architecture
 
-This fork still ships under the inherited Python package and CLI names, `basic_memory` and
-`basic-memory`, but the product direction is MemoryHub: a local-first MCP memory system for many
+This fork still ships under the inherited Python package and CLI names, `memoryhub` and
+`memoryhub`, but the product direction is MemoryHub: a local-first MCP memory system for many
 projects on one machine.
 
 ## Overview
@@ -32,15 +32,15 @@ MCP tools / CLI commands
 
 The repo has three user-facing entrypoints:
 
-- `API`: FastAPI routers under `src/basic_memory/api/`
-- `MCP`: the stdio/HTTP MCP server under `src/basic_memory/mcp/`
-- `CLI`: the Typer app under `src/basic_memory/cli/`
+- `API`: FastAPI routers under `src/memoryhub/api/`
+- `MCP`: the stdio/HTTP MCP server under `src/memoryhub/mcp/`
+- `CLI`: the Typer app under `src/memoryhub/cli/`
 
 Each entrypoint has a composition root in `container.py`. The composition root is the only place
 that should read global config and assemble concrete dependencies.
 
 ```text
-src/basic_memory/
+src/memoryhub/
 ├── api/container.py
 ├── cli/container.py
 ├── mcp/container.py
@@ -94,7 +94,7 @@ repositories, not in tool handlers.
 
 ## Typed MCP Clients
 
-MCP tools talk to the API through typed clients in `src/basic_memory/mcp/clients/`:
+MCP tools talk to the API through typed clients in `src/memoryhub/mcp/clients/`:
 
 - `KnowledgeClient`
 - `SearchClient`
@@ -145,7 +145,7 @@ Semantic search is still local. The app can use either:
 
 ## Sync and Watch Services
 
-`src/basic_memory/sync/` manages file watching and local indexing lifecycle.
+`src/memoryhub/sync/` manages file watching and local indexing lifecycle.
 
 Important boundaries:
 
@@ -160,7 +160,7 @@ Important boundaries:
 The `deps/` package provides feature-scoped FastAPI dependencies:
 
 ```text
-src/basic_memory/deps/
+src/memoryhub/deps/
 ├── config.py
 ├── db.py
 ├── importers.py
@@ -175,7 +175,7 @@ re-export shims.
 ## Main Source Directories
 
 ```text
-src/basic_memory/
+src/memoryhub/
 ├── api/          FastAPI app and routers
 ├── cli/          Typer app and command groups
 ├── config.py     Config models and manager

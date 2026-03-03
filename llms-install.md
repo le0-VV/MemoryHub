@@ -3,7 +3,7 @@
 This guide is for the MemoryHub fork in this repository.
 
 Important: the fork has not been fully renamed yet. The code still runs through
-the inherited `basic-memory` CLI, so install from the local checkout rather
+the inherited `memoryhub` CLI, so install from the local checkout rather
 than from PyPI.
 
 ## Installation Steps
@@ -20,7 +20,7 @@ uv tool install -e .
 pip install -e .
 ```
 
-Do not use `uv tool install basic-memory` or `pip install basic-memory` if you
+Do not use `uv tool install memoryhub` or `pip install memoryhub` if you
 want this fork. Those commands install the upstream project from PyPI.
 
 ### 2. Configure The MCP Server
@@ -31,7 +31,7 @@ Use the inherited runtime command until the rename is complete:
 {
   "mcpServers": {
     "memoryhub": {
-      "command": "basic-memory",
+      "command": "memoryhub",
       "args": ["mcp"]
     }
   }
@@ -46,13 +46,13 @@ For Claude Desktop, this file is usually located at:
 ### 3. Start Synchronization (optional)
 
 ```bash
-basic-memory sync --watch
+memoryhub sync --watch
 ```
 
 For a one-time sync:
 
 ```bash
-basic-memory sync
+memoryhub sync
 ```
 
 ## Configuration Options
@@ -60,16 +60,16 @@ basic-memory sync
 ### Custom Directory
 
 ```bash
-basic-memory project add custom-project /path/to/your/directory
-basic-memory project default custom-project
+memoryhub project add custom-project /path/to/your/directory
+memoryhub project default custom-project
 ```
 
 ### Multiple Projects
 
 ```bash
-basic-memory project list
-basic-memory project add work ~/work-basic-memory
-basic-memory project default work
+memoryhub project list
+memoryhub project add work ~/work-memoryhub
+memoryhub project default work
 ```
 
 ## Importing Existing Data
@@ -77,39 +77,39 @@ basic-memory project default work
 ### From Claude.ai
 
 ```bash
-basic-memory import claude conversations path/to/conversations.json
-basic-memory import claude projects path/to/projects.json
+memoryhub import claude conversations path/to/conversations.json
+memoryhub import claude projects path/to/projects.json
 ```
 
 ### From ChatGPT
 
 ```bash
-basic-memory import chatgpt path/to/conversations.json
+memoryhub import chatgpt path/to/conversations.json
 ```
 
 ### From MCP Memory Server
 
 ```bash
-basic-memory import memory-json path/to/memory.json
+memoryhub import memory-json path/to/memory.json
 ```
 
 ## Troubleshooting
 
 1. Check the installed executable:
    ```bash
-   basic-memory --version
+   memoryhub --version
    ```
 2. Verify the process is running:
    ```bash
-   ps aux | grep basic-memory
+   ps aux | grep memoryhub
    ```
 3. Check sync output:
    ```bash
-   basic-memory sync --verbose
+   memoryhub sync --verbose
    ```
 4. Check logs:
    ```bash
-   cat ~/.basic-memory/basic-memory.log
+   cat ~/.memoryhub/memoryhub.log
    ```
 
 See [README.md](README.md) for the fork status and [README_old.md](README_old.md)

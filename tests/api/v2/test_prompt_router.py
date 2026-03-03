@@ -4,8 +4,8 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 
-from basic_memory.models import Project
-from basic_memory.services.context_service import ContextService
+from memoryhub.models import Project
+from memoryhub.services.context_service import ContextService
 
 
 @pytest_asyncio.fixture
@@ -153,7 +153,7 @@ async def test_error_handling(client: AsyncClient, monkeypatch, v2_project_url: 
         raise Exception("Template error")
 
     # Apply the patch
-    monkeypatch.setattr("basic_memory.api.template_loader.TemplateLoader.render", mock_render)
+    monkeypatch.setattr("memoryhub.api.template_loader.TemplateLoader.render", mock_render)
 
     # Test continue_conversation error handling
     response = await client.post(

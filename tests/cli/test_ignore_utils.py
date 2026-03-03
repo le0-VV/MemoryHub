@@ -3,7 +3,7 @@
 import tempfile
 from pathlib import Path
 
-from basic_memory.ignore_utils import (
+from memoryhub.ignore_utils import (
     DEFAULT_IGNORE_PATTERNS,
     load_gitignore_patterns,
     should_ignore_path,

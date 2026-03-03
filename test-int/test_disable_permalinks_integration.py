@@ -2,20 +2,20 @@
 
 import pytest
 
-from basic_memory.markdown import EntityParser, MarkdownProcessor
-from basic_memory.repository import (
+from memoryhub.markdown import EntityParser, MarkdownProcessor
+from memoryhub.repository import (
     EntityRepository,
     ObservationRepository,
     RelationRepository,
     ProjectRepository,
 )
-from basic_memory.repository.sqlite_search_repository import SQLiteSearchRepository
-from basic_memory.schemas import Entity as EntitySchema
-from basic_memory.services import FileService
-from basic_memory.services.entity_service import EntityService
-from basic_memory.services.link_resolver import LinkResolver
-from basic_memory.services.search_service import SearchService
-from basic_memory.sync.sync_service import SyncService
+from memoryhub.repository.sqlite_search_repository import SQLiteSearchRepository
+from memoryhub.schemas import Entity as EntitySchema
+from memoryhub.services import FileService
+from memoryhub.services.entity_service import EntityService
+from memoryhub.services.link_resolver import LinkResolver
+from memoryhub.services.search_service import SearchService
+from memoryhub.sync.sync_service import SyncService
 
 
 @pytest.mark.asyncio

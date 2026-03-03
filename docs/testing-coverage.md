@@ -14,10 +14,10 @@ To keep the default CI signal **stable and meaningful**, the default `pytest` co
 Coverage excludes are configured in `pyproject.toml` under `[tool.coverage.report].omit`.
 
 Current exclusions include:
-- `src/basic_memory/cli/**`: interactive wrappers; behavior is validated via higher-level tests and smoke tests.
-- `src/basic_memory/db.py`: platform and initialization paths that are better covered by integration runs than by strict unit coverage.
-- `src/basic_memory/services/initialization.py`: startup orchestration/background tasks; covered indirectly by app/MCP entrypoints.
-- `src/basic_memory/sync/sync_service.py`: heavy filesystem↔DB integration; validated in integration suite (not enforced in unit coverage).
+- `src/memoryhub/cli/**`: interactive wrappers; behavior is validated via higher-level tests and smoke tests.
+- `src/memoryhub/db.py`: platform and initialization paths that are better covered by integration runs than by strict unit coverage.
+- `src/memoryhub/services/initialization.py`: startup orchestration/background tasks; covered indirectly by app/MCP entrypoints.
+- `src/memoryhub/sync/sync_service.py`: heavy filesystem↔DB integration; validated in integration suite (not enforced in unit coverage).
 
 ### Recommended additional runs
 

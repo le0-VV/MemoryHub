@@ -1,7 +1,7 @@
 import pytest
 from watchfiles.main import Change
 
-from basic_memory.sync.watch_service import WatchService
+from memoryhub.sync.watch_service import WatchService
 
 
 @pytest.mark.asyncio

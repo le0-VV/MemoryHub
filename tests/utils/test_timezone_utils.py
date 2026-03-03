@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 
-from basic_memory.utils import ensure_timezone_aware
+from memoryhub.utils import ensure_timezone_aware
 
 
 class TestEnsureTimezoneAware:

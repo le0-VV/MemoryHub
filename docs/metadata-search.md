@@ -137,7 +137,7 @@ await search_notes("tag:tier1 alpha")
 
 ## CLI Access
 
-The `basic-memory tool search-notes` command exposes metadata filtering via `--meta` and `--filter`
+The `memoryhub tool search-notes` command exposes metadata filtering via `--meta` and `--filter`
 flags.
 
 ### `--meta` — simple key=value filters
@@ -146,10 +146,10 @@ Repeatable flag for equality filters on frontmatter fields.
 
 ```bash
 # Single filter
-basic-memory tool search-notes "my query" --meta status=draft
+memoryhub tool search-notes "my query" --meta status=draft
 
 # Multiple filters (AND logic)
-basic-memory tool search-notes "" --meta status=active --meta priority=high
+memoryhub tool search-notes "" --meta status=active --meta priority=high
 ```
 
 ### `--filter` — advanced JSON filters
@@ -158,23 +158,23 @@ Pass a full JSON filter dictionary for operator-based queries.
 
 ```bash
 # Range filter
-basic-memory tool search-notes "" --filter '{"score": {"$between": [0.3, 0.8]}}'
+memoryhub tool search-notes "" --filter '{"score": {"$between": [0.3, 0.8]}}'
 
 # $in filter
-basic-memory tool search-notes "" --filter '{"priority": {"$in": ["high", "critical"]}}'
+memoryhub tool search-notes "" --filter '{"priority": {"$in": ["high", "critical"]}}'
 ```
 
 ### `--tag` and `--status` — convenience shortcuts
 
 ```bash
-basic-memory tool search-notes "query" --tag security --tag oauth
-basic-memory tool search-notes "" --status draft
+memoryhub tool search-notes "query" --tag security --tag oauth
+memoryhub tool search-notes "" --status draft
 ```
 
 ### Combined example
 
 ```bash
-basic-memory tool search-notes "authentication" --tag security --meta status=draft --type spec
+memoryhub tool search-notes "authentication" --tag security --meta status=draft --type spec
 ```
 
 ## Practical Examples
@@ -256,8 +256,8 @@ await search_notes("OAuth", metadata_filters={"status": "in-progress"})
 ### CLI equivalents
 
 ```bash
-basic-memory tool search-notes "" --meta status=in-progress --type spec
-basic-memory tool search-notes "" --filter '{"confidence": {"$gt": 0.7}}'
-basic-memory tool search-notes "OAuth" --meta status=in-progress
-basic-memory tool search-notes --tag security
+memoryhub tool search-notes "" --meta status=in-progress --type spec
+memoryhub tool search-notes "" --filter '{"confidence": {"$gt": 0.7}}'
+memoryhub tool search-notes "OAuth" --meta status=in-progress
+memoryhub tool search-notes --tag security
 ```
