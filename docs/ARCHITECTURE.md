@@ -1,442 +1,214 @@
-# Basic Memory Architecture
+# MemoryHub Architecture
 
-This document describes the architectural patterns and composition structure of Basic Memory.
+This fork still ships under the inherited Python package and CLI names, `basic_memory` and
+`basic-memory`, but the product direction is MemoryHub: a local-first MCP memory system for many
+projects on one machine.
 
 ## Overview
 
-Basic Memory is a local-first knowledge management system with three entrypoints:
-- **API** - FastAPI REST server for HTTP access
-- **MCP** - Model Context Protocol server for LLM integration
-- **CLI** - Typer command-line interface
+The current architecture is intentionally simple:
 
-Each entrypoint uses a **composition root** pattern to manage configuration and dependencies.
+- Markdown files are the source of truth.
+- SQLite is the only supported database backend.
+- The app exposes three entrypoints: API, MCP, and CLI.
+- Semantic search, when enabled, is built on SQLite plus local vector tables.
+- File watching and sync are local-only background services.
+
+At a high level:
+
+```text
+Markdown files
+    ↓
+Parser + sync/watch services
+    ↓
+SQLite index and search tables
+    ↓
+FastAPI application
+    ↓
+MCP tools / CLI commands
+```
+
+## Entrypoints
+
+The repo has three user-facing entrypoints:
+
+- `API`: FastAPI routers under `src/basic_memory/api/`
+- `MCP`: the stdio/HTTP MCP server under `src/basic_memory/mcp/`
+- `CLI`: the Typer app under `src/basic_memory/cli/`
+
+Each entrypoint has a composition root in `container.py`. The composition root is the only place
+that should read global config and assemble concrete dependencies.
+
+```text
+src/basic_memory/
+├── api/container.py
+├── cli/container.py
+├── mcp/container.py
+└── runtime.py
+```
+
+## Runtime Model
+
+The fork now treats runtime mode as a local concern:
+
+- `TEST`: isolated test environment
+- `LOCAL`: normal app runtime
+
+Historical cloud-oriented compatibility code still exists in parts of the tree, but it is not part
+of the supported architecture for this fork.
+
+Runtime mode decides whether to start local background services such as file watching. It is not a
+network-routing feature anymore.
 
 ## Composition Roots
 
-### What is a Composition Root?
+Every container follows the same pattern:
 
-A composition root is the single place in an application where dependencies are wired together. In Basic Memory, each entrypoint has its own composition root that:
+1. Read `ConfigManager`
+2. Resolve runtime mode
+3. Build explicit dependencies
+4. Expose those dependencies to tools, routers, or commands
 
-1. Reads configuration from `ConfigManager`
-2. Resolves runtime mode (local/test)
-3. Creates and provides dependencies to downstream code
+This keeps configuration lookup centralized and makes the rest of the codebase easier to test.
 
-**Key principle**: Only composition roots read global configuration. All other modules receive configuration explicitly.
+## Core Request Flow
 
-### Container Structure
+The main request path is:
 
-Each entrypoint has a container dataclass in its package:
-
-```
-src/basic_memory/
-├── api/
-│   └── container.py      # ApiContainer
-├── mcp/
-│   └── container.py      # McpContainer
-├── cli/
-│   └── container.py      # CliContainer
-└── runtime.py            # RuntimeMode enum and resolver
-```
-
-### Container Pattern
-
-All containers follow the same structure:
-
-```python
-@dataclass
-class Container:
-    config: BasicMemoryConfig
-    mode: RuntimeMode
-
-    @classmethod
-    def create(cls) -> "Container":
-        """Create container by reading ConfigManager."""
-        config = ConfigManager().config
-        mode = resolve_runtime_mode(is_test_env=config.is_test_env)
-        return cls(config=config, mode=mode)
-
-    @property
-    def some_computed_property(self) -> bool:
-        """Derived values based on config and mode."""
-        return self.mode.is_local and self.config.some_setting
-
-# Module-level singleton
-_container: Container | None = None
-
-def get_container() -> Container:
-    if _container is None:
-        raise RuntimeError("Container not initialized")
-    return _container
-
-def set_container(container: Container) -> None:
-    global _container
-    _container = container
+```text
+CLI command or MCP tool
+    ↓
+typed API client
+    ↓
+FastAPI router
+    ↓
+service layer
+    ↓
+repository layer
+    ↓
+SQLite
 ```
 
-### Runtime Mode Resolution
+This matters because MCP tools are intentionally thin. Business rules belong in services and
+repositories, not in tool handlers.
 
-The `RuntimeMode` enum centralizes mode detection:
+## Typed MCP Clients
 
-```python
-class RuntimeMode(Enum):
-    LOCAL = "local"
-    CLOUD = "cloud"
-    TEST = "test"
+MCP tools talk to the API through typed clients in `src/basic_memory/mcp/clients/`:
 
-    @property
-    def is_cloud(self) -> bool:
-        return self == RuntimeMode.CLOUD
+- `KnowledgeClient`
+- `SearchClient`
+- `MemoryClient`
+- `DirectoryClient`
+- `ResourceClient`
+- `ProjectClient`
+- `SchemaClient`
 
-    @property
-    def is_local(self) -> bool:
-        return self == RuntimeMode.LOCAL
+Those clients encapsulate HTTP paths and response validation so the tool layer stays small.
 
-    @property
-    def is_test(self) -> bool:
-        return self == RuntimeMode.TEST
-```
+## Projects and Resolution
 
-Resolution follows this precedence in local app flows: **TEST > LOCAL**
+Projects are the main isolation boundary. A project is a local directory of notes plus an indexed
+database view of that directory.
 
-```python
-def resolve_runtime_mode(is_test_env: bool) -> RuntimeMode:
-    if is_test_env:
-        return RuntimeMode.TEST
-    return RuntimeMode.LOCAL
-```
+Project selection is unified through `ProjectResolver`:
 
-**Note**: `RuntimeMode` determines global behavior (e.g., whether to start file sync).
-Per-project routing is orthogonal: individual projects can be set to `cloud` mode via `ProjectMode`,
-which affects client routing in `get_client(project_name=...)` without changing global runtime mode.
-`RuntimeMode.CLOUD` may remain for compatibility, but standard local runtime resolution does not select it.
+1. explicit project argument
+2. configured default project
+3. single available project
 
-## Dependencies Package
+The fork vision is to get smarter about workspace inference over time, but the current
+implementation is still explicit-project-first.
 
-### Structure
+## Storage Model
 
-The `deps/` package provides FastAPI dependencies organized by feature:
+The storage model is local-first and SQLite-only:
 
-```
+- Markdown files are canonical.
+- SQLite holds derived state for search, relations, metadata, and semantic chunks.
+- Reindexing and sync rebuild derived state from files when needed.
+
+There is no supported Postgres path in this fork.
+
+## Search Architecture
+
+Search currently has three layers:
+
+1. FTS-style text search in SQLite
+2. metadata/frontmatter filtering
+3. optional vector and hybrid search on SQLite vector tables
+
+Semantic search is still local. The app can use either:
+
+- `fastembed` for fully local embeddings
+- `openai` for remote embedding generation while the deployment remains local
+
+## Sync and Watch Services
+
+`src/basic_memory/sync/` manages file watching and local indexing lifecycle.
+
+Important boundaries:
+
+- watchers read local files only
+- sync updates SQLite derived state from files
+- background tasks should never become a hidden source of truth
+
+`SyncCoordinator` is the lifecycle hub for starting and stopping those background services.
+
+## Dependencies Layout
+
+The `deps/` package provides feature-scoped FastAPI dependencies:
+
+```text
 src/basic_memory/deps/
-├── __init__.py       # Re-exports for backwards compatibility
-├── config.py         # Configuration access
-├── db.py             # Database/session management
-├── projects.py       # Project resolution
-├── repositories.py   # Data access layer
-├── services.py       # Business logic layer
-└── importers.py      # Import functionality
+├── config.py
+├── db.py
+├── importers.py
+├── projects.py
+├── repositories.py
+└── services.py
 ```
 
-### Usage in Routers
+New code should import from the specific dependency module it needs rather than from broad
+re-export shims.
 
-```python
-from basic_memory.deps.services import get_entity_service
-from basic_memory.deps.projects import get_project_config
+## Main Source Directories
 
-@router.get("/entities/{id}")
-async def get_entity(
-    id: int,
-    entity_service: EntityService = Depends(get_entity_service),
-    project: ProjectConfig = Depends(get_project_config),
-):
-    return await entity_service.get(id)
-```
-
-### Backwards Compatibility
-
-The old `deps.py` file still exists as a thin re-export shim:
-
-```python
-# deps.py - backwards compatibility shim
-from basic_memory.deps import *
-```
-
-New code should import from specific submodules (`basic_memory.deps.services`) for clarity.
-
-## MCP Tools Architecture
-
-### Typed API Clients
-
-MCP tools communicate with the API through typed clients that encapsulate HTTP paths and response validation:
-
-```
-src/basic_memory/mcp/clients/
-├── __init__.py       # Re-exports all clients
-├── base.py           # BaseClient with common logic
-├── knowledge.py      # KnowledgeClient - entity CRUD
-├── search.py         # SearchClient - search operations
-├── memory.py         # MemoryClient - context building
-├── directory.py      # DirectoryClient - directory listing
-├── resource.py       # ResourceClient - resource reading
-└── project.py        # ProjectClient - project management
-```
-
-### Client Pattern
-
-Each client encapsulates API paths and validates responses:
-
-```python
-class KnowledgeClient(BaseClient):
-    """Client for knowledge/entity operations."""
-
-    async def resolve_entity(self, identifier: str) -> int:
-        """Resolve identifier to entity ID."""
-        response = await call_get(
-            self.http_client,
-            f"{self._base_path}/resolve/{identifier}",
-        )
-        return int(response.text)
-
-    async def get_entity(self, entity_id: int) -> EntityResponse:
-        """Get entity by ID."""
-        response = await call_get(
-            self.http_client,
-            f"{self._base_path}/entities/{entity_id}",
-        )
-        return EntityResponse.model_validate(response.json())
-```
-
-### Tool → Client → API Flow
-
-```
-MCP Tool (thin adapter)
-    ↓
-Typed Client (encapsulates paths, validates responses)
-    ↓
-HTTP API (FastAPI router)
-    ↓
-Service Layer (business logic)
-    ↓
-Repository Layer (data access)
-```
-
-Example tool using typed client:
-
-```python
-@mcp.tool()
-async def search_notes(
-    query: str,
-    project: str | None = None,
-    metadata_filters: dict | None = None,
-    tags: list[str] | None = None,
-    status: str | None = None,
-) -> SearchResponse:
-    async with get_project_client(project, context) as (client, active_project):
-        # Import client inside function to avoid circular imports
-        from basic_memory.mcp.clients import SearchClient
-        from basic_memory.schemas.search import SearchQuery
-
-        search_query = SearchQuery(
-            text=query,
-            metadata_filters=metadata_filters,
-            tags=tags,
-            status=status,
-        )
-        search_client = SearchClient(client, active_project.external_id)
-        return await search_client.search(search_query.model_dump())
-```
-
-### Per-Project Client Routing
-
-`get_project_client()` from `mcp/project_context.py` is an async context manager that:
-1. Resolves the project name from config (no network call)
-2. Creates the correctly-routed client based on the project's mode (local ASGI or cloud HTTP with API key)
-3. Validates the project via the API
-4. Yields `(client, active_project)` tuple
-
-This solves the bootstrap problem: you need the project name to choose the right client (local vs cloud), but you need the client to validate the project exists.
-
-```python
-from basic_memory.mcp.project_context import get_project_client
-
-async with get_project_client(project, context) as (client, active_project):
-    # client is routed based on project's mode (local or cloud)
-    # active_project is validated via the API
-    ...
-```
-
-## Sync Coordination
-
-### SyncCoordinator
-
-The `SyncCoordinator` centralizes sync/watch lifecycle management:
-
-```python
-@dataclass
-class SyncCoordinator:
-    """Coordinates file sync and watch operations."""
-
-    status: SyncStatus = SyncStatus.NOT_STARTED
-    sync_task: asyncio.Task | None = None
-    watch_service: WatchService | None = None
-
-    async def start(self, ...):
-        """Start sync and watch operations."""
-
-    async def stop(self):
-        """Stop all sync operations gracefully."""
-
-    def get_status_info(self) -> dict:
-        """Get current sync status for observability."""
-```
-
-### Status Enum
-
-```python
-class SyncStatus(Enum):
-    NOT_STARTED = "not_started"
-    STARTING = "starting"
-    RUNNING = "running"
-    STOPPING = "stopping"
-    STOPPED = "stopped"
-    ERROR = "error"
-```
-
-## Project Resolution
-
-### ProjectResolver
-
-Unified project selection across all entrypoints:
-
-```python
-class ProjectResolver:
-    """Resolves which project to use based on context."""
-
-    def resolve(
-        self,
-        explicit_project: str | None = None,
-    ) -> ResolvedProject:
-        """Resolve project using three-tier hierarchy:
-        1. Explicit project parameter
-        2. Default project from config
-        3. Single available project
-        """
-```
-
-### Resolution Modes
-
-```python
-class ResolutionMode(Enum):
-    EXPLICIT = "explicit"           # User specified project
-    DEFAULT = "default"             # Using configured default
-    SINGLE_PROJECT = "single"       # Only one project exists
-    FALLBACK = "fallback"           # Using first available
-```
-
-## Testing Patterns
-
-### Container Testing
-
-Each container has corresponding tests:
-
-```
-tests/
-├── api/test_api_container.py
-├── mcp/test_mcp_container.py
-└── cli/test_cli_container.py
-```
-
-Tests verify:
-- Container creation from config
-- Runtime mode properties
-- Container accessor functions (get/set)
-
-### Mocking Typed Clients
-
-When testing MCP tools, mock at the client level:
-
-```python
-def test_search_notes(monkeypatch):
-    import basic_memory.mcp.clients as clients_mod
-
-    class MockSearchClient:
-        async def search(self, query):
-            return SearchResponse(results=[...])
-
-    monkeypatch.setattr(clients_mod, "SearchClient", MockSearchClient)
+```text
+src/basic_memory/
+├── api/          FastAPI app and routers
+├── cli/          Typer app and command groups
+├── config.py     Config models and manager
+├── deps/         FastAPI dependency providers
+├── importers/    Chat export and external import flows
+├── markdown/     Markdown parsing and rendering helpers
+├── mcp/          MCP server, tools, prompts, and typed clients
+├── models/       SQLAlchemy models
+├── repository/   Data access and search backends
+├── schema/       Schema parsing, validation, inference, and diffing
+├── services/     Business logic
+└── sync/         File watch and sync lifecycle
 ```
 
 ## Design Principles
 
-### 1. Explicit Dependencies
+### Explicit dependencies
 
-Modules receive configuration explicitly rather than reading globals:
+Pass config and collaborators in explicitly. Avoid hidden global reads outside composition roots.
 
-```python
-# Good - explicit injection
-async def sync_files(config: BasicMemoryConfig):
-    ...
+### Thin adapters
 
-# Avoid - hidden global access
-async def sync_files():
-    config = ConfigManager().config  # Hidden coupling
-```
+Routers, tools, and CLI commands should translate inputs and outputs, then defer to services.
 
-### 2. Single Responsibility
+### Markdown-first
 
-Each layer has a clear responsibility:
-- **Containers**: Wire dependencies
-- **Clients**: Encapsulate HTTP communication
-- **Services**: Business logic
-- **Repositories**: Data access
-- **Tools/Routers**: Thin adapters
+Files outlive any one runtime. Derived database state should always be rebuildable.
 
-### 3. Deferred Imports
+### Local-first support surface
 
-To avoid circular imports, typed clients are imported inside functions:
+Documentation and active code paths should optimize for local, SQLite-backed deployments first.
 
-```python
-async def my_tool():
-    async with get_client() as client:
-        # Import here to avoid circular dependency
-        from basic_memory.mcp.clients import KnowledgeClient
+### Compatibility is not the same as product direction
 
-        knowledge_client = KnowledgeClient(client, project_id)
-```
-
-### 4. Backwards Compatibility
-
-When refactoring, maintain backwards compatibility via shims:
-
-```python
-# Old module becomes a shim
-from basic_memory.new_location import *
-
-# Docstring explains migration path
-"""
-DEPRECATED: Import from basic_memory.new_location instead.
-This shim will be removed in a future version.
-"""
-```
-
-## File Organization
-
-```
-src/basic_memory/
-├── api/
-│   ├── container.py          # API composition root
-│   ├── routers/              # FastAPI routers
-│   └── ...
-├── mcp/
-│   ├── container.py          # MCP composition root
-│   ├── clients/              # Typed API clients
-│   ├── tools/                # MCP tool definitions
-│   └── server.py             # MCP server setup
-├── cli/
-│   ├── container.py          # CLI composition root
-│   ├── app.py                # Typer app
-│   └── commands/             # CLI command groups
-├── deps/
-│   ├── config.py             # Config dependencies
-│   ├── db.py                 # Database dependencies
-│   ├── projects.py           # Project dependencies
-│   ├── repositories.py       # Repository dependencies
-│   ├── services.py           # Service dependencies
-│   └── importers.py          # Importer dependencies
-├── sync/
-│   ├── coordinator.py        # SyncCoordinator
-│   └── ...
-├── runtime.py                # RuntimeMode resolution
-├── project_resolver.py       # Unified project selection
-└── config.py                 # Configuration management
-```
+Some inherited upstream code still exists for transition reasons. Treat docs and new development as
+the source of truth for what is actually supported.

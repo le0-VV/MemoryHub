@@ -1,4 +1,4 @@
-"""CLI composition root for Basic Memory.
+"""CLI composition root for MemoryHub.
 
 This container owns reading ConfigManager and environment variables for the
 CLI entrypoint. Downstream modules receive config/dependencies explicitly
@@ -6,7 +6,7 @@ rather than reading globals.
 
 Design principles:
 - Only this module reads ConfigManager directly
-- Runtime mode (cloud/local/test) is resolved here
+- Runtime mode (local/test) is resolved here
 - Different CLI commands may need different initialization
 """
 
@@ -43,8 +43,8 @@ class CliContainer:
 
     @property
     def is_cloud_mode(self) -> bool:
-        """Whether running in cloud mode."""
-        return self.mode.is_cloud
+        """Legacy compatibility property retained for old callers."""
+        return False
 
 
 # Module-level container instance (set by app callback)

@@ -304,7 +304,7 @@ def test_edit_note_backend_failure_returns_nonzero(app, app_config, test_project
 
 
 def test_edit_note_project_and_routing_flag_parity(app, app_config, test_project, config_manager):
-    """edit-note supports --project/--local and validates --local/--cloud conflict."""
+    """edit-note supports --project/--local and rejects removed cloud flags."""
     note = _write_note(
         "Edit Project Flag Note",
         "edit-tests",
@@ -343,9 +343,8 @@ def test_edit_note_project_and_routing_flag_parity(app, app_config, test_project
             "append",
             "--content",
             "ignored",
-            "--local",
             "--cloud",
         ],
     )
     assert conflict.exit_code != 0
-    assert "Cannot specify both --local and --cloud" in conflict.output
+    assert "No such option: --cloud" in conflict.output

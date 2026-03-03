@@ -6,7 +6,7 @@ from enum import Enum, auto
 from pathlib import Path
 from typing import AsyncGenerator, Optional
 
-from basic_memory.config import BasicMemoryConfig, ConfigManager, DatabaseBackend
+from basic_memory.config import BasicMemoryConfig, ConfigManager
 from alembic import command
 from alembic.config import Config
 
@@ -21,7 +21,6 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.pool import NullPool
 
-from basic_memory.repository.postgres_search_repository import PostgresSearchRepository
 from basic_memory.repository.sqlite_search_repository import SQLiteSearchRepository
 
 # -----------------------------------------------------------------------------
@@ -99,11 +98,7 @@ async def _run_semantic_embedding_backfill(
         logger.info("Skipping automatic semantic embedding backfill: no active projects found.")
         return
 
-    repository_class = (
-        PostgresSearchRepository
-        if app_config.database_backend == DatabaseBackend.POSTGRES
-        else SQLiteSearchRepository
-    )
+    repository_class = SQLiteSearchRepository
 
     total_entities = 0
     for project_id, project_name in projects:
@@ -142,7 +137,6 @@ class DatabaseType(Enum):
 
     MEMORY = auto()
     FILESYSTEM = auto()
-    POSTGRES = auto()
 
     @classmethod
     def get_db_url(
@@ -151,8 +145,8 @@ class DatabaseType(Enum):
         """Get SQLAlchemy URL for database path.
 
         Args:
-            db_path: Path to SQLite database file (ignored for Postgres)
-            db_type: Type of database (MEMORY, FILESYSTEM, or POSTGRES)
+            db_path: Path to SQLite database file
+            db_type: Type of database (MEMORY or FILESYSTEM)
             config: Optional config to check for database backend and URL
 
         Returns:
@@ -162,24 +156,19 @@ class DatabaseType(Enum):
         if config is None:
             config = ConfigManager().config
 
-        # Handle explicit Postgres type
-        if db_type == cls.POSTGRES:
-            if not config.database_url:
-                raise ValueError("DATABASE_URL must be set when using Postgres backend")
-            logger.info(f"Using Postgres database: {config.database_url}")
-            return config.database_url
-
-        # Check if Postgres backend is configured (for backward compatibility)
-        if config.database_backend == DatabaseBackend.POSTGRES:
-            if not config.database_url:
-                raise ValueError("DATABASE_URL must be set when using Postgres backend")
-            logger.info(f"Using Postgres database: {config.database_url}")
-            return config.database_url
-
         # SQLite databases
         if db_type == cls.MEMORY:
             logger.info("Using in-memory SQLite database")
             return "sqlite+aiosqlite://"
+
+        if config.database_url:
+            if not config.database_url.startswith("sqlite"):
+                raise ValueError(
+                    "MemoryHub is SQLite-only in this fork. "
+                    "Use a sqlite+aiosqlite URL or unset BASIC_MEMORY_DATABASE_URL."
+                )
+            logger.info(f"Using SQLite database URL: {config.database_url}")
+            return config.database_url
 
         return f"sqlite+aiosqlite:///{db_path}"  # pragma: no cover
 
@@ -299,41 +288,6 @@ def _create_sqlite_engine(db_url: str, db_type: DatabaseType) -> AsyncEngine:
     return engine
 
 
-def _create_postgres_engine(db_url: str, config: BasicMemoryConfig) -> AsyncEngine:
-    """Create Postgres async engine with appropriate configuration.
-
-    Args:
-        db_url: Postgres connection URL (postgresql+asyncpg://...)
-        config: BasicMemoryConfig with pool settings
-
-    Returns:
-        Configured async engine for Postgres
-    """
-    # Use NullPool connection issues.
-    # Assume connection pooler like PgBouncer handles connection pooling.
-    engine = create_async_engine(
-        db_url,
-        echo=False,
-        poolclass=NullPool,  # No pooling - fresh connection per request
-        connect_args={
-            # Disable statement cache to avoid issues with prepared statements on reconnect
-            "statement_cache_size": 0,
-            # Allow 30s for commands (Neon cold start can take 2-5s, sometimes longer)
-            "command_timeout": 30,
-            # Allow 30s for initial connection (Neon wake-up time)
-            "timeout": 30,
-            "server_settings": {
-                "application_name": "basic-memory",
-                # Statement timeout for queries (30s to allow for cold start)
-                "statement_timeout": "30s",
-            },
-        },
-    )
-    logger.debug("Created Postgres engine with NullPool (no connection pooling)")
-
-    return engine
-
-
 def _create_engine_and_session(
     db_path: Path,
     db_type: DatabaseType = DatabaseType.FILESYSTEM,
@@ -342,8 +296,8 @@ def _create_engine_and_session(
     """Internal helper to create engine and session maker.
 
     Args:
-        db_path: Path to database file (used for SQLite, ignored for Postgres)
-        db_type: Type of database (MEMORY, FILESYSTEM, or POSTGRES)
+        db_path: Path to database file
+        db_type: Type of database (MEMORY or FILESYSTEM)
         config: Optional explicit config. If not provided, reads from ConfigManager.
             Prefer passing explicitly from composition roots.
 
@@ -356,12 +310,7 @@ def _create_engine_and_session(
     db_url = DatabaseType.get_db_url(db_path, db_type, config)
     logger.debug(f"Creating engine for db_url: {db_url}")
 
-    # Delegate to backend-specific engine creation
-    # Check explicit POSTGRES type first, then config setting
-    if db_type == DatabaseType.POSTGRES or config.database_backend == DatabaseBackend.POSTGRES:
-        engine = _create_postgres_engine(db_url, config)
-    else:
-        engine = _create_sqlite_engine(db_url, db_type)
+    engine = _create_sqlite_engine(db_url, db_type)
 
     session_maker = async_sessionmaker(engine, expire_on_commit=False)
     return engine, session_maker
@@ -524,17 +473,9 @@ async def run_migrations(
         else:
             session_maker = _session_maker
 
-        # Initialize the search index schema
-        # For SQLite: Create FTS5 virtual table
-        # For Postgres: No-op (tsvector column added by migrations)
-        # The project_id is not used for init_search_index, so we pass a dummy value
-        if (
-            database_type == DatabaseType.POSTGRES
-            or app_config.database_backend == DatabaseBackend.POSTGRES
-        ):
-            await PostgresSearchRepository(session_maker, 1).init_search_index()
-        else:
-            await SQLiteSearchRepository(session_maker, 1).init_search_index()
+        # Initialize the SQLite search index schema.
+        # The project_id is not used for init_search_index, so we pass a dummy value.
+        await SQLiteSearchRepository(session_maker, 1).init_search_index()
 
         revisions_after_upgrade = await _load_applied_alembic_revisions(session_maker)
         if _should_run_semantic_embedding_backfill(

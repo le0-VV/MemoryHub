@@ -1,10 +1,10 @@
 cff-version: 1.0.3
-message: "If you use this project, please cite it as follows:"
+message: "This repository is an experimental fork of Basic Memory. Cite the fork for fork-specific work and the upstream project for upstream releases."
 authors:
   - family-names: "Hernandez"
     given-names: "Paul"
     affiliation: "Basic Machines"
-title: "Basic Memory"
+title: "MemoryHub"
 version: "0.0.1"
 date-released: "2025-02-03"
-url: "https://github.com/basicmachines-co/basic-memory"
+url: "https://github.com/le0-VV/MemoryHub"

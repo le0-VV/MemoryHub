@@ -69,7 +69,7 @@ def get_bmignore_path() -> Path:
 def create_default_bmignore() -> None:
     """Create default .bmignore file if it doesn't exist.
 
-    This ensures users have a file they can customize for all Basic Memory operations.
+    This ensures users have a file they can customize for local sync and import operations.
     """
     bmignore_path = get_bmignore_path()
 
@@ -78,7 +78,7 @@ def create_default_bmignore() -> None:
 
     bmignore_path.parent.mkdir(parents=True, exist_ok=True)
     bmignore_path.write_text("""# Basic Memory Ignore Patterns
-# This file is used by both 'bm cloud upload', 'bm cloud bisync', and file sync
+# This file is used by local file sync and import-related filtering
 # Patterns use standard gitignore-style syntax
 
 # Hidden files (files starting with dot)

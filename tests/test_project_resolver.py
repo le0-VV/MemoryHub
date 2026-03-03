@@ -1,5 +1,7 @@
 """Tests for ProjectResolver - unified project resolution logic."""
 
+from pathlib import Path
+
 import pytest
 
 from basic_memory.project_resolver import (
@@ -35,6 +37,58 @@ class TestProjectResolver:
     def test_default_project_is_used_as_fallback(self):
         """Default project should be used when explicit is missing."""
         resolver = ProjectResolver(default_project="my-default")
+
+        result = resolver.resolve(project=None)
+
+        assert result.project == "my-default"
+        assert result.mode == ResolutionMode.DEFAULT
+
+    def test_cwd_project_is_used_before_default(self, tmp_path: Path):
+        """Configured project matching cwd should win over the default fallback."""
+        project_root = tmp_path / "repo-a"
+        working_dir = project_root / "nested" / "child"
+        working_dir.mkdir(parents=True)
+
+        resolver = ProjectResolver(
+            default_project="my-default",
+            project_paths={"repo-a": str(project_root)},
+            cwd=str(working_dir),
+        )
+
+        result = resolver.resolve(project=None)
+
+        assert result.project == "repo-a"
+        assert result.mode == ResolutionMode.CWD
+
+    def test_explicit_project_still_beats_cwd(self, tmp_path: Path):
+        """Explicit parameter should override cwd-based inference."""
+        project_root = tmp_path / "repo-a"
+        working_dir = project_root / "nested"
+        working_dir.mkdir(parents=True)
+
+        resolver = ProjectResolver(
+            default_project="my-default",
+            project_paths={"repo-a": str(project_root)},
+            cwd=str(working_dir),
+        )
+
+        result = resolver.resolve(project="explicit-project")
+
+        assert result.project == "explicit-project"
+        assert result.mode == ResolutionMode.EXPLICIT
+
+    def test_cwd_outside_projects_falls_back_to_default(self, tmp_path: Path):
+        """Unmatched cwd should still use the configured default project."""
+        project_root = tmp_path / "repo-a"
+        project_root.mkdir()
+        outside_dir = tmp_path / "elsewhere"
+        outside_dir.mkdir()
+
+        resolver = ProjectResolver(
+            default_project="my-default",
+            project_paths={"repo-a": str(project_root)},
+            cwd=str(outside_dir),
+        )
 
         result = resolver.resolve(project=None)
 

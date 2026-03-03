@@ -1,6 +1,5 @@
 """Tests for ProjectService.get_embedding_status()."""
 
-import os
 from unittest.mock import patch
 
 import pytest
@@ -8,10 +7,6 @@ from sqlalchemy import text
 
 from basic_memory.schemas.project_info import EmbeddingStatus
 from basic_memory.services.project_service import ProjectService
-
-
-def _is_postgres() -> bool:
-    return os.environ.get("BASIC_MEMORY_TEST_POSTGRES", "").lower() in ("1", "true", "yes")
 
 
 @pytest.mark.asyncio
@@ -38,14 +33,8 @@ async def test_embedding_status_vector_tables_missing(
     project_service: ProjectService, test_graph, test_project
 ):
     """When vector tables don't exist, recommend reindex."""
-    # Drop the chunks table created by the fixture to simulate missing vector tables
-    # Postgres requires CASCADE (due to index dependencies); SQLite doesn't support it
-    drop_sql = (
-        "DROP TABLE IF EXISTS search_vector_chunks CASCADE"
-        if _is_postgres()
-        else "DROP TABLE IF EXISTS search_vector_chunks"
-    )
-    await project_service.repository.execute_query(text(drop_sql), {})
+    # Drop the chunks table created by the fixture to simulate missing vector tables.
+    await project_service.repository.execute_query(text("DROP TABLE IF EXISTS search_vector_chunks"), {})
 
     with patch.object(
         type(project_service),
@@ -112,8 +101,7 @@ async def test_embedding_status_orphaned_chunks(
 
     # Create a minimal search_vector_embeddings stub (not a real vector table)
     # so the LEFT JOIN works and finds the orphan.
-    # Uses chunk_id as PK — Postgres queries join on chunk_id,
-    # SQLite queries join on rowid which aliases INTEGER PRIMARY KEY.
+    # SQLite joins on rowid, which aliases INTEGER PRIMARY KEY here.
     await project_service.repository.execute_query(
         text(
             "CREATE TABLE IF NOT EXISTS search_vector_embeddings (  chunk_id INTEGER PRIMARY KEY)"

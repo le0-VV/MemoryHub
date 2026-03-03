@@ -1,23 +1,27 @@
 # Semantic Search
 
-This guide covers Basic Memory's semantic (vector) search feature, which adds meaning-based retrieval alongside the existing full-text search.
+This guide covers MemoryHub's semantic search feature. The fork is SQLite-only, so all supported
+semantic search flows run on local SQLite indexes and vector tables.
 
 ## Overview
 
-Basic Memory's search supports both full-text search (FTS) and semantic retrieval. Semantic search adds vector embeddings that capture the *meaning* of your content, enabling:
+MemoryHub supports both full-text search and semantic retrieval. Semantic search adds vector
+embeddings that capture the meaning of your content, enabling:
 
 - **Paraphrase matching**: Find "authentication flow" when searching for "login process"
 - **Conceptual queries**: Search for "ways to improve performance" and find notes about caching, indexing, and optimization
 - **Hybrid retrieval**: Combine the precision of keyword search with the recall of semantic similarity
 
-Semantic search is enabled by default when semantic dependencies are available at runtime. It works on both SQLite (local) and Postgres (cloud) backends.
+Semantic search is enabled by default when semantic dependencies are available at runtime. In this
+fork, it works on SQLite only.
 
 ## Installation
 
-Semantic search dependencies (fastembed, sqlite-vec, openai) are included in the default `basic-memory` install.
+Semantic search dependencies (`fastembed`, `sqlite-vec`, and optional `openai`) are included in the
+default project install.
 
 ```bash
-pip install basic-memory
+pip install -e .
 ```
 
 You can always override with `BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED=true|false`.
@@ -37,7 +41,7 @@ You can always override with `BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED=true|false`.
 The default install includes FastEmbed, which depends on ONNX Runtime. ONNX Runtime dropped Intel Mac (x86_64) wheels starting in v1.24, so install with a compatible ONNX Runtime pin first:
 
 ```bash
-pip install basic-memory 'onnxruntime<1.24'
+pip install -e . 'onnxruntime<1.24'
 ```
 
 After installation, Intel Mac users have two runtime options:
@@ -61,10 +65,10 @@ export BASIC_MEMORY_SEMANTIC_EMBEDDING_PROVIDER=fastembed
 
 ## Quick Start
 
-1. Install Basic Memory:
+1. Install the project:
 
 ```bash
-pip install basic-memory
+uv sync
 ```
 
 2. (Optional) Explicitly enable semantic search:
@@ -76,7 +80,7 @@ export BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED=true
 3. Build vector embeddings for your existing content:
 
 ```bash
-bm reindex --embeddings
+basic-memory reindex --embeddings
 ```
 
 4. Search using semantic modes:
@@ -87,6 +91,9 @@ search_notes("login process", search_type="vector")
 
 # Hybrid: combines FTS precision with vector recall (recommended)
 search_notes("login process", search_type="hybrid")
+
+# Alias for vector search also works
+search_notes("login process", search_type="semantic")
 
 # Explicit full-text search
 search_notes("login process", search_type="text")
@@ -116,8 +123,8 @@ FastEmbed runs entirely locally using ONNX models — no API key, no network cal
 - **Tradeoff**: Smaller model, fast inference, good quality for most use cases
 
 ```bash
-# Install basic-memory and enable semantic search
-pip install basic-memory
+# Install project dependencies and enable semantic search
+uv sync
 export BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED=true
 ```
 
@@ -138,14 +145,15 @@ export OPENAI_API_KEY=sk-...
 When switching from FastEmbed to OpenAI (or vice versa), you must rebuild embeddings since the vector dimensions differ:
 
 ```bash
-bm reindex --embeddings
+basic-memory reindex --embeddings
 ```
 
 ## Search Modes
 
 ### `text` (default)
 
-Full-text keyword search using FTS5 (SQLite) or tsvector (Postgres). Supports boolean operators (`AND`, `OR`, `NOT`), phrase matching, and prefix wildcards.
+Full-text keyword search using SQLite FTS. Supports boolean operators (`AND`, `OR`, `NOT`), phrase
+matching, and prefix wildcards.
 
 ```python
 search_notes("project AND planning", search_type="text")
@@ -183,20 +191,20 @@ Score-based fusion uses the formula `max(vec, fts) + bonus * min(vec, fts)` to p
 
 ## The Reindex Command
 
-The `bm reindex` command rebuilds search indexes without dropping the database.
+The reindex flow rebuilds search indexes without dropping the database.
 
 ```bash
 # Rebuild everything (FTS + embeddings if semantic is enabled)
-bm reindex
+basic-memory reindex
 
 # Only rebuild vector embeddings
-bm reindex --embeddings
+basic-memory reindex --embeddings
 
 # Only rebuild the full-text search index
-bm reindex --search
+basic-memory reindex --search
 
 # Target a specific project
-bm reindex -p my-project
+basic-memory reindex --project my-project
 ```
 
 ### When You Need to Reindex
@@ -251,7 +259,7 @@ Vector and hybrid modes return individual observations and relations as first-cl
 
 ## Database Backends
 
-### SQLite (local)
+## SQLite Backend
 
 - **Vector storage**: [sqlite-vec](https://github.com/asg017/sqlite-vec) virtual table
 - **Table creation**: At runtime when semantic search is first used — no migration needed
@@ -260,11 +268,12 @@ Vector and hybrid modes return individual observations and relations as first-cl
 
 The sqlite-vec extension is loaded per-connection. Vector tables are created lazily on first use.
 
-### Postgres (cloud)
+There is no supported Postgres backend in this fork.
 
-- **Vector storage**: [pgvector](https://github.com/pgvector/pgvector) with HNSW indexing
-- **Chunk metadata table**: Created via Alembic migration (`search_vector_chunks` with `BIGSERIAL` primary key)
-- **Embedding table**: `search_vector_embeddings` created at runtime (dimension-dependent, same pattern as SQLite)
-- **Index**: HNSW index on the embedding column for fast approximate nearest-neighbour queries
+## Practical Notes
 
-The Alembic migration creates the dimension-independent chunks table. The embeddings table and HNSW index are deferred to runtime because they depend on the configured vector dimensions.
+- `text` is best for exact keyword queries.
+- `vector` and `semantic` are equivalent.
+- `hybrid` is a good default when semantic search is enabled.
+- `semantic_min_similarity` can be raised when you want fewer, higher-confidence vector matches.
+- Rebuild embeddings whenever you change provider, model, or dimensions.

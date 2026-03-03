@@ -1,4 +1,4 @@
-"""Project context utilities for Basic Memory MCP server.
+"""Project context utilities for the MemoryHub MCP server.
 
 Provides project lookup utilities for MCP tools.
 Handles project validation and context management in one place.
@@ -19,9 +19,8 @@ from loguru import logger
 from fastmcp import Context
 from mcp.server.fastmcp.exceptions import ToolError
 
-from basic_memory.config import BasicMemoryConfig, ConfigManager, ProjectMode
+from basic_memory.config import BasicMemoryConfig, ConfigManager
 from basic_memory.project_resolver import ProjectResolver
-from basic_memory.schemas.cloud import WorkspaceInfo, WorkspaceListResponse
 from basic_memory.schemas.project_info import ProjectItem, ProjectList
 from basic_memory.schemas.v2 import ProjectResolveResponse
 from basic_memory.schemas.memory import memory_url_path
@@ -58,10 +57,16 @@ async def resolve_project_parameter(
     if default_project is None:
         config = ConfigManager().config
         default_project = config.default_project
+        project_paths = {name: entry.path for name, entry in config.projects.items()}
+    else:
+        project_paths = {
+            name: entry.path for name, entry in ConfigManager().config.projects.items()
+        }
 
     # Create resolver with configuration and resolve
     resolver = ProjectResolver.from_env(
         default_project=default_project,
+        project_paths=project_paths,
     )
     result = resolver.resolve(project=project, allow_discovery=allow_discovery)
     return result.project
@@ -74,101 +79,6 @@ async def get_project_names(client: AsyncClient, headers: HeaderTypes | None = N
     response = await call_get(client, "/v2/projects/", headers=headers)
     project_list = ProjectList.model_validate(response.json())
     return [project.name for project in project_list.projects]
-
-
-def _workspace_matches_identifier(workspace: WorkspaceInfo, identifier: str) -> bool:
-    """Return True when identifier matches workspace tenant_id or name."""
-    if workspace.tenant_id == identifier:
-        return True
-    return workspace.name.lower() == identifier.lower()
-
-
-def _workspace_choices(workspaces: list[WorkspaceInfo]) -> str:
-    """Format deterministic workspace choices for prompt-style errors."""
-    return "\n".join(
-        [
-            (
-                f"- {item.name} "
-                f"(type={item.workspace_type}, role={item.role}, tenant_id={item.tenant_id})"
-            )
-            for item in workspaces
-        ]
-    )
-
-
-async def get_available_workspaces(context: Optional[Context] = None) -> list[WorkspaceInfo]:
-    """Load available cloud workspaces for the current authenticated user."""
-    if context:
-        cached_raw = await context.get_state("available_workspaces")
-        if isinstance(cached_raw, list):
-            return [WorkspaceInfo.model_validate(item) for item in cached_raw]
-
-    from basic_memory.mcp.async_client import get_cloud_control_plane_client
-    from basic_memory.mcp.tools.utils import call_get
-
-    async with get_cloud_control_plane_client() as client:
-        response = await call_get(client, "/workspaces/")
-        workspace_list = WorkspaceListResponse.model_validate(response.json())
-
-    if context:
-        await context.set_state(
-            "available_workspaces",
-            [ws.model_dump() for ws in workspace_list.workspaces],
-        )
-
-    return workspace_list.workspaces
-
-
-async def resolve_workspace_parameter(
-    workspace: Optional[str] = None,
-    context: Optional[Context] = None,
-) -> WorkspaceInfo:
-    """Resolve workspace using explicit input, session cache, and cloud discovery."""
-    if context:
-        cached_raw = await context.get_state("active_workspace")
-        if isinstance(cached_raw, dict):
-            cached_workspace = WorkspaceInfo.model_validate(cached_raw)
-            if workspace is None or _workspace_matches_identifier(cached_workspace, workspace):
-                logger.debug(f"Using cached workspace from context: {cached_workspace.tenant_id}")
-                return cached_workspace
-
-    workspaces = await get_available_workspaces(context=context)
-    if not workspaces:
-        raise ValueError(
-            "No accessible workspaces found for this account. "
-            "Ensure you have an active subscription and tenant access."
-        )
-
-    selected_workspace: WorkspaceInfo | None = None
-
-    if workspace:
-        matches = [item for item in workspaces if _workspace_matches_identifier(item, workspace)]
-        if not matches:
-            raise ValueError(
-                f"Workspace '{workspace}' was not found.\n"
-                f"Available workspaces:\n{_workspace_choices(workspaces)}"
-            )
-        if len(matches) > 1:
-            raise ValueError(
-                f"Workspace name '{workspace}' matches multiple workspaces. "
-                "Use tenant_id instead.\n"
-                f"Available workspaces:\n{_workspace_choices(workspaces)}"
-            )
-        selected_workspace = matches[0]
-    elif len(workspaces) == 1:
-        selected_workspace = workspaces[0]
-    else:
-        raise ValueError(
-            "Multiple workspaces are available. Ask the user which workspace to use, then retry "
-            "with the 'workspace' argument set to the tenant_id or unique name.\n"
-            f"Available workspaces:\n{_workspace_choices(workspaces)}"
-        )
-
-    if context:
-        await context.set_state("active_workspace", selected_workspace.model_dump())
-        logger.debug(f"Cached workspace in context: {selected_workspace.tenant_id}")
-
-    return selected_workspace
 
 
 async def get_active_project(
@@ -378,54 +288,13 @@ def detect_project_from_url_prefix(identifier: str, config: BasicMemoryConfig) -
 @asynccontextmanager
 async def get_project_client(
     project: Optional[str] = None,
-    workspace: Optional[str] = None,
     context: Optional[Context] = None,
 ) -> AsyncIterator[Tuple[AsyncClient, ProjectItem]]:
-    """Resolve project, create correctly-routed client, and validate project.
+    """Resolve a project, create a local client, and validate the project."""
+    from basic_memory.mcp.async_client import get_client
 
-    Solves the bootstrap problem: we need to know the project name to choose
-    the right client (local vs cloud), but we need the client to validate
-    the project. This helper resolves the project from config first (no
-    network), creates the correctly-routed client, then validates via API.
-
-    Routing decision order:
-    1. Explicit --local/--cloud flags → skip workspace, use flag routing
-    2. Cloud routing (explicit --cloud OR project mode CLOUD) →
-       resolve workspace via priority chain, create cloud client
-    3. Otherwise → local ASGI client
-
-    Workspace resolution priority (when cloud routing):
-    1. Explicit ``workspace`` parameter
-    2. Per-project ``workspace_id`` from config
-    3. Global ``default_workspace`` from config
-    4. MCP session cache (context)
-    5. Auto-select if single workspace
-    6. Error listing choices
-
-    Args:
-        project: Optional explicit project parameter
-        workspace: Optional cloud workspace selector (tenant_id or unique name)
-        context: Optional FastMCP context for caching
-
-    Yields:
-        Tuple of (client, active_project)
-
-    Raises:
-        ValueError: If no project can be resolved
-        RuntimeError: If cloud project but no API key configured
-    """
-    # Deferred imports to avoid circular dependency
-    from basic_memory.mcp.async_client import (
-        _explicit_routing,
-        _force_local_mode,
-        get_client,
-        is_factory_mode,
-    )
-
-    # Step 1: Resolve project name from config (no network call)
     resolved_project = await resolve_project_parameter(project)
     if not resolved_project:
-        # Fall back to local client to discover projects and raise helpful error
         async with get_client() as client:
             project_names = await get_project_names(client)
             raise ValueError(
@@ -434,76 +303,6 @@ async def get_project_client(
                 f"Available projects: {project_names}"
             )
 
-    # Step 1b: Factory injection (in-process cloud server)
-    # Trigger: set_client_factory() was called (e.g., by cloud MCP server)
-    # Why: the transport layer already resolved workspace and tenant context;
-    #   attempting cloud workspace resolution here would call the production
-    #   control-plane API with no valid credentials and fail with 401
-    # Outcome: use the factory client directly, skip workspace resolution
-    if is_factory_mode():
-        async with get_client() as client:
-            active_project = await get_active_project(client, resolved_project, context)
-            yield client, active_project
-        return
-
-    # Step 2: Check explicit routing BEFORE workspace resolution
-    # Trigger: CLI passed --local or --cloud
-    # Why: explicit flags must be deterministic — skip workspace entirely for --local
-    # Outcome: route strictly based on explicit flag, no workspace network calls
-    if _explicit_routing() and _force_local_mode():
-        async with get_client(project_name=resolved_project) as client:
-            active_project = await get_active_project(client, resolved_project, context)
-            yield client, active_project
-        return
-
-    # Step 3: Determine if cloud routing is needed
-    config = ConfigManager().config
-    project_entry = config.projects.get(resolved_project)
-    project_mode = config.get_project_mode(resolved_project)
-
-    # Trigger: workspace provided for a local project (without explicit --cloud)
-    # Why: workspace selection is a cloud routing concern only
-    # Outcome: fail fast with a deterministic guidance message
-    if project_mode != ProjectMode.CLOUD and workspace is not None and not _explicit_routing():
-        raise ValueError(
-            f"Workspace '{workspace}' cannot be used with local project '{resolved_project}'. "
-            "Workspace selection is only supported for cloud-mode projects."
-        )
-
-    if project_mode == ProjectMode.CLOUD or (_explicit_routing() and not _force_local_mode()):
-        # --- Cloud routing: resolve workspace with priority chain ---
-        effective_workspace = workspace
-
-        # Priority 2: per-project workspace_id from config
-        if effective_workspace is None and project_entry and project_entry.workspace_id:
-            effective_workspace = project_entry.workspace_id
-
-        # Priority 3: global default_workspace from config
-        if effective_workspace is None and config.default_workspace:
-            effective_workspace = config.default_workspace
-
-        # Priorities 4-6: if still unresolved, fall back to resolve_workspace_parameter
-        # which checks context cache, auto-selects single workspace, or errors
-        if effective_workspace is not None:
-            # Config-resolved workspace — pass directly to get_client, skip network lookup
-            async with get_client(
-                project_name=resolved_project,
-                workspace=effective_workspace,
-            ) as client:
-                active_project = await get_active_project(client, resolved_project, context)
-                yield client, active_project
-        else:
-            # No config-based workspace — use resolve_workspace_parameter for discovery
-            active_ws = await resolve_workspace_parameter(workspace=None, context=context)
-            async with get_client(
-                project_name=resolved_project,
-                workspace=active_ws.tenant_id,
-            ) as client:
-                active_project = await get_active_project(client, resolved_project, context)
-                yield client, active_project
-        return
-
-    # Step 4: Local routing (default)
     async with get_client(project_name=resolved_project) as client:
         active_project = await get_active_project(client, resolved_project, context)
         yield client, active_project

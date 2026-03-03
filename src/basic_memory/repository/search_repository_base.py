@@ -38,15 +38,14 @@ BULLET_PATTERN = re.compile(r"^[\-\*]\s+")
 class SearchRepositoryBase(ABC):
     """Abstract base class for backend-specific search repository implementations.
 
-    This class defines the common interface that all search repositories must implement,
-    regardless of whether they use SQLite FTS5 or Postgres tsvector for full-text search.
+    This class defines the common interface for the active SQLite search
+    repository and preserves backend hook structure from upstream.
 
     Shared semantic search logic (chunking, embedding orchestration, hybrid score-based fusion)
     lives here. Backend-specific operations are delegated to abstract hooks.
 
-    Concrete implementations:
+    Active implementation:
     - SQLiteSearchRepository: Uses FTS5 virtual tables with MATCH queries
-    - PostgresSearchRepository: Uses tsvector/tsquery with GIN indexes
     """
 
     # --- Subclass-populated attributes ---
@@ -83,7 +82,6 @@ class SearchRepositoryBase(ABC):
 
         Backend-specific implementations:
         - SQLite: CREATE VIRTUAL TABLE using FTS5
-        - Postgres: CREATE TABLE with tsvector column and GIN indexes
         """
         pass
 
@@ -100,7 +98,6 @@ class SearchRepositoryBase(ABC):
 
         Backend-specific implementations:
         - SQLite: Quotes FTS5 special characters, adds * wildcards
-        - Postgres: Converts to tsquery syntax with :* prefix operator
         """
         pass
 
@@ -139,7 +136,6 @@ class SearchRepositoryBase(ABC):
 
         Backend-specific implementations:
         - SQLite: Uses MATCH operator and bm25() for scoring
-        - Postgres: Uses @@ operator and ts_rank() for scoring
         """
         pass
 
@@ -188,7 +184,6 @@ class SearchRepositoryBase(ABC):
         """Delete all chunk + embedding rows for an entity.
 
         SQLite must explicitly delete embeddings first (no CASCADE).
-        Postgres relies on ON DELETE CASCADE from the FK.
         """
         pass
 
@@ -213,7 +208,6 @@ class SearchRepositoryBase(ABC):
 
         Backend-specific implementations:
         - SQLite (vec0): L2/Euclidean distance → cosine similarity via 1 - d²/2
-        - Postgres (pgvector <=>): Cosine distance → cosine similarity via 1 - d
         """
         pass  # pragma: no cover
 
@@ -237,7 +231,7 @@ class SearchRepositoryBase(ABC):
             )
 
             # When using text() raw SQL, always serialize JSON to string
-            # Both SQLite (TEXT) and Postgres (JSONB) accept JSON strings in raw SQL
+            # SQLite (TEXT) accepts JSON strings in raw SQL
             # The database driver/column type will handle conversion
             insert_data = search_index_row.to_insert(serialize_json=True)
             insert_data["project_id"] = self.project_id
@@ -281,7 +275,7 @@ class SearchRepositoryBase(ABC):
 
         async with db.scoped_session(self.session_maker) as session:
             # When using text() raw SQL, always serialize JSON to string
-            # Both SQLite (TEXT) and Postgres (JSONB) accept JSON strings in raw SQL
+            # SQLite (TEXT) accepts JSON strings in raw SQL
             # The database driver/column type will handle conversion
             insert_data_list = []
             for row in search_index_rows:
@@ -719,7 +713,7 @@ class SearchRepositoryBase(ABC):
     def _timestamp_now_expr(self) -> str:
         """SQL expression for 'now' in the backend.
 
-        SQLite uses CURRENT_TIMESTAMP, Postgres uses NOW().
+        SQLite uses CURRENT_TIMESTAMP.
         """
         return "CURRENT_TIMESTAMP"
 
@@ -1126,8 +1120,7 @@ class SearchRepositoryBase(ABC):
         # Vector scores are used raw — already calibrated [0, 1] by _distance_to_similarity().
         rows_by_id: dict[int, SearchIndexRow] = {}
 
-        # Normalize FTS scores to [0, 1] — handles both SQLite (negative bm25)
-        # and Postgres (positive ts_rank) by using absolute values
+        # Normalize FTS scores to [0, 1] — handles SQLite (negative bm25)
         fts_abs = [abs(row.score or 0.0) for row in fts_results]
         fts_max = max(fts_abs) if fts_abs else 1.0
 

@@ -1,4 +1,4 @@
-"""Status command for basic-memory CLI."""
+"""Status command for the MemoryHub CLI."""
 
 import json
 from typing import Set, Dict
@@ -166,29 +166,23 @@ def status(
     ] = None,
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed file information"),
     json_output: bool = typer.Option(False, "--json", help="Output in JSON format"),
-    local: bool = typer.Option(
-        False, "--local", help="Force local API routing (ignore cloud mode)"
-    ),
-    cloud: bool = typer.Option(False, "--cloud", help="Force cloud API routing"),
+    local: bool = typer.Option(False, "--local", help="Force local API routing"),
 ):
     """Show sync status between files and database.
 
     Use --json for machine-readable output.
-    Use --local to force local routing when cloud mode is enabled.
-    Use --cloud to force cloud routing when cloud mode is disabled.
+    This fork supports local routing only.
     """
     from basic_memory.cli.commands.command_utils import run_with_cleanup
 
     try:
-        validate_routing_flags(local, cloud)
-        # Trigger: no explicit routing flag provided
-        # Why: status scans the local filesystem — cloud routing would use the
-        #      Docker-internal path stored in the cloud database, which doesn't
-        #      exist locally.
-        # Outcome: default to local routing unless --cloud was explicitly requested.
-        if not local and not cloud:
+        validate_routing_flags(local)
+        # Trigger: no explicit routing flag provided.
+        # Why: status inspects the local filesystem and SQLite index directly.
+        # Outcome: default to local routing.
+        if not local:
             local = True
-        with force_routing(local=local, cloud=cloud):
+        with force_routing(local=local):
             project_name, sync_report = run_with_cleanup(run_status(project))
 
         if json_output:

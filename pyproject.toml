@@ -1,7 +1,7 @@
 [project]
 name = "basic-memory"
 dynamic = ["version"]
-description = "Local-first knowledge management combining Zettelkasten with knowledge graphs"
+description = "Experimental MemoryHub fork of Basic Memory focused on multi-project MCP workflows"
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "AGPL-3.0-or-later" }
@@ -34,10 +34,8 @@ dependencies = [
     "python-dotenv>=1.1.0",
     "pytest-aio>=1.9.0",
     "aiofiles>=24.1.0", # Optional observability (disabled by default via config)
-    "asyncpg>=0.30.0",
-    "nest-asyncio>=1.6.0", # For Alembic migrations with Postgres
+    "nest-asyncio>=1.6.0",
     "pytest-asyncio>=1.2.0",
-    "psycopg==3.3.1",
     "mdformat>=0.7.22",
     "mdformat-gfm>=0.3.7",
     "mdformat-frontmatter>=2.0.8",
@@ -50,9 +48,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/basicmachines-co/basic-memory"
-Repository = "https://github.com/basicmachines-co/basic-memory"
-Documentation = "https://github.com/basicmachines-co/basic-memory#readme"
+Homepage = "https://github.com/le0-VV/MemoryHub"
+Repository = "https://github.com/le0-VV/MemoryHub"
+Documentation = "https://github.com/le0-VV/MemoryHub#readme"
 
 [project.scripts]
 basic-memory = "basic_memory.cli.main:app"
@@ -71,7 +69,6 @@ asyncio_default_fixture_loop_scope = "function"
 markers = [
     "benchmark: Performance benchmark tests (deselect with '-m \"not benchmark\"')",
     "slow: Slow-running tests (deselect with '-m \"not slow\"')",
-    "postgres: Tests that run against Postgres backend (deselect with '-m \"not postgres\"')",
     "windows: Windows-specific tests (deselect with '-m \"not windows\"')",
     "smoke: Fast end-to-end smoke tests for MCP flows",
     "semantic: Tests requiring semantic dependencies (fastembed, sqlite-vec, openai)",
@@ -92,8 +89,6 @@ dev = [
     "pytest-xdist>=3.0.0",
     "ruff>=0.1.6",
     "freezegun>=1.5.5",
-    "testcontainers[postgres]>=4.0.0",
-    "psycopg>=3.2.0",
     "pyright>=1.1.408",
     "pytest-testmon>=2.2.0",
     "ty>=0.0.18",
@@ -148,7 +143,7 @@ omit = [
     "*/watch_service.py",           # File system watching - complex integration testing
     "*/background_sync.py",         # Background processes
     "*/cli/**",                    # CLI is an interactive wrapper; core logic is covered via API/MCP/service tests
-    "*/db.py",                     # Backend/runtime-dependent (sqlite/postgres/windows tuning); validated via integration tests
+    "*/db.py",                     # Runtime-dependent (sqlite/windows tuning); validated via integration tests
     "*/services/initialization.py", # Startup orchestration + background tasks (watchers); exercised indirectly in entrypoints
     "*/sync/sync_service.py",      # Heavy filesystem/db integration; covered by integration suite, not enforced in unit coverage
     "*/services/migration_service.py", # Complex migration scenarios

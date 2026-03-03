@@ -29,7 +29,7 @@ console = Console()
 
 async def run_doctor() -> None:
     """Run local consistency checks for file <-> database flows."""
-    console.print("[blue]Running Basic Memory doctor checks...[/blue]")
+    console.print("[blue]Running MemoryHub doctor checks...[/blue]")
 
     project_name = f"doctor-{uuid.uuid4().hex[:8]}"
     api_note_title = "Doctor API Note"
@@ -132,17 +132,16 @@ async def run_doctor() -> None:
 @app.command()
 def doctor(
     local: bool = typer.Option(
-        False, "--local", help="Force local API routing (ignore cloud mode)"
+        False, "--local", help="Force local API routing"
     ),
-    cloud: bool = typer.Option(False, "--cloud", help="Force cloud API routing"),
 ) -> None:
     """Run local consistency checks to verify file/database sync."""
     try:
-        validate_routing_flags(local, cloud)
+        validate_routing_flags(local)
         # Doctor runs local filesystem checks — always default to local routing
-        if not local and not cloud:
+        if not local:
             local = True
-        with force_routing(local=local, cloud=cloud):
+        with force_routing(local=local):
             run_with_cleanup(run_doctor())
     except (ToolError, ValueError) as e:
         console.print(f"[red]Doctor failed: {e}[/red]")

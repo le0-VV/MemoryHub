@@ -1,7 +1,7 @@
 """Integration-style tests for the initialization service.
 
 Goal: avoid brittle deep mocking; assert real behavior using the existing
-test config + dual-backend fixtures.
+test config + SQLite fixtures.
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from basic_memory import db
-from basic_memory.config import BasicMemoryConfig, DatabaseBackend
+from basic_memory.config import BasicMemoryConfig
 from basic_memory.repository.project_repository import ProjectRepository
 from basic_memory.services.initialization import (
     ensure_initialization,
@@ -41,18 +41,17 @@ async def test_initialize_database_creates_engine_and_allows_queries(app_config:
 
 
 @pytest.mark.asyncio
-async def test_initialize_database_raises_on_invalid_postgres_config(
-    app_config: BasicMemoryConfig, config_manager
+async def test_initialize_database_rejects_non_sqlite_database_url(
+    app_config: BasicMemoryConfig,
 ):
-    """If config selects Postgres but has no DATABASE_URL, initialization should fail."""
+    """SQLite-only fork should reject non-SQLite database URLs."""
     await db.shutdown_db()
     try:
         bad_config = app_config.model_copy(
-            update={"database_backend": DatabaseBackend.POSTGRES, "database_url": None}
+            update={"database_url": "postgresql+asyncpg://user:pass@host/db"}
         )
-        config_manager.save_config(bad_config)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="SQLite-only"):
             await initialize_database(bad_config)
     finally:
         await db.shutdown_db()
@@ -139,7 +138,6 @@ def test_ensure_initialization_runs_and_cleans_up(app_config: BasicMemoryConfig,
 async def test_initialize_app_warns_on_frontmatter_permalink_precedence(
     app_config: BasicMemoryConfig, monkeypatch
 ):
-    app_config.database_backend = DatabaseBackend.SQLITE
     app_config.ensure_frontmatter_on_sync = True
     app_config.disable_permalinks = True
 
@@ -222,8 +220,6 @@ async def test_run_migrations_triggers_embedding_backfill_on_new_revision(
             lambda *args, **kwargs: None,
         )
         monkeypatch.setattr("basic_memory.db.SQLiteSearchRepository", StubSearchRepository)
-        monkeypatch.setattr("basic_memory.db.PostgresSearchRepository", StubSearchRepository)
-
         load_revisions_mock = AsyncMock(
             side_effect=[
                 set(),
@@ -265,8 +261,6 @@ async def test_run_migrations_skips_embedding_backfill_when_revision_already_app
             lambda *args, **kwargs: None,
         )
         monkeypatch.setattr("basic_memory.db.SQLiteSearchRepository", StubSearchRepository)
-        monkeypatch.setattr("basic_memory.db.PostgresSearchRepository", StubSearchRepository)
-
         load_revisions_mock = AsyncMock(
             side_effect=[
                 {db.SEMANTIC_EMBEDDING_BACKFILL_REVISION},
@@ -323,8 +317,6 @@ async def test_semantic_embedding_backfill_syncs_each_entity(
             synced_pairs.append((self.project_id, entity_id))
 
     monkeypatch.setattr("basic_memory.db.SQLiteSearchRepository", StubSearchRepository)
-    monkeypatch.setattr("basic_memory.db.PostgresSearchRepository", StubSearchRepository)
-
     app_config.semantic_search_enabled = True
 
     await db._run_semantic_embedding_backfill(app_config, session_maker)  # pyright: ignore [reportPrivateUsage]
@@ -351,8 +343,6 @@ async def test_semantic_embedding_backfill_skips_when_semantic_disabled(
             return None
 
     monkeypatch.setattr("basic_memory.db.SQLiteSearchRepository", StubSearchRepository)
-    monkeypatch.setattr("basic_memory.db.PostgresSearchRepository", StubSearchRepository)
-
     app_config.semantic_search_enabled = False
     await db._run_semantic_embedding_backfill(app_config, session_maker)  # pyright: ignore [reportPrivateUsage]
     assert called is False

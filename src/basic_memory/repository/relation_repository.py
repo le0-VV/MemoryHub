@@ -1,10 +1,8 @@
 """Repository for managing Relation objects."""
 
-from typing import Sequence, List, Optional, Any, cast
+from typing import Sequence, List, Optional
 
 from sqlalchemy import and_, delete, select
-from sqlalchemy.engine import CursorResult
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.orm import selectinload, aliased
@@ -96,8 +94,6 @@ class RelationRepository(Repository[Relation]):
         for bulk operations where the same link may appear multiple times in
         a document.
 
-        Works with both SQLite and PostgreSQL dialects.
-
         Args:
             relations: List of Relation objects to insert
 
@@ -121,26 +117,11 @@ class RelationRepository(Repository[Relation]):
         ]
 
         async with db.scoped_session(self.session_maker) as session:
-            # Check dialect to use appropriate insert
-            dialect_name = session.bind.dialect.name if session.bind else "sqlite"
-
-            if dialect_name == "postgresql":  # pragma: no cover
-                # PostgreSQL: use RETURNING to count inserted rows
-                # (rowcount is 0 for ON CONFLICT DO NOTHING)
-                stmt = (  # pragma: no cover
-                    pg_insert(Relation)
-                    .values(values)
-                    .on_conflict_do_nothing()
-                    .returning(Relation.id)
-                )
-                result = await session.execute(stmt)  # pragma: no cover
-                return len(result.fetchall())  # pragma: no cover
-            else:
-                # SQLite: rowcount works correctly
-                stmt = sqlite_insert(Relation).values(values)
-                stmt = stmt.on_conflict_do_nothing()
-                result = cast(CursorResult[Any], await session.execute(stmt))
-                return result.rowcount if result.rowcount > 0 else 0
+            stmt = sqlite_insert(Relation).values(values)
+            stmt = stmt.on_conflict_do_nothing()
+            result = await session.execute(stmt)
+            rowcount = result.rowcount
+            return rowcount if rowcount and rowcount > 0 else 0
 
     def get_load_options(self) -> List[LoaderOption]:
         return [selectinload(Relation.from_entity), selectinload(Relation.to_entity)]

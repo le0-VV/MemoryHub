@@ -1,4 +1,4 @@
-"""Project management service for Basic Memory."""
+"""Project management service for MemoryHub."""
 
 import asyncio
 import json
@@ -22,7 +22,6 @@ from basic_memory.schemas import (
     SystemStatus,
 )
 from basic_memory.config import (
-    DatabaseBackend,
     WATCH_STATUS_JSON,
     ConfigManager,
     ProjectEntry,
@@ -36,7 +35,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class ProjectService:
-    """Service for managing Basic Memory projects."""
+    """Service for managing MemoryHub projects."""
 
     repository: ProjectRepository
 
@@ -157,8 +156,7 @@ class ProjectService:
         if project_root:
             base_path = Path(project_root)
 
-            # In cloud mode (when project_root is set), ignore user's path completely
-            # and use sanitized project name as the directory name
+            # Use sanitized project name as the directory name
             # This ensures flat structure: /app/data/test-bisync instead of /app/data/documents/test bisync
             sanitized_name = generate_permalink(name)
 
@@ -182,7 +180,7 @@ class ProjectService:
                     raise ValueError(  # pragma: no cover
                         f"Path collision detected: '{resolved_path}' conflicts with existing project "
                         f"'{existing.name}' at '{existing.path}'. "
-                        f"In cloud mode, paths are normalized to lowercase to prevent case-sensitivity issues."
+                        f"Paths are normalized to lowercase to prevent case-sensitivity issues."
                     )  # pragma: no cover
         else:
             resolved_path = Path(os.path.abspath(os.path.expanduser(path))).as_posix()
@@ -211,9 +209,8 @@ class ProjectService:
                     )
 
         # Ensure the project directory exists on disk.
-        # Trigger: project_root not set means local filesystem mode (not S3/cloud)
-        # Why: FileService (or future S3FileService) provides cloud-compatible directory creation;
-        #      direct Path.mkdir() bypasses this abstraction
+        # Trigger: project_root not set means local filesystem mode
+        # Why: FileService provides directory creation abstraction
         # Outcome: directory exists before config/DB entries are written
         if not self.config_manager.config.project_root:
             if self.file_service is None:
@@ -263,22 +260,19 @@ class ProjectService:
 
         project_path = project.path
 
-        # Check if project is default
-        # In cloud mode: database is source of truth
-        # In local mode: also check config file
+        # Check if project is default in the database or local config.
         is_default = project.is_default
-        if self.config_manager.config.database_backend != DatabaseBackend.POSTGRES:
-            is_default = is_default or name == self.config_manager.config.default_project
+        is_default = is_default or name == self.config_manager.config.default_project
         if is_default:
             raise ValueError(f"Cannot remove the default project '{name}'")  # pragma: no cover
 
-        # Remove from config if it exists there (may not exist in cloud mode)
+        # Remove from local config if it exists there.
         try:
             self.config_manager.remove_project(name)
         except ValueError:  # pragma: no cover
-            # Project not in config - that's OK in cloud mode, continue with database deletion
+            # Continue removing stale database state even if config is already missing the project.
             logger.debug(  # pragma: no cover
-                f"Project '{name}' not found in config, removing from database only"
+                f"Project '{name}' not found in local config, removing from database only"
             )
 
         # Remove from database
@@ -474,9 +468,9 @@ class ProjectService:
         if name not in self.config_manager.projects:
             raise ValueError(f"Project '{name}' not found in configuration")
 
-        # Create the new directory if it doesn't exist (skip in cloud mode where storage is S3)
+        # Create the new directory if it doesn't exist
         # Trigger: project_root not set means local filesystem mode
-        # Why: FileService (or future S3FileService) provides cloud-compatible directory creation
+        # Why: FileService provides directory creation abstraction
         # Outcome: destination directory exists before config/DB are updated
         if not self.config_manager.config.project_root:
             if self.file_service is None:
@@ -561,7 +555,7 @@ class ProjectService:
                 )
 
     async def get_project_info(self, project_name: Optional[str] = None) -> ProjectInfoResponse:
-        """Get comprehensive information about the specified Basic Memory project.
+        """Get comprehensive information about the specified MemoryHub project.
 
         Args:
             project_name: Name of the project to get info for. If None, uses the current config project.
@@ -581,16 +575,14 @@ class ProjectService:
         if not db_project:  # pragma: no cover
             raise ValueError(f"Project '{requested_project_name}' not found in database")
 
-        # Trigger: cloud-only projects may exist in DB but not in local config.
-        # Why: cloud routing should not require local config entries for project info.
-        # Outcome: prefer config path when available, otherwise use DB path.
         config_name, config_path = self.config_manager.get_project(db_project.name)
-        if config_name and config_path:
-            resolved_project_name = config_name
-            resolved_project_path = config_path
-        else:
-            resolved_project_name = db_project.name
-            resolved_project_path = db_project.path
+        if not config_name or not config_path:
+            raise ValueError(
+                f"Project '{db_project.name}' is missing from local config. "
+                "Run project synchronization before requesting project info."
+            )
+        resolved_project_name = config_name
+        resolved_project_path = config_path
 
         # Get statistics for the specified project
         statistics = await self.get_statistics(db_project.id)
@@ -631,18 +623,6 @@ class ProjectService:
                     if config_db_project
                     else config_project_name.lower().replace(" ", "-")
                 ),
-            }
-
-        # Include active DB projects that are not present in local config (cloud-only).
-        for active_db_project in db_projects:
-            if active_db_project.name in enhanced_projects:
-                continue
-            enhanced_projects[active_db_project.name] = {
-                "path": active_db_project.path,
-                "active": active_db_project.is_active,
-                "id": active_db_project.id,
-                "is_default": bool(active_db_project.is_default),
-                "permalink": active_db_project.permalink,
             }
 
         # Construct the response
@@ -835,17 +815,9 @@ class ProjectService:
             now.year - (1 if now.month <= 6 else 0), ((now.month - 6) % 12) or 12, 1
         )
 
-        # Query for monthly entity creation (project filtered)
-        # Use different date formatting for SQLite vs Postgres
-        from basic_memory.config import DatabaseBackend
-
-        is_postgres = self.config_manager.config.database_backend == DatabaseBackend.POSTGRES
-        date_format = (
-            "to_char(created_at, 'YYYY-MM')" if is_postgres else "strftime('%Y-%m', created_at)"
-        )
-
-        # Postgres needs datetime objects, SQLite needs ISO strings
-        six_months_param = six_months_ago if is_postgres else six_months_ago.isoformat()
+        # Query for monthly entity creation (project filtered).
+        date_format = "strftime('%Y-%m', created_at)"
+        six_months_param = six_months_ago.isoformat()
 
         entity_growth_result = await self.repository.execute_query(
             text(f"""
@@ -862,11 +834,7 @@ class ProjectService:
         entity_growth = {row[0]: row[1] for row in entity_growth_result.fetchall()}
 
         # Query for monthly observation creation (project filtered)
-        date_format_entity = (
-            "to_char(entity.created_at, 'YYYY-MM')"
-            if is_postgres
-            else "strftime('%Y-%m', entity.created_at)"
-        )
+        date_format_entity = "strftime('%Y-%m', entity.created_at)"
 
         observation_growth_result = await self.repository.execute_query(
             text(f"""
@@ -939,21 +907,13 @@ class ProjectService:
         model = config.semantic_embedding_model
         dimensions = config.semantic_embedding_dimensions
 
-        is_postgres = config.database_backend == DatabaseBackend.POSTGRES
-
         # --- Check vector table existence ---
         # Both search_vector_chunks and search_vector_embeddings must exist
         # for the detailed stats queries (JOINs between them) to work.
-        if is_postgres:
-            table_check_sql = text(
-                "SELECT COUNT(*) FROM information_schema.tables "
-                "WHERE table_name IN ('search_vector_chunks', 'search_vector_embeddings')"
-            )
-        else:
-            table_check_sql = text(
-                "SELECT COUNT(*) FROM sqlite_master "
-                "WHERE type = 'table' AND name IN ('search_vector_chunks', 'search_vector_embeddings')"
-            )
+        table_check_sql = text(
+            "SELECT COUNT(*) FROM sqlite_master "
+            "WHERE type = 'table' AND name IN ('search_vector_chunks', 'search_vector_embeddings')"
+        )
 
         table_result = await self.repository.execute_query(table_check_sql, {})
         vector_tables_exist = (table_result.scalar() or 0) == 2
@@ -1004,38 +964,22 @@ class ProjectService:
         )
         total_entities_with_chunks = entities_with_chunks_result.scalar() or 0
 
-        # Embeddings count — join pattern differs between SQLite and Postgres
-        if is_postgres:
-            embeddings_sql = text(
-                "SELECT COUNT(*) FROM search_vector_chunks c "
-                "JOIN search_vector_embeddings e ON e.chunk_id = c.id "
-                "WHERE c.project_id = :project_id"
-            )
-        else:
-            embeddings_sql = text(
-                "SELECT COUNT(*) FROM search_vector_chunks c "
-                "JOIN search_vector_embeddings e ON e.rowid = c.id "
-                "WHERE c.project_id = :project_id"
-            )
+        embeddings_sql = text(
+            "SELECT COUNT(*) FROM search_vector_chunks c "
+            "JOIN search_vector_embeddings e ON e.rowid = c.id "
+            "WHERE c.project_id = :project_id"
+        )
 
         embeddings_result = await self.repository.execute_query(
             embeddings_sql, {"project_id": project_id}
         )
         total_embeddings = embeddings_result.scalar() or 0
 
-        # Orphaned chunks (chunks without embeddings — indicates interrupted indexing)
-        if is_postgres:
-            orphan_sql = text(
-                "SELECT COUNT(*) FROM search_vector_chunks c "
-                "LEFT JOIN search_vector_embeddings e ON e.chunk_id = c.id "
-                "WHERE c.project_id = :project_id AND e.chunk_id IS NULL"
-            )
-        else:
-            orphan_sql = text(
-                "SELECT COUNT(*) FROM search_vector_chunks c "
-                "LEFT JOIN search_vector_embeddings e ON e.rowid = c.id "
-                "WHERE c.project_id = :project_id AND e.rowid IS NULL"
-            )
+        orphan_sql = text(
+            "SELECT COUNT(*) FROM search_vector_chunks c "
+            "LEFT JOIN search_vector_embeddings e ON e.rowid = c.id "
+            "WHERE c.project_id = :project_id AND e.rowid IS NULL"
+        )
 
         orphan_result = await self.repository.execute_query(orphan_sql, {"project_id": project_id})
         orphaned_chunks = orphan_result.scalar() or 0

@@ -50,20 +50,17 @@ The `app` fixture ensures FastAPI dependency overrides are active, and
 `mcp_server` provides the MCP server with proper project session initialization.
 """
 
-import os
-from typing import AsyncGenerator, Literal
+from typing import AsyncGenerator
 
 import pytest
 import pytest_asyncio
 from pathlib import Path
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import NullPool
-from testcontainers.postgres import PostgresContainer
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from httpx import AsyncClient, ASGITransport
 
-from basic_memory.config import BasicMemoryConfig, ProjectConfig, ConfigManager, DatabaseBackend
+from basic_memory.config import BasicMemoryConfig, ProjectConfig, ConfigManager
 from basic_memory.db import engine_session_factory, DatabaseType
 from basic_memory.models import Project
 from basic_memory.models.base import Base
@@ -77,117 +74,33 @@ from basic_memory.deps import get_project_config, get_engine_factory, get_app_co
 from basic_memory.mcp import tools  # noqa: F401
 
 
-# =============================================================================
-# Database Backend Selection (env var approach)
-# =============================================================================
-# By default, integration tests run against SQLite.
-# Set BASIC_MEMORY_TEST_POSTGRES=1 to run against Postgres (uses testcontainers).
-
-
-@pytest.fixture(scope="session")
-def db_backend() -> Literal["sqlite", "postgres"]:
-    """Determine database backend from environment variable.
-
-    Default: sqlite
-    Set BASIC_MEMORY_TEST_POSTGRES=1 to use postgres
-    """
-    if os.environ.get("BASIC_MEMORY_TEST_POSTGRES", "").lower() in ("1", "true", "yes"):
-        return "postgres"
-    return "sqlite"
-
-
-@pytest.fixture(scope="session")
-def postgres_container(db_backend):
-    """Session-scoped Postgres container for integration tests.
-
-    Uses testcontainers to spin up a real Postgres instance.
-    Only starts if db_backend is "postgres".
-    """
-    if db_backend != "postgres":
-        yield None
-        return
-
-    # Use pgvector image so CREATE EXTENSION vector succeeds in search repository
-    with PostgresContainer("pgvector/pgvector:pg16") as postgres:
-        yield postgres
-
-
 @pytest_asyncio.fixture
 async def engine_factory(
     app_config,
     config_manager,
-    db_backend: Literal["sqlite", "postgres"],
-    postgres_container,
     tmp_path,
 ) -> AsyncGenerator[tuple, None]:
-    """Create engine and session factory for the configured database backend."""
+    """Create engine and session factory for SQLite integration tests."""
     from basic_memory.models.search import (
         CREATE_SEARCH_INDEX,
-        CREATE_POSTGRES_SEARCH_INDEX_TABLE,
-        CREATE_POSTGRES_SEARCH_INDEX_FTS,
-        CREATE_POSTGRES_SEARCH_INDEX_METADATA,
-        CREATE_POSTGRES_SEARCH_INDEX_PERMALINK,
     )
-    from basic_memory import db
 
-    if db_backend == "postgres":
-        # Postgres mode using testcontainers
-        sync_url = postgres_container.get_connection_url()
-        async_url = sync_url.replace("postgresql+psycopg2", "postgresql+asyncpg")
+    # SQLite: Create fresh database (fast with tmp files)
+    db_path = tmp_path / "test.db"
+    db_type = DatabaseType.FILESYSTEM
 
-        engine = create_async_engine(
-            async_url,
-            echo=False,
-            poolclass=NullPool,
-        )
-
-        session_maker = async_sessionmaker(
-            bind=engine,
-            class_=AsyncSession,
-            expire_on_commit=False,
-            autoflush=False,
-        )
-
-        # Set module-level state to prevent MCP lifespan from re-initializing
-        # This ensures get_or_create_db() sees an existing engine and skips initialization
-        db._engine = engine
-        db._session_maker = session_maker
-
-        # Drop and recreate all tables for test isolation
+    async with engine_session_factory(db_path, db_type) as (engine, session_maker):
+        # Create all tables via ORM
         async with engine.begin() as conn:
-            await conn.execute(text("DROP TABLE IF EXISTS search_index CASCADE"))
-            await conn.run_sync(Base.metadata.drop_all)
             await conn.run_sync(Base.metadata.create_all)
-            # asyncpg requires separate execute calls for each statement
-            await conn.execute(CREATE_POSTGRES_SEARCH_INDEX_TABLE)
-            await conn.execute(CREATE_POSTGRES_SEARCH_INDEX_FTS)
-            await conn.execute(CREATE_POSTGRES_SEARCH_INDEX_METADATA)
-            await conn.execute(CREATE_POSTGRES_SEARCH_INDEX_PERMALINK)
+
+        # Drop any SearchIndex ORM table, then create FTS5 virtual table
+        async with db.scoped_session(session_maker) as session:
+            await session.execute(text("DROP TABLE IF EXISTS search_index"))
+            await session.execute(CREATE_SEARCH_INDEX)
+            await session.commit()
 
         yield engine, session_maker
-
-        # Clean up module-level state
-        await engine.dispose()
-        db._engine = None
-        db._session_maker = None
-
-    else:
-        # SQLite: Create fresh database (fast with tmp files)
-        db_path = tmp_path / "test.db"
-        db_type = DatabaseType.FILESYSTEM
-
-        async with engine_session_factory(db_path, db_type) as (engine, session_maker):
-            # Create all tables via ORM
-            async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all)
-
-            # Drop any SearchIndex ORM table, then create FTS5 virtual table
-            async with db.scoped_session(session_maker) as session:
-                await session.execute(text("DROP TABLE IF EXISTS search_index"))
-                await session.execute(CREATE_SEARCH_INDEX)
-                await session.commit()
-
-            yield engine, session_maker
 
 
 @pytest_asyncio.fixture
@@ -218,27 +131,12 @@ def config_home(tmp_path, monkeypatch) -> Path:
 @pytest.fixture
 def app_config(
     config_home,
-    db_backend: Literal["sqlite", "postgres"],
-    postgres_container,
     tmp_path,
     monkeypatch,
 ) -> BasicMemoryConfig:
     """Create test app configuration."""
-    # Disable cloud mode for CLI tests
-    monkeypatch.setenv("BASIC_MEMORY_CLOUD_MODE", "false")
-
     # Create a basic config with test-project like unit tests do
     projects = {"test-project": str(config_home)}
-
-    # Configure database backend based on env var
-    if db_backend == "postgres":
-        database_backend = DatabaseBackend.POSTGRES
-        # Get URL from testcontainer and convert to asyncpg driver
-        sync_url = postgres_container.get_connection_url()
-        database_url = sync_url.replace("postgresql+psycopg2", "postgresql+asyncpg")
-    else:
-        database_backend = DatabaseBackend.SQLITE
-        database_url = None
 
     app_config = BasicMemoryConfig(
         env="test",
@@ -246,8 +144,6 @@ def app_config(
         default_project="test-project",
         update_permalinks_on_move=True,
         sync_changes=False,  # Disable file sync in tests - prevents lifespan from starting blocking task
-        database_backend=database_backend,
-        database_url=database_url,
     )
     return app_config
 

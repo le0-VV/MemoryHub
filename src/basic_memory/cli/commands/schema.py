@@ -1,10 +1,11 @@
-"""Schema management CLI commands for Basic Memory.
+"""Schema management CLI commands for MemoryHub.
 
 Provides CLI access to schema validation, inference, and drift detection.
-Registered as a subcommand group: `bm schema validate`, `bm schema infer`, `bm schema diff`.
+Registered as a subcommand group: `basic-memory schema validate`,
+`basic-memory schema infer`, `basic-memory schema diff`.
 
 Each command calls the corresponding MCP tool with output_format="json" and
-renders the result as Rich tables — same code path as `bm tool schema-*` but
+renders the result as Rich tables - same code path as `basic-memory tool schema-*` but
 with human-friendly formatting.
 """
 
@@ -174,10 +175,7 @@ def validate(
     ] = None,
     strict: bool = typer.Option(False, "--strict", help="Exit with error on validation failures"),
     json_output: bool = typer.Option(False, "--json", help="Output in JSON format"),
-    local: bool = typer.Option(
-        False, "--local", help="Force local API routing (ignore cloud mode)"
-    ),
-    cloud: bool = typer.Option(False, "--cloud", help="Force cloud API routing"),
+    local: bool = typer.Option(False, "--local", help="Force local API routing"),
 ):
     """Validate notes against their schemas.
 
@@ -186,11 +184,12 @@ def validate(
 
     Use --json for machine-readable output.
     Use --strict to exit with error code 1 if any validation errors are found.
-    Use --local to force local routing when cloud mode is enabled.
-    Use --cloud to force cloud routing when cloud mode is disabled.
+    This fork supports local routing only.
     """
     try:
-        validate_routing_flags(local, cloud)
+        validate_routing_flags(local)
+        if not local:
+            local = True
         project_name = _resolve_project_name(project)
 
         # Heuristic: if target contains / or ., treat as identifier; otherwise as note type
@@ -201,7 +200,7 @@ def validate(
             else:
                 note_type = target
 
-        with force_routing(local=local, cloud=cloud):
+        with force_routing(local=local):
             result = run_with_cleanup(
                 mcp_schema_validate(
                     note_type=note_type,
@@ -255,10 +254,7 @@ def infer(
     ),
     save: bool = typer.Option(False, "--save", help="Save inferred schema to schema/ directory"),
     json_output: bool = typer.Option(False, "--json", help="Output in JSON format"),
-    local: bool = typer.Option(
-        False, "--local", help="Force local API routing (ignore cloud mode)"
-    ),
-    cloud: bool = typer.Option(False, "--cloud", help="Force cloud API routing"),
+    local: bool = typer.Option(False, "--local", help="Force local API routing"),
 ):
     """Infer schema from existing notes of a type.
 
@@ -269,14 +265,15 @@ def infer(
     threshold (default 25%) become optional. Fields below threshold are excluded.
 
     Use --json for machine-readable output.
-    Use --local to force local routing when cloud mode is enabled.
-    Use --cloud to force cloud routing when cloud mode is disabled.
+    This fork supports local routing only.
     """
     try:
-        validate_routing_flags(local, cloud)
+        validate_routing_flags(local)
+        if not local:
+            local = True
         project_name = _resolve_project_name(project)
 
-        with force_routing(local=local, cloud=cloud):
+        with force_routing(local=local):
             result = run_with_cleanup(
                 mcp_schema_infer(
                     note_type=note_type,
@@ -337,10 +334,7 @@ def diff(
         typer.Option(help="The project name."),
     ] = None,
     json_output: bool = typer.Option(False, "--json", help="Output in JSON format"),
-    local: bool = typer.Option(
-        False, "--local", help="Force local API routing (ignore cloud mode)"
-    ),
-    cloud: bool = typer.Option(False, "--cloud", help="Force cloud API routing"),
+    local: bool = typer.Option(False, "--local", help="Force local API routing"),
 ):
     """Show drift between schema and actual usage.
 
@@ -349,14 +343,15 @@ def diff(
     dropped fields, and cardinality changes.
 
     Use --json for machine-readable output.
-    Use --local to force local routing when cloud mode is enabled.
-    Use --cloud to force cloud routing when cloud mode is disabled.
+    This fork supports local routing only.
     """
     try:
-        validate_routing_flags(local, cloud)
+        validate_routing_flags(local)
+        if not local:
+            local = True
         project_name = _resolve_project_name(project)
 
-        with force_routing(local=local, cloud=cloud):
+        with force_routing(local=local):
             result = run_with_cleanup(
                 mcp_schema_diff(
                     note_type=note_type,

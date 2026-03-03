@@ -1,6 +1,8 @@
 # Note Format Reference
 
-Every document in Basic Memory is a plain Markdown file. Files are the source of truth — changes to files automatically update the knowledge graph in the database. You maintain complete ownership, files work with git, and knowledge persists independently of any AI conversation.
+Every document in MemoryHub is a plain Markdown file. Files are the source of truth: the SQLite
+index is derived from them, not the other way around. This fork still uses the inherited
+`basic-memory` command and `basic_memory` package names in the current codebase.
 
 ## Document Structure
 
@@ -58,7 +60,7 @@ Here `status` and `source` are custom fields stored in `entity_metadata`.
 
 ### Frontmatter Value Handling
 
-YAML automatically converts some values to native types. Basic Memory normalizes them:
+YAML automatically converts some values to native types. MemoryHub normalizes them:
 
 - Date strings (`2025-10-24`) → kept as ISO format strings
 - Numbers (`1.0`) → converted to strings
@@ -160,7 +162,8 @@ This creates two relations: `links_to [[Core Design]]` and `links_to [[Utility F
 
 ### Forward References
 
-Relations can link to entities that don't exist yet. Basic Memory resolves them when the target is created.
+Relations can link to entities that don't exist yet. MemoryHub resolves them when the target is
+created.
 
 ## Permalinks and memory:// URLs
 
@@ -258,7 +261,7 @@ Good for one-off structured notes or prototyping a schema before extracting it.
 
 ```yaml
 ---
-title: Basic Memory
+title: MemoryHub
 schema: SoftwareProject
 ---
 ```
@@ -289,7 +292,8 @@ The system looks up a schema note where `entity: Person`. If found, it applies. 
 
 ### Schema Notes
 
-A schema is itself a Basic Memory note with `type: schema`. It lives anywhere (though `schema/` is the conventional directory).
+A schema is itself a MemoryHub note with `type: schema`. It lives anywhere, though `schema/` is
+the conventional directory.
 
 ```yaml
 # schema/Person.md

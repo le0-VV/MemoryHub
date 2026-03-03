@@ -1,6 +1,8 @@
 # Metadata Search Reference
 
-Basic Memory automatically indexes custom frontmatter fields so you can query them with structured filters. Any YAML key in a note's frontmatter beyond the standard set (`title`, `type`, `tags`, `permalink`, `schema`) is stored as `entity_metadata` and becomes searchable.
+MemoryHub automatically indexes custom frontmatter fields so you can query them with structured
+filters. Any YAML key in a note's frontmatter beyond the standard set (`title`, `type`, `tags`,
+`permalink`, `schema`) is stored as `entity_metadata` and becomes searchable.
 
 ## Querying with `search_notes`
 
@@ -135,7 +137,8 @@ await search_notes("tag:tier1 alpha")
 
 ## CLI Access
 
-The `bm tool search-notes` command exposes metadata filtering via `--meta` and `--filter` flags.
+The `basic-memory tool search-notes` command exposes metadata filtering via `--meta` and `--filter`
+flags.
 
 ### `--meta` — simple key=value filters
 
@@ -143,10 +146,10 @@ Repeatable flag for equality filters on frontmatter fields.
 
 ```bash
 # Single filter
-bm tool search-notes "my query" --meta status=draft
+basic-memory tool search-notes "my query" --meta status=draft
 
 # Multiple filters (AND logic)
-bm tool search-notes "" --meta status=active --meta priority=high
+basic-memory tool search-notes "" --meta status=active --meta priority=high
 ```
 
 ### `--filter` — advanced JSON filters
@@ -155,23 +158,23 @@ Pass a full JSON filter dictionary for operator-based queries.
 
 ```bash
 # Range filter
-bm tool search-notes "" --filter '{"score": {"$between": [0.3, 0.8]}}'
+basic-memory tool search-notes "" --filter '{"score": {"$between": [0.3, 0.8]}}'
 
 # $in filter
-bm tool search-notes "" --filter '{"priority": {"$in": ["high", "critical"]}}'
+basic-memory tool search-notes "" --filter '{"priority": {"$in": ["high", "critical"]}}'
 ```
 
 ### `--tag` and `--status` — convenience shortcuts
 
 ```bash
-bm tool search-notes "query" --tag security --tag oauth
-bm tool search-notes "" --status draft
+basic-memory tool search-notes "query" --tag security --tag oauth
+basic-memory tool search-notes "" --status draft
 ```
 
 ### Combined example
 
 ```bash
-bm tool search-notes "authentication" --tag security --meta status=draft --type spec
+basic-memory tool search-notes "authentication" --tag security --meta status=draft --type spec
 ```
 
 ## Practical Examples
@@ -253,8 +256,8 @@ await search_notes("OAuth", metadata_filters={"status": "in-progress"})
 ### CLI equivalents
 
 ```bash
-bm tool search-notes "" --meta status=in-progress --type spec
-bm tool search-notes "" --filter '{"confidence": {"$gt": 0.7}}'
-bm tool search-notes "OAuth" --meta status=in-progress
-bm tool search-notes --tag security
+basic-memory tool search-notes "" --meta status=in-progress --type spec
+basic-memory tool search-notes "" --filter '{"confidence": {"$gt": 0.7}}'
+basic-memory tool search-notes "OAuth" --meta status=in-progress
+basic-memory tool search-notes --tag security
 ```

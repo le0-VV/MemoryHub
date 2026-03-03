@@ -259,7 +259,6 @@ Error searching for '{query}': {error_message}
 async def search_notes(
     query: Optional[str] = None,
     project: Optional[str] = None,
-    workspace: Optional[str] = None,
     page: int = 1,
     page_size: int = 10,
     search_type: str | None = None,
@@ -444,7 +443,7 @@ async def search_notes(
         if detected:
             project = detected
 
-    async with get_project_client(project, workspace, context) as (client, active_project):
+    async with get_project_client(project, context) as (client, active_project):
         # Handle memory:// URLs by resolving to permalink search
         is_memory_url = False
         if query is not None:

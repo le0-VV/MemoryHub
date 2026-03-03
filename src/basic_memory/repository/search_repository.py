@@ -1,9 +1,8 @@
 """Repository for search operations.
 
 This module provides the search repository interface.
-The actual repository implementations are backend-specific:
-- SQLiteSearchRepository: Uses FTS5 virtual tables
-- PostgresSearchRepository: Uses tsvector/tsquery with GIN indexes
+The active repository implementation in MemoryHub is SQLiteSearchRepository,
+which uses FTS5 virtual tables and sqlite-vec for local search.
 """
 
 from datetime import datetime
@@ -12,8 +11,7 @@ from typing import List, Optional, Protocol
 from sqlalchemy import Result
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from basic_memory.config import BasicMemoryConfig, ConfigManager, DatabaseBackend
-from basic_memory.repository.postgres_search_repository import PostgresSearchRepository
+from basic_memory.config import BasicMemoryConfig
 from basic_memory.repository.search_index_row import SearchIndexRow
 from basic_memory.repository.sqlite_search_repository import SQLiteSearchRepository
 from basic_memory.schemas.search import SearchItemType, SearchRetrievalMode
@@ -22,7 +20,7 @@ from basic_memory.schemas.search import SearchItemType, SearchRetrievalMode
 class SearchRepository(Protocol):
     """Protocol defining the search repository interface.
 
-    Both SQLite and Postgres implementations must satisfy this protocol.
+    The active SQLite search repository satisfies this protocol.
     """
 
     project_id: int
@@ -78,32 +76,19 @@ def create_search_repository(
     session_maker: async_sessionmaker[AsyncSession],
     project_id: int,
     app_config: Optional[BasicMemoryConfig] = None,
-    database_backend: Optional[DatabaseBackend] = None,
+    database_backend: Optional[object] = None,
 ) -> SearchRepository:
-    """Factory function to create the appropriate search repository based on database backend.
+    """Factory function to create the active SQLite search repository.
 
     Args:
         session_maker: SQLAlchemy async session maker
         project_id: Project ID for the repository
-        database_backend: Optional explicit backend. If not provided, reads from ConfigManager.
-            Prefer passing explicitly from composition roots.
+        database_backend: Ignored legacy parameter preserved for compatibility.
 
     Returns:
         SearchRepository: Backend-appropriate search repository instance
     """
-    # Prefer explicit parameter; fall back to ConfigManager for backwards compatibility
-    if database_backend is None:
-        config = app_config or ConfigManager().config
-        database_backend = config.database_backend
-
-    if database_backend == DatabaseBackend.POSTGRES:  # pragma: no cover
-        return PostgresSearchRepository(  # pragma: no cover
-            session_maker,
-            project_id=project_id,
-            app_config=app_config,
-        )
-    else:
-        return SQLiteSearchRepository(session_maker, project_id=project_id, app_config=app_config)
+    return SQLiteSearchRepository(session_maker, project_id=project_id, app_config=app_config)
 
 
 __all__ = [

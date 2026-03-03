@@ -1,4 +1,4 @@
-# SPEC-SCHEMA: Basic Memory Schema System
+# SPEC-SCHEMA: MemoryHub Schema System
 
 **Status:** Draft
 **Created:** 2025-02-06
@@ -6,7 +6,7 @@
 
 ## Summary
 
-A schema system for Basic Memory that uses [Picoschema](https://genkit.dev/docs/dotprompt/)
+A schema system for MemoryHub that uses [Picoschema](https://genkit.dev/docs/dotprompt/)
 syntax in YAML frontmatter. Schemas validate notes against their existing observation/relation
 structure — no new data model, no migration, just a declarative lens over what's already there.
 
@@ -60,7 +60,7 @@ schema:
 
 ## Schema-to-Note Mapping
 
-Schemas validate against the existing Basic Memory note format. No new syntax for note
+Schemas validate against the existing note format. No new syntax for note
 authors to learn.
 
 ### Mapping Rules
@@ -112,7 +112,7 @@ A human individual in the knowledge graph.
 Any documentation about this entity type goes here as prose.
 ```
 
-Schema notes are regular Basic Memory notes. They show up in search, can have their own
+Schema notes are regular MemoryHub notes. They show up in search, can have their own
 observations and relations, and can be organized in any folder (though `schema/` is
 the suggested convention).
 
@@ -149,9 +149,9 @@ Good for one-off structured notes or prototyping a schema before extracting it.
 A note can reference a schema by entity name or permalink:
 
 ```yaml
-# projects/basic-memory.md
+# projects/memoryhub.md
 ---
-title: Basic Memory
+title: MemoryHub
 schema: SoftwareProject         # by entity name
 ---
 
@@ -284,7 +284,7 @@ Summary: 22/30 valid, 8 warnings, 0 errors
 Most schema systems require: define schema → create conforming content → fight the schema
 when reality doesn't match. This is backwards. Knowledge grows organically.
 
-### The Basic Memory Approach
+### The MemoryHub Approach
 
 ```
 Write notes freely → Patterns emerge → Crystallize into schema → Validate future notes
@@ -344,8 +344,8 @@ Update schema? [y/n/review]
 
 ## LLM Integration (AI Guidance)
 
-No agent runtime or API key required. The LLM already in the session uses schemas as
-context for note creation.
+No built-in agent runtime or cloud dependency is required. The assistant already in the session uses
+schemas as context for note creation.
 
 ### Flow
 

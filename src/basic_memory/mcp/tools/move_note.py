@@ -351,7 +351,6 @@ async def move_note(
     destination_folder: Optional[str] = None,
     is_directory: bool = False,
     project: Optional[str] = None,
-    workspace: Optional[str] = None,
     output_format: Literal["text", "json"] = "text",
     context: Context | None = None,
 ) -> str | dict:
@@ -475,7 +474,7 @@ async def move_note(
                 "error": "DESTINATION_FOLDER_NOT_FOR_DIRECTORIES",
             }
         return f"# Move Failed - Invalid Parameters\n\n{error_msg}"
-    async with get_project_client(project, workspace, context) as (client, active_project):
+    async with get_project_client(project, context) as (client, active_project):
         logger.debug(
             f"Moving {'directory' if is_directory else 'note'}: {identifier} to {destination_path} in project: {active_project.name}"
         )

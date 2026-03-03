@@ -1,245 +1,120 @@
 # MemoryHub
 
-MemoryHub is a multi-project, multi-agent MCP memory server built on top of Basic Memory.
+MemoryHub is an experimental fork of Basic Memory focused on multi-project,
+multi-agent MCP workflows.
 
-It provides a single MCP endpoint that dynamically routes requests to the correct memory project based on workspace context, repository detection, or explicit metadata.
+Today this repository is still mostly the upstream Basic Memory codebase with
+fork-specific documentation, attribution, and direction. The fork vision is to
+turn the existing note graph and MCP stack into a routing hub for multiple
+repositories and agent sessions, but that work is not complete yet.
 
-MemoryHub is designed for modern AI-native workflows where multiple agents operate across multiple codebases — without requiring per-project MCP configuration.
+## Current State
 
----
+What already exists in this repository today:
 
-## Overview
+- The upstream Basic Memory architecture: API, MCP server, CLI, sync, search,
+  Markdown-backed notes, and knowledge graph traversal.
+- SQLite-backed local deployment.
+- Multi-project configuration and project management.
+- Default or explicit project selection for tool calls.
+- Per-project local or cloud routing once a project is known.
 
-Basic Memory introduced a powerful local-first knowledge graph built from structured Markdown files and exposed through MCP. However, the default architecture assumes a single active project per MCP server instance.
+What has not been implemented yet:
 
-MemoryHub extends that model by introducing a routing layer that enables:
+- Automatic routing by repository root, current working directory, or generic
+  request metadata.
+- A dedicated MemoryHub routing layer or project registry/cache.
+- Renamed package, CLI, and MCP server identities. The code still runs under
+  inherited `basic_memory`, `basic-memory`, and `bm` names.
+- A maintained Postgres backend. This fork is standardizing on SQLite only.
 
-- One MCP server
-- Multiple independent memory projects
-- Context-aware request dispatching
-- Concurrent multi-agent access
-- Lazy project initialization
+## Fork Goal
 
-From the agent’s perspective, there is only one memory server.
-Internally, MemoryHub multiplexes across multiple project-specific memory contexts.
+The long-term goal is still the same as the fork vision:
 
----
+- One MCP endpoint for many projects.
+- Strong project isolation between repositories.
+- Context-aware routing without per-project MCP configuration.
+- Safe concurrent use by multiple agents.
+- No change to the underlying Markdown-based knowledge model.
 
-## Design Goals
+In short: keep Basic Memory's file format and graph semantics, but evolve the
+server into a workspace-aware memory hub.
 
-MemoryHub is built around the following principles:
+## Running The Fork Today
 
-### 1. Single Endpoint Simplicity
-
-Agents should connect to one MCP server — not one per project.
-
-### 2. Project Isolation
-
-Each repository or workspace maintains its own memory graph.
-No cross-project leakage unless explicitly configured.
-
-### 3. Context-Aware Routing
-
-MemoryHub determines the correct project by:
-
-- Detecting a memory store in the current repository
-- Inspecting metadata (e.g., `project_id`)
-- Falling back to a configured default project
-
-### 4. Multi-Agent Safety
-
-Multiple agents can operate simultaneously across different projects without interfering with each other.
-
-### 5. Local-First Architecture
-
-All knowledge remains Markdown-based and file-backed.
-MemoryHub does not change the underlying knowledge model.
-
----
-
-## How It Works
-
-MemoryHub runs a single MCP JSON-RPC server.
-
-For each incoming request:
-
-1. Extract routing metadata (e.g., `project_id`, `cwd`, repo marker)
-2. Resolve the appropriate project root
-3. Load or retrieve the cached memory context
-4. Dispatch the request to that context
-5. Return the response transparently
-
-This creates a logical structure like:
-
-```
-Agents
-   │
-   ▼
-MemoryHub MCP Server
-   │
-   ├── Project: repo-a
-   ├── Project: repo-b
-   └── Project: research-notes
-```
-
-Projects are loaded on demand and cached for performance.
-
----
-
-## Routing Strategies
-
-MemoryHub supports multiple routing modes.
-
-### Workspace Auto-Detection
-
-If a repository contains a memory store (e.g., `.basicmemory/` or configured project path), requests originating from that workspace are routed automatically.
-
-### Explicit Metadata Routing
-
-Agents may include routing metadata in requests:
-
-```json
-{
-    "metadata": {
-        "project_id": "repo-a"
-    }
-}
-```
-
-MemoryHub resolves the matching memory project.
-
-### Default Project Fallback
-
-If no routing hint is found, MemoryHub can:
-
-- Route to a global default project
-- Or reject the request in strict mode
-
----
-
-## Use Cases
-
-### Multi-Agent Development Systems
-
-- Planner agent → project A
-- Refactor agent → project B
-- Reviewer agent → project A
-
-All share a single MCP endpoint.
-
-### Monorepos
-
-Each subdirectory maintains its own memory store.
-MemoryHub routes automatically based on workspace detection.
-
-### AI Toolchains
-
-Ephemeral agents spawned by automation pipelines can connect to a unified memory service without project-specific configuration.
-
----
-
-## Installation (Development)
+Because the package has not been renamed yet, install this fork from the local
+checkout instead of from PyPI.
 
 ```bash
 uv tool install -e .
+basic-memory mcp
 ```
 
-Run the MCP server:
+You can also run it directly from the repository:
 
 ```bash
-memoryhub mcp
+uv run basic-memory mcp
 ```
 
-Or:
+Do not use `uv tool install basic-memory` if you want this fork. That installs
+the upstream package from PyPI.
 
-```bash
-uvx memoryhub mcp
-```
+## MCP Configuration
 
----
-
-## Agent Configuration
-
-Configure a single MCP server entry.
-
-Example (Claude Desktop):
+Until the rename is complete, your MCP config should still invoke the inherited
+CLI command:
 
 ```json
 {
-    "mcpServers": {
-        "memoryhub": {
-            "command": "uvx",
-            "args": ["memoryhub", "mcp"]
-        }
+  "mcpServers": {
+    "memoryhub": {
+      "command": "uvx",
+      "args": ["basic-memory", "mcp"]
     }
+  }
 }
 ```
 
-No per-project `--project` argument required.
+If you want to ensure you are using this fork rather than the upstream PyPI
+package, prefer a local editable install and reference the installed
+`basic-memory` executable directly.
 
----
+## Documentation Map
 
-## Comparison with Basic Memory
+- [README.md](README.md): current fork status and direction
+- [README_old.md](README_old.md): preserved upstream README for reference
+- [CONTRIBUTING.md](CONTRIBUTING.md): contributor guidance for this fork
+- [AGENTS.md](AGENTS.md): repo-specific instructions for coding agents
+- [NOTICE](NOTICE): fork attribution and licensing notice
 
-| Capability                | Basic Memory | MemoryHub |
-| ------------------------- | ------------ | --------- |
-| Single MCP endpoint       | ✔            | ✔         |
-| One project per server    | ✔            | ✘         |
-| Dynamic project selection | ✘            | ✔         |
-| Multi-agent concurrency   | Limited      | ✔         |
-| Workspace-aware routing   | ✘            | ✔         |
+## Automation Status
 
-MemoryHub builds on Basic Memory’s knowledge model and storage system.
-It extends server behavior — not the data format.
+Repository automation is intentionally conservative during the fork transition:
 
----
+- Dependabot configuration is retained.
+- GitHub Actions workflows and issue templates are currently removed.
+- PyPI, Homebrew, and Docker publishing are not configured in this fork right
+  now.
 
-## Technical Foundation
+## Attribution And License
 
-MemoryHub inherits:
+MemoryHub is derived from Basic Memory:
 
-- Markdown-based entity storage
-- SQLite / Postgres indexing
-- Knowledge graph traversal
-- MCP tool exposure
+- Upstream repository:
+  [basicmachines-co/basic-memory](https://github.com/basicmachines-co/basic-memory)
+- License: AGPL-3.0-or-later
+- Upstream copyright notices remain with their original authors
+- Additional modifications in this fork are copyright their respective
+  contributors
 
-It introduces:
-
-- Context resolver
-- Project registry
-- Routing dispatcher
-- Memory context cache
-
-The file format, graph semantics, and tool APIs remain unchanged.
-
----
-
-## Roadmap
-
-Planned enhancements:
-
-- Configurable routing plugins
-- Namespaced tool exposure per project
-- Access control policies
-- Project discovery via Git integration
-- Observability and metrics
-
----
-
-## License
-
-AGPL-3.0
-
-MemoryHub inherits licensing terms from Basic Memory.
-
-If operated as a network service, source code must be made available under AGPL.
-
----
+If this modified software is run as a network service, AGPL obligations still
+apply, including providing the corresponding source for the modified version.
 
 ## Status
 
-Early-stage experimental fork.
+Early-stage fork. The documentation now reflects the current reality more
+accurately than the implementation roadmap.
 
-MemoryHub is intended for advanced multi-agent and multi-repository workflows.
-
-Contributions and architectural discussions are welcome.
+The next major phase is architectural: introduce real project routing and then
+rename the inherited packaging and runtime identity to match MemoryHub.

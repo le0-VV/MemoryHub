@@ -7,59 +7,30 @@ install:
     @echo "💡 Remember to activate the virtual environment by running: source .venv/bin/activate"
 
 # ==============================================================================
-# DATABASE BACKEND TESTING
+# TESTING
 # ==============================================================================
-# Basic Memory supports dual database backends (SQLite and Postgres).
-# By default, tests run against SQLite (fast, no dependencies).
-# Set BASIC_MEMORY_TEST_POSTGRES=1 to run against Postgres (uses testcontainers).
+# MemoryHub is SQLite-only.
 #
 # Quick Start:
-#   just test              # Run all tests against SQLite (default)
-#   just test-sqlite       # Run all tests against SQLite
-#   just test-postgres     # Run all tests against Postgres (testcontainers)
-#   just test-unit-sqlite  # Run unit tests against SQLite
-#   just test-unit-postgres # Run unit tests against Postgres
-#   just test-int-sqlite   # Run integration tests against SQLite
-#   just test-int-postgres # Run integration tests against Postgres
-#
-# CI runs both in parallel for faster feedback.
+#   just test
+#   just test-sqlite
+#   just test-unit-sqlite
+#   just test-int-sqlite
 # ==============================================================================
 
-# Run all tests against SQLite and Postgres
-test: test-sqlite test-postgres
+# Run all tests
+test: test-sqlite
 
 # Run all tests against SQLite
 test-sqlite: test-unit-sqlite test-int-sqlite
-
-# Run all tests against Postgres (uses testcontainers)
-test-postgres: test-unit-postgres test-int-postgres
 
 # Run unit tests against SQLite
 test-unit-sqlite:
     BASIC_MEMORY_ENV=test uv run pytest -p pytest_mock -v --no-cov tests
 
-# Run unit tests against Postgres
-test-unit-postgres:
-    BASIC_MEMORY_ENV=test BASIC_MEMORY_TEST_POSTGRES=1 uv run pytest -p pytest_mock -v --no-cov tests
-
 # Run integration tests against SQLite (excludes semantic benchmarks — use just test-semantic)
 test-int-sqlite:
     BASIC_MEMORY_ENV=test uv run pytest -p pytest_mock -v --no-cov -m "not semantic" test-int
-
-# Run integration tests against Postgres
-# Note: Uses timeout due to FastMCP Client + asyncpg cleanup hang (tests pass, process hangs on exit)
-# See: https://github.com/jlowin/fastmcp/issues/1311
-test-int-postgres:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    # Use gtimeout (macOS/Homebrew) or timeout (Linux)
-    TIMEOUT_CMD=$(command -v gtimeout || command -v timeout || echo "")
-    if [[ -n "$TIMEOUT_CMD" ]]; then
-        $TIMEOUT_CMD --signal=KILL 600 bash -c 'BASIC_MEMORY_ENV=test BASIC_MEMORY_TEST_POSTGRES=1 uv run pytest -p pytest_mock -v --no-cov -m "not semantic" test-int' || test $? -eq 137
-    else
-        echo "⚠️  No timeout command found, running without timeout..."
-        BASIC_MEMORY_ENV=test BASIC_MEMORY_TEST_POSTGRES=1 uv run pytest -p pytest_mock -v --no-cov -m "not semantic" test-int
-    fi
 
 # Run tests impacted by recent changes (requires pytest-testmon)
 testmon *args:
@@ -76,23 +47,6 @@ fast-check:
     just typecheck
     just testmon
     just test-smoke
-
-# Reset Postgres test database (drops and recreates schema)
-# Useful when Alembic migration state gets out of sync during development
-# Uses credentials from docker-compose-postgres.yml
-postgres-reset:
-    docker exec basic-memory-postgres psql -U ${POSTGRES_USER:-basic_memory_user} -d ${POSTGRES_TEST_DB:-basic_memory_test} -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-    @echo "✅ Postgres test database reset"
-
-# Run Alembic migrations manually against Postgres test database
-# Useful for debugging migration issues
-# Uses credentials from docker-compose-postgres.yml (can override with env vars)
-postgres-migrate:
-    @cd src/basic_memory/alembic && \
-    BASIC_MEMORY_DATABASE_BACKEND=postgres \
-    BASIC_MEMORY_DATABASE_URL=${POSTGRES_TEST_URL:-postgresql+asyncpg://basic_memory_user:dev_password@localhost:5433/basic_memory_test} \
-    uv run alembic upgrade head
-    @echo "✅ Migrations applied to Postgres test database"
 
 # Run Windows-specific tests only (only works on Windows platform)
 # These tests verify Windows-specific database optimizations (locking mode, NullPool)
@@ -115,10 +69,6 @@ test-semantic-report:
     BASIC_MEMORY_ENV=test BASIC_MEMORY_BENCHMARK_OUTPUT=.benchmarks/semantic-quality.jsonl uv run pytest -p pytest_mock -v -s --no-cov -m semantic test-int/semantic/
     uv run python test-int/semantic/report.py .benchmarks/semantic-quality.jsonl
 
-# Run semantic benchmarks (Postgres combos only)
-test-semantic-postgres:
-    BASIC_MEMORY_ENV=test uv run pytest -p pytest_mock -v --no-cov -m semantic -k postgres test-int/semantic/
-
 # View semantic benchmark results (rich formatted table)
 # Usage: just semantic-report [--filter-combo sqlite] [--filter-suite paraphrase] [--sort-by avg_latency_ms]
 semantic-report *args:
@@ -131,8 +81,7 @@ semantic-report *args:
 benchmark-compare baseline candidate *args:
     uv run python test-int/compare_search_benchmarks.py "{{baseline}}" "{{candidate}}" --format table {{args}}
 
-# Run all tests including Windows, Postgres, and Benchmarks (for CI/comprehensive testing)
-# Use this before releasing to ensure everything works across all backends and platforms
+# Run all tests including Windows-specific and benchmark suites
 test-all:
     BASIC_MEMORY_ENV=test uv run pytest -p pytest_mock -v --no-cov tests test-int
 
@@ -143,22 +92,8 @@ coverage:
     
     uv run coverage erase
     
-    echo "🔎 Coverage (SQLite)..."
+    echo "🔎 Coverage..."
     BASIC_MEMORY_ENV=test uv run coverage run --source=basic_memory -m pytest -p pytest_mock -v --no-cov tests test-int
-    
-    echo "🔎 Coverage (Postgres via testcontainers)..."
-    # Note: Uses timeout due to FastMCP Client + asyncpg cleanup hang (tests pass, process hangs on exit)
-    # See: https://github.com/jlowin/fastmcp/issues/1311
-    TIMEOUT_CMD=$(command -v gtimeout || command -v timeout || echo "")
-    if [[ -n "$TIMEOUT_CMD" ]]; then
-        $TIMEOUT_CMD --signal=KILL 600 bash -c 'BASIC_MEMORY_ENV=test BASIC_MEMORY_TEST_POSTGRES=1 uv run coverage run --source=basic_memory -m pytest -p pytest_mock -v --no-cov -m postgres tests test-int' || test $? -eq 137
-    else
-        echo "⚠️  No timeout command found, running without timeout..."
-        BASIC_MEMORY_ENV=test BASIC_MEMORY_TEST_POSTGRES=1 uv run coverage run --source=basic_memory -m pytest -p pytest_mock -v --no-cov -m postgres tests test-int
-    fi
-    
-    echo "🧩 Combining coverage data..."
-    uv run coverage combine
     uv run coverage report -m
     uv run coverage html
     echo "Coverage report generated in htmlcov/index.html"
@@ -281,15 +216,15 @@ release version:
     git push origin main
     git push origin "{{version}}"
     
-    echo "✅ Release {{version}} created successfully!"
-    echo "📦 GitHub Actions will build and publish to PyPI"
-    echo "🔗 Monitor at: https://github.com/basicmachines-co/basic-memory/actions"
+    echo "✅ Release {{version}} tag created successfully!"
+    echo "📦 This fork does not currently ship via repository workflows"
+    echo "🔗 Review tags/releases manually in the GitHub UI as needed"
     echo ""
     echo "📝 REMINDER: Post-release tasks:"
-    echo "   1. docs.basicmemory.com - Add release notes to src/pages/latest-releases.mdx"
-    echo "   2. basicmachines.co - Update version in src/components/sections/hero.tsx"
-    echo "   3. MCP Registry - Run: mcp-publisher publish"
-    echo "   See: .claude/commands/release/release.md for detailed instructions"
+    echo "   1. Draft or review the GitHub Release manually if you want one"
+    echo "   2. Update any fork documentation that should mention the new tag"
+    echo "   3. There is no Docker publishing pipeline in this fork right now"
+    echo "   See: .agents/commands/release/release.md for detailed instructions"
 
 # Create a beta release (e.g., just beta v0.13.2b1)
 beta version:
@@ -352,15 +287,14 @@ beta version:
     git push origin main
     git push origin "{{version}}"
     
-    echo "✅ Beta release {{version}} created successfully!"
-    echo "📦 GitHub Actions will build and publish to PyPI as pre-release"
-    echo "🔗 Monitor at: https://github.com/basicmachines-co/basic-memory/actions"
-    echo "📥 Install with: uv tool install basic-memory --pre"
+    echo "✅ Beta release {{version}} tag created successfully!"
+    echo "📦 This fork does not currently build release artifacts via repository workflows"
+    echo "📥 Install from a local checkout or create artifacts manually as needed"
     echo ""
-    echo "📝 REMINDER: For stable releases, update documentation sites:"
-    echo "   1. docs.basicmemory.com - Add release notes to src/pages/latest-releases.mdx"
-    echo "   2. basicmachines.co - Update version in src/components/sections/hero.tsx"
-    echo "   See: .claude/commands/release/release.md for detailed instructions"
+    echo "📝 REMINDER:"
+    echo "   1. This fork does not auto-publish to PyPI, Homebrew, or Docker"
+    echo "   2. Draft prereleases manually in GitHub if you want them published there"
+    echo "   See: .agents/commands/release/release.md for detailed instructions"
 
 # List all available recipes
 default:

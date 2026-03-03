@@ -1,5 +1,9 @@
 # Semantic Search Manual Test Log
 
+> Historical note: this is a point-in-time manual test log from a specific local dataset. It is
+> useful as an example of how to inspect semantic search quality, but it is not a standing product
+> guarantee.
+
 ## Overview
 
 Manual test session for semantic (vector) search on the main project.
@@ -74,8 +78,8 @@ Manual test session for semantic (vector) search on the main project.
 
 #### 2c: Domain concept with no jargon
 - **Input:** query="pricing strategy for cloud product", search_type="vector"
-- **Actual:** 3 results — SPEC-16 MCP Cloud Service Consolidation, knowledge architecture observation, Visual Knowledge Spaces relation. Scores ~0.56-0.57
-- **Verdict:** PASS (found cloud-related content conceptually)
+- **Actual:** 3 results — results from that test corpus surfaced conceptually related product notes. Scores ~0.56-0.57
+- **Verdict:** PASS for that corpus
 
 #### 2d: Technical concept, long query
 - **Input:** query="SQLite performance optimization WAL mode concurrent writes", search_type="vector"
@@ -102,7 +106,7 @@ Manual test session for semantic (vector) search on the main project.
 ### Test 4: Hybrid Ranking
 
 #### 4a: Hybrid vs vector on "OAuth authentication"
-- **Hybrid with entity_types=["entity"]:** 5 results — RLS Implementation Lessons, Cloud Readiness Assessment, AUTH.md OAuth, Core Service Implementation, OAuth Rip-and-Replace. Scores ~0.016-0.023
+- **Hybrid with entity_types=["entity"]:** 5 results — entity-only results from that corpus. Scores ~0.016-0.023
 - **Vector with entity_types=["entity"]:** 5 results — Core Service Implementation, SPEC-13 CLI Auth, Coding Guide, Authentication Service, ADR Production Auth. Scores ~0.55-0.60
 - **Observation:** Hybrid surfaces different top results than vector-only. Hybrid found RLS and Cloud Readiness docs that vector didn't prioritize. Different ranking is expected from RRF fusion.
 - **Verdict:** PASS — hybrid produces meaningfully different ranking
@@ -142,12 +146,12 @@ Manual test session for semantic (vector) search on the main project.
 
 #### 6c: after_date with vector
 - **Input:** query="OAuth authentication", search_type="vector", after_date="2025-06-01"
-- **Actual:** 3 results — Core Service Implementation, Cloud Web App analysis observation, SPEC-13. Filtered out older OAuth docs.
+- **Actual:** 3 results — newer matching results from that corpus, older OAuth docs filtered out.
 - **Verdict:** PASS — date filter applied correctly
 
 #### 6d: entity_types=["entity"] with hybrid
 - **Input:** query="OAuth authentication", search_type="hybrid", entity_types=["entity"]
-- **Actual:** 5 results, all type="entity" — RLS lessons, Cloud Readiness, AUTH.md OAuth, Core Service, OAuth Rip-and-Replace
+- **Actual:** 5 results, all type="entity" from the local corpus
 - **Verdict:** PASS — filter works with hybrid mode too
 
 #### 6e: types=["entity"] with vector (WRONG filter name)

@@ -49,7 +49,7 @@ async def test_find_connected_depth_limit(context_service, test_graph):
 
 @pytest.mark.asyncio
 async def test_find_connected_timeframe(
-    context_service, test_graph, search_repository, entity_repository, app_config
+    context_service, test_graph, search_repository, entity_repository
 ):
     """Test timeframe filtering.
     This tests how traversal is affected by the item dates.
@@ -57,12 +57,6 @@ async def test_find_connected_timeframe(
     1. They match the timeframe
     2. There is a valid path to them through other items in the timeframe
     """
-    # Skip for Postgres - needs investigation of duplicate key violations
-    from basic_memory.config import DatabaseBackend
-
-    if app_config.database_backend == DatabaseBackend.POSTGRES:
-        pytest.skip("Not yet supported for Postgres - duplicate key violation issue")
-
     now = datetime.now(UTC)
     old_date = now - timedelta(days=10)
     recent_date = now - timedelta(days=1)
@@ -233,13 +227,11 @@ async def test_context_metadata(context_service, test_graph):
 
 
 @pytest.mark.asyncio
-async def test_project_isolation_in_find_related(session_maker, app_config):
+async def test_project_isolation_in_find_related(session_maker):
     """Test that find_related respects project boundaries and doesn't leak data."""
     from basic_memory.repository.entity_repository import EntityRepository
     from basic_memory.repository.observation_repository import ObservationRepository
     from basic_memory.repository.sqlite_search_repository import SQLiteSearchRepository
-    from basic_memory.repository.postgres_search_repository import PostgresSearchRepository
-    from basic_memory.config import DatabaseBackend
     from basic_memory import db
 
     # Create database session
@@ -299,13 +291,9 @@ async def test_project_isolation_in_find_related(session_maker, app_config):
         db_session.add(relation_p1)
         await db_session.commit()
 
-        # Create database-specific search repositories based on backend
-        if app_config.database_backend == DatabaseBackend.POSTGRES:
-            search_repo_p1 = PostgresSearchRepository(session_maker, project1.id)
-            search_repo_p2 = PostgresSearchRepository(session_maker, project2.id)
-        else:
-            search_repo_p1 = SQLiteSearchRepository(session_maker, project1.id)
-            search_repo_p2 = SQLiteSearchRepository(session_maker, project2.id)
+        # MemoryHub runs SQLite-only in the active fork.
+        search_repo_p1 = SQLiteSearchRepository(session_maker, project1.id)
+        search_repo_p2 = SQLiteSearchRepository(session_maker, project2.id)
 
         # Create repositories for project1
         entity_repo_p1 = EntityRepository(session_maker, project1.id)

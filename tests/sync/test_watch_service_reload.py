@@ -144,8 +144,8 @@ async def test_run_reloads_projects_each_cycle(monkeypatch, tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_run_filters_cloud_only_projects_each_cycle(monkeypatch, tmp_path):
-    """Cloud-only projects (slug path, no local directory) are filtered out."""
+async def test_run_filters_non_local_project_paths_each_cycle(monkeypatch, tmp_path):
+    """Projects without absolute local paths are filtered out."""
     config = BasicMemoryConfig(
         watch_project_reload_interval=1,
         projects={
@@ -180,8 +180,8 @@ async def test_run_filters_cloud_only_projects_each_cycle(monkeypatch, tmp_path)
 
 
 @pytest.mark.asyncio
-async def test_run_keeps_cloud_projects_with_local_bisync(monkeypatch, tmp_path):
-    """Cloud projects with an absolute path (local bisync copy) are kept for watching."""
+async def test_run_keeps_projects_with_absolute_local_paths(monkeypatch, tmp_path):
+    """Legacy migrated projects with absolute paths remain watchable."""
     config = BasicMemoryConfig(
         watch_project_reload_interval=1,
         projects={

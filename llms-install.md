@@ -1,54 +1,55 @@
-# Basic Memory Installation Guide for LLMs
+# MemoryHub Installation Guide for LLMs
 
-This guide is specifically designed to help AI assistants like Cline install and configure Basic Memory. Follow these
-steps in order.
+This guide is for the MemoryHub fork in this repository.
+
+Important: the fork has not been fully renamed yet. The code still runs through
+the inherited `basic-memory` CLI, so install from the local checkout rather
+than from PyPI.
 
 ## Installation Steps
 
-### 1. Install Basic Memory Package
+### 1. Install This Fork
 
-Use one of the following package managers to install:
+From the repository root:
 
 ```bash
-# Install with uv (recommended)
-uv tool install basic-memory
+# Recommended
+uv tool install -e .
 
-# Or with pip
-pip install basic-memory
+# Or editable pip install
+pip install -e .
 ```
 
-### 2. Configure MCP Server
+Do not use `uv tool install basic-memory` or `pip install basic-memory` if you
+want this fork. Those commands install the upstream project from PyPI.
 
-Add the following to your config:
+### 2. Configure The MCP Server
+
+Use the inherited runtime command until the rename is complete:
 
 ```json
 {
   "mcpServers": {
-    "basic-memory": {
-      "command": "uvx",
-      "args": [
-        "basic-memory",
-        "mcp"
-      ]
+    "memoryhub": {
+      "command": "basic-memory",
+      "args": ["mcp"]
     }
   }
 }
 ```
 
-For Claude Desktop, this file is located at:
+For Claude Desktop, this file is usually located at:
 
-macOS: ~/Library/Application Support/Claude/claude_desktop_config.json
-Windows: %APPDATA%\Claude\claude_desktop_config.json
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\\Claude\\claude_desktop_config.json`
 
 ### 3. Start Synchronization (optional)
-
-To synchronize files in real-time, run:
 
 ```bash
 basic-memory sync --watch
 ```
 
-Or for a one-time sync:
+For a one-time sync:
 
 ```bash
 basic-memory sync
@@ -58,8 +59,6 @@ basic-memory sync
 
 ### Custom Directory
 
-To use a directory other than the default `~/basic-memory`:
-
 ```bash
 basic-memory project add custom-project /path/to/your/directory
 basic-memory project default custom-project
@@ -67,16 +66,9 @@ basic-memory project default custom-project
 
 ### Multiple Projects
 
-To manage multiple knowledge bases:
-
 ```bash
-# List all projects
 basic-memory project list
-
-# Add a new project
 basic-memory project add work ~/work-basic-memory
-
-# Set default project
 basic-memory project default work
 ```
 
@@ -103,26 +95,22 @@ basic-memory import memory-json path/to/memory.json
 
 ## Troubleshooting
 
-If you encounter issues:
-
-1. Check that Basic Memory is properly installed:
+1. Check the installed executable:
    ```bash
    basic-memory --version
    ```
-
-2. Verify the sync process is running:
+2. Verify the process is running:
    ```bash
    ps aux | grep basic-memory
    ```
-
-3. Check sync output for errors:
+3. Check sync output:
    ```bash
    basic-memory sync --verbose
    ```
-
-4. Check log output:
+4. Check logs:
    ```bash
    cat ~/.basic-memory/basic-memory.log
    ```
 
-For more detailed information, refer to the [full documentation](https://memory.basicmachines.co/).
+See [README.md](README.md) for the fork status and [README_old.md](README_old.md)
+for the preserved upstream product documentation.

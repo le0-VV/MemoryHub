@@ -475,38 +475,21 @@ def validate_project_path(path: str, project_path: Path) -> bool:
         return False  # pragma: no cover
 
 
-def ensure_timezone_aware(dt: datetime, cloud_mode: bool | None = None) -> datetime:
+def ensure_timezone_aware(dt: datetime) -> datetime:
     """Ensure a datetime is timezone-aware.
 
-    If the datetime is naive, convert it to timezone-aware. The interpretation
-    depends on cloud_mode:
-    - In cloud mode (PostgreSQL/asyncpg): naive datetimes are interpreted as UTC
-    - In local mode (SQLite): naive datetimes are interpreted as local time
-
-    asyncpg uses binary protocol which returns timestamps in UTC but as naive
-    datetimes. In cloud deployments, cloud_mode=True handles this correctly.
+    If the datetime is naive, convert it to timezone-aware using local timezone.
+    MemoryHub runs in SQLite-only local mode.
 
     Args:
         dt: The datetime to ensure is timezone-aware
-        cloud_mode: Optional explicit cloud_mode setting. If None, inferred from
-            configured database backend (Postgres => UTC semantics).
 
     Returns:
         A timezone-aware datetime
     """
     if dt.tzinfo is None:
-        # Determine cloud_mode: use explicit parameter if provided, otherwise infer from config.
-        if cloud_mode is None:
-            from basic_memory.config import ConfigManager, DatabaseBackend
-
-            cloud_mode = ConfigManager().config.database_backend == DatabaseBackend.POSTGRES
-
-        if cloud_mode:
-            # Cloud/PostgreSQL mode: naive datetimes from asyncpg are already UTC
-            return dt.replace(tzinfo=timezone.utc)
-        else:
-            # Local/SQLite mode: naive datetimes are in local time
-            return dt.astimezone()
+        # Local/SQLite mode: naive datetimes are in local time
+        return dt.astimezone()
     else:
         # Already timezone-aware
         return dt

@@ -1,7 +1,6 @@
-"""Tests for project list display and project ls routing behavior."""
+"""Tests for local project list and project ls behavior."""
 
 import json
-import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -12,7 +11,6 @@ from basic_memory.cli.app import app
 from basic_memory.mcp.clients.project import ProjectClient
 from basic_memory.schemas.project_info import ProjectList
 
-# Importing registers project subcommands on the shared app instance.
 import basic_memory.cli.commands.project as project_cmd  # noqa: F401
 
 
@@ -45,36 +43,31 @@ def mock_client(monkeypatch):
     """Mock get_client with a no-op async context manager."""
 
     @asynccontextmanager
-    async def fake_get_client(workspace=None):
+    async def fake_get_client(project_name=None):
         yield object()
 
     monkeypatch.setattr(project_cmd, "get_client", fake_get_client)
 
 
-def test_project_list_shows_local_cloud_presence_and_routes(
+def test_project_list_shows_local_projects(
     runner: CliRunner, write_config, mock_client, tmp_path, monkeypatch
 ):
-    """project list should show local/cloud paths plus CLI and MCP route targets."""
+    """project list shows local project names, paths, and default marker."""
     alpha_local = (tmp_path / "alpha-local").as_posix()
-    beta_local_sync = (tmp_path / "beta-sync").as_posix()
+    beta_local = (tmp_path / "beta-local").as_posix()
 
     write_config(
         {
             "env": "dev",
             "projects": {
                 "alpha": {"path": alpha_local, "mode": "local"},
-                "beta": {
-                    "path": beta_local_sync,
-                    "mode": "cloud",
-                    "local_sync_path": beta_local_sync,
-                },
+                "beta": {"path": beta_local, "mode": "local"},
             },
             "default_project": "alpha",
-            "cloud_api_key": "bmc_test_key_123",
         }
     )
 
-    local_payload = {
+    payload = {
         "projects": [
             {
                 "id": 1,
@@ -82,64 +75,39 @@ def test_project_list_shows_local_cloud_presence_and_routes(
                 "name": "alpha",
                 "path": alpha_local,
                 "is_default": True,
-            }
-        ],
-        "default_project": "alpha",
-    }
-
-    cloud_payload = {
-        "projects": [
+            },
             {
                 "id": 2,
                 "external_id": "22222222-2222-2222-2222-222222222222",
-                "name": "alpha",
-                "path": "/alpha",
-                "is_default": True,
-            },
-            {
-                "id": 3,
-                "external_id": "33333333-3333-3333-3333-333333333333",
                 "name": "beta",
-                "path": "/beta",
+                "path": beta_local,
                 "is_default": False,
             },
         ],
         "default_project": "alpha",
     }
 
-    _original_list_projects = ProjectClient.list_projects
-
     async def fake_list_projects(self):
-        if os.getenv("BASIC_MEMORY_FORCE_CLOUD", "").lower() in ("true", "1", "yes"):
-            return ProjectList.model_validate(cloud_payload)
-        return ProjectList.model_validate(local_payload)
+        return ProjectList.model_validate(payload)
 
     monkeypatch.setattr(ProjectClient, "list_projects", fake_list_projects)
 
-    result = runner.invoke(app, ["project", "list"], env={"COLUMNS": "240"})
+    result = runner.invoke(app, ["project", "list"], env={"COLUMNS": "200"})
 
     assert result.exit_code == 0, f"Exit code: {result.exit_code}, output: {result.stdout}"
-    assert "Local Path" in result.stdout
-    assert "Cloud Path" in result.stdout
-    assert "CLI Route" in result.stdout
-    assert "MCP (stdio)" in result.stdout
-
-    lines = result.stdout.splitlines()
-    alpha_line = next(line for line in lines if "│ alpha" in line)
-    beta_line = next(line for line in lines if "│ beta" in line)
-
-    assert "local" in alpha_line  # CLI route for alpha
-    assert "cloud" in beta_line  # CLI route for beta
-    assert "n/a" in beta_line  # MCP stdio route is unavailable for cloud-only projects
+    assert "Name" in result.stdout
+    assert "Path" in result.stdout
+    assert "Default" in result.stdout
+    assert "alpha" in result.stdout
+    assert "beta" in result.stdout
     assert "alpha-local" in result.stdout
-    assert "/alpha" in result.stdout
-    assert "/beta" in result.stdout
+    assert "beta-local" in result.stdout
 
 
-def test_project_ls_local_mode_defaults_to_local_route(
+def test_project_ls_local_mode_lists_local_files(
     runner: CliRunner, write_config, mock_client, tmp_path, monkeypatch
 ):
-    """project ls without flags for a local-mode project should list local files."""
+    """project ls lists files from the local project path."""
     project_dir = tmp_path / "alpha-files"
     (project_dir / "docs").mkdir(parents=True, exist_ok=True)
     (project_dir / "notes.md").write_text("# local note")
@@ -167,114 +135,13 @@ def test_project_ls_local_mode_defaults_to_local_route(
     }
 
     async def fake_list_projects(self):
-        assert os.getenv("BASIC_MEMORY_FORCE_CLOUD", "").lower() not in ("true", "1", "yes")
         return ProjectList.model_validate(payload)
 
-    def fail_if_called(*args, **kwargs):
-        raise AssertionError("project_ls should not be used for default local route")
-
     monkeypatch.setattr(ProjectClient, "list_projects", fake_list_projects)
-    monkeypatch.setattr(project_cmd, "project_ls", fail_if_called)
 
     result = runner.invoke(app, ["project", "ls", "--name", "alpha"], env={"COLUMNS": "200"})
 
     assert result.exit_code == 0, f"Exit code: {result.exit_code}, output: {result.stdout}"
-    assert "Files in alpha (LOCAL)" in result.stdout
+    assert "Files in alpha" in result.stdout
     assert "notes.md" in result.stdout
     assert "docs/spec.md" in result.stdout
-
-
-def test_project_ls_cloud_mode_defaults_to_cloud_route(
-    runner: CliRunner, write_config, mock_client, tmp_path, monkeypatch
-):
-    """project ls without flags for a cloud-mode project should list cloud files."""
-    write_config(
-        {
-            "env": "dev",
-            "projects": {"alpha": {"path": str(tmp_path / "alpha"), "mode": "cloud"}},
-            "default_project": "alpha",
-            "cloud_api_key": "bmc_test_key_123",
-        }
-    )
-
-    cloud_payload = {
-        "projects": [
-            {
-                "id": 1,
-                "external_id": "11111111-1111-1111-1111-111111111111",
-                "name": "alpha",
-                "path": "/alpha",
-                "is_default": True,
-            }
-        ],
-        "default_project": "alpha",
-    }
-
-    class _TenantInfo:
-        bucket_name = "tenant-bucket"
-
-    async def fake_list_projects(self):
-        # Cloud routing should be active when project mode is cloud
-        assert os.getenv("BASIC_MEMORY_FORCE_CLOUD", "").lower() in ("true", "1", "yes")
-        return ProjectList.model_validate(cloud_payload)
-
-    async def fake_get_mount_info():
-        return _TenantInfo()
-
-    monkeypatch.setattr(ProjectClient, "list_projects", fake_list_projects)
-    monkeypatch.setattr(project_cmd, "get_mount_info", fake_get_mount_info)
-    monkeypatch.setattr(project_cmd, "project_ls", lambda *args, **kwargs: ["        42 cloud.md"])
-
-    # No --cloud flag: project mode should determine route
-    result = runner.invoke(app, ["project", "ls", "--name", "alpha"], env={"COLUMNS": "200"})
-
-    assert result.exit_code == 0, f"Exit code: {result.exit_code}, output: {result.stdout}"
-    assert "Files in alpha (CLOUD)" in result.stdout
-    assert "cloud.md" in result.stdout
-
-
-def test_project_ls_cloud_route_uses_cloud_listing(
-    runner: CliRunner, write_config, mock_client, tmp_path, monkeypatch
-):
-    """project ls --cloud should fetch cloud project listing and print cloud-target heading."""
-    write_config(
-        {
-            "env": "dev",
-            "projects": {"alpha": {"path": str(tmp_path / "alpha"), "mode": "local"}},
-            "default_project": "alpha",
-            "cloud_api_key": "bmc_test_key_123",
-        }
-    )
-
-    cloud_payload = {
-        "projects": [
-            {
-                "id": 1,
-                "external_id": "11111111-1111-1111-1111-111111111111",
-                "name": "alpha",
-                "path": "/alpha",
-                "is_default": True,
-            }
-        ],
-        "default_project": "alpha",
-    }
-
-    class _TenantInfo:
-        bucket_name = "tenant-bucket"
-
-    async def fake_list_projects(self):
-        assert os.getenv("BASIC_MEMORY_FORCE_CLOUD", "").lower() in ("true", "1", "yes")
-        return ProjectList.model_validate(cloud_payload)
-
-    async def fake_get_mount_info():
-        return _TenantInfo()
-
-    monkeypatch.setattr(ProjectClient, "list_projects", fake_list_projects)
-    monkeypatch.setattr(project_cmd, "get_mount_info", fake_get_mount_info)
-    monkeypatch.setattr(project_cmd, "project_ls", lambda *args, **kwargs: ["        42 cloud.md"])
-
-    result = runner.invoke(app, ["project", "ls", "--name", "alpha", "--cloud"])
-
-    assert result.exit_code == 0, f"Exit code: {result.exit_code}, output: {result.stdout}"
-    assert "Files in alpha (CLOUD)" in result.stdout
-    assert "cloud.md" in result.stdout

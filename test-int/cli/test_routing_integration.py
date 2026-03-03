@@ -1,6 +1,6 @@
-"""Integration tests for CLI routing flags (--local/--cloud).
+"""Integration tests for CLI routing flags in the local-only fork.
 
-These tests verify that the --local and --cloud flags work correctly
+These tests verify that the routing flags work correctly
 across CLI commands, and that MCP routing varies by transport.
 
 Note: Environment variable behavior during command execution is tested
@@ -20,73 +20,26 @@ from basic_memory.cli.main import app as cli_app
 runner = CliRunner()
 
 
-class TestRoutingFlagsValidation:
-    """Tests for --local/--cloud flag validation.
+class TestRemovedCloudFlags:
+    """Tests for removed cloud flags."""
 
-    These tests verify that using both --local and --cloud together
-    produces an appropriate error message.
-    """
-
-    def test_status_both_flags_error(self):
-        """Using both --local and --cloud should produce an error."""
-        result = runner.invoke(cli_app, ["status", "--local", "--cloud"])
-        # Exit code can be 1 or 2 depending on how typer handles the exception
+    @pytest.mark.parametrize(
+        "args",
+        [
+            ["status", "--cloud"],
+            ["project", "list", "--cloud"],
+            ["project", "ls", "--name", "test", "--cloud"],
+            ["tool", "search-notes", "test", "--cloud"],
+            ["tool", "read-note", "test", "--cloud"],
+            ["tool", "build-context", "memory://test", "--cloud"],
+            ["tool", "edit-note", "test", "--operation", "append", "--content", "test", "--cloud"],
+        ],
+    )
+    def test_removed_cloud_flag_errors(self, args):
+        """Commands should reject the removed --cloud flag at parse time."""
+        result = runner.invoke(cli_app, args)
         assert result.exit_code != 0
-        assert "Cannot specify both --local and --cloud" in result.output
-
-    def test_project_list_both_flags_error(self):
-        """Using both --local and --cloud should produce an error."""
-        result = runner.invoke(cli_app, ["project", "list", "--local", "--cloud"])
-        assert result.exit_code != 0
-        assert "Cannot specify both --local and --cloud" in result.output
-
-    def test_project_ls_both_flags_error(self):
-        """Using both --local and --cloud on project ls should produce an error."""
-        result = runner.invoke(
-            cli_app,
-            ["project", "ls", "--name", "test", "--local", "--cloud"],
-        )
-        assert result.exit_code != 0
-        assert "Cannot specify both --local and --cloud" in result.output
-
-    def test_tool_search_both_flags_error(self):
-        """Using both --local and --cloud should produce an error."""
-        result = runner.invoke(cli_app, ["tool", "search-notes", "test", "--local", "--cloud"])
-        assert result.exit_code != 0
-        assert "Cannot specify both --local and --cloud" in result.output
-
-    def test_tool_read_note_both_flags_error(self):
-        """Using both --local and --cloud should produce an error."""
-        result = runner.invoke(cli_app, ["tool", "read-note", "test", "--local", "--cloud"])
-        assert result.exit_code != 0
-        assert "Cannot specify both --local and --cloud" in result.output
-
-    def test_tool_build_context_both_flags_error(self):
-        """Using both --local and --cloud should produce an error."""
-        result = runner.invoke(
-            cli_app, ["tool", "build-context", "memory://test", "--local", "--cloud"]
-        )
-        assert result.exit_code != 0
-        assert "Cannot specify both --local and --cloud" in result.output
-
-    def test_tool_edit_note_both_flags_error(self):
-        """Using both --local and --cloud should produce an error."""
-        result = runner.invoke(
-            cli_app,
-            [
-                "tool",
-                "edit-note",
-                "test",
-                "--operation",
-                "append",
-                "--content",
-                "test",
-                "--local",
-                "--cloud",
-            ],
-        )
-        assert result.exit_code != 0
-        assert "Cannot specify both --local and --cloud" in result.output
+        assert "No such option: --cloud" in result.output
 
 
 class TestMcpCommandRouting:
@@ -116,9 +69,9 @@ class TestMcpCommandRouting:
         assert env_at_run["FORCE_LOCAL"] is None
         assert env_at_run["EXPLICIT"] is None
 
-    def test_mcp_stdio_honors_external_env_override(self, monkeypatch):
-        """Stdio transport should pass through externally-set routing env vars."""
-        monkeypatch.setenv("BASIC_MEMORY_FORCE_CLOUD", "true")
+    def test_mcp_stdio_honors_external_local_override(self, monkeypatch):
+        """Stdio transport should pass through externally-set local routing env vars."""
+        monkeypatch.setenv("BASIC_MEMORY_FORCE_LOCAL", "true")
         monkeypatch.setenv("BASIC_MEMORY_EXPLICIT_ROUTING", "true")
 
         env_at_run = {}
@@ -126,7 +79,7 @@ class TestMcpCommandRouting:
         import basic_memory.cli.commands.mcp as mcp_mod
 
         def mock_run(*args, **kwargs):
-            env_at_run["FORCE_CLOUD"] = os.environ.get("BASIC_MEMORY_FORCE_CLOUD")
+            env_at_run["FORCE_LOCAL"] = os.environ.get("BASIC_MEMORY_FORCE_LOCAL")
             env_at_run["EXPLICIT"] = os.environ.get("BASIC_MEMORY_EXPLICIT_ROUTING")
             raise SystemExit(0)
 
@@ -136,7 +89,7 @@ class TestMcpCommandRouting:
         runner.invoke(cli_app, ["mcp"])
 
         # Externally-set vars should be preserved
-        assert env_at_run["FORCE_CLOUD"] == "true"
+        assert env_at_run["FORCE_LOCAL"] == "true"
         assert env_at_run["EXPLICIT"] == "true"
 
     def test_mcp_streamable_http_forces_local(self, monkeypatch):
@@ -179,7 +132,7 @@ class TestMcpCommandRouting:
 
 
 class TestToolCommandsAcceptFlags:
-    """Tests that tool commands accept routing flags without parsing errors."""
+    """Tests that tool commands accept local routing flags."""
 
     @pytest.mark.parametrize(
         "command,args",
@@ -198,46 +151,18 @@ class TestToolCommandsAcceptFlags:
         # Should not fail due to flag parsing (No such option error)
         assert "No such option: --local" not in result.output
 
-    @pytest.mark.parametrize(
-        "command,args",
-        [
-            ("search-notes", ["test query"]),
-            ("recent-activity", []),
-            ("read-note", ["test"]),
-            ("edit-note", ["test", "--operation", "append", "--content", "test"]),
-            ("build-context", ["memory://test"]),
-        ],
-    )
-    def test_tool_commands_accept_cloud_flag(self, command, args, app_config):
-        """Tool commands should accept --cloud flag without parsing error."""
-        full_args = ["tool", command] + args + ["--cloud"]
-        result = runner.invoke(cli_app, full_args)
-        # Should not fail due to flag parsing (No such option error)
-        assert "No such option: --cloud" not in result.output
-
-
 class TestProjectCommandsAcceptFlags:
-    """Tests that project commands accept routing flags without parsing errors."""
+    """Tests that project commands accept local routing flags."""
 
     def test_project_list_accepts_local_flag(self, app_config):
         """project list should accept --local flag."""
         result = runner.invoke(cli_app, ["project", "list", "--local"])
         assert "No such option: --local" not in result.output
 
-    def test_project_list_accepts_cloud_flag(self, app_config):
-        """project list should accept --cloud flag."""
-        result = runner.invoke(cli_app, ["project", "list", "--cloud"])
-        assert "No such option: --cloud" not in result.output
-
     def test_project_info_accepts_local_flag(self, app_config):
         """project info should accept --local flag."""
         result = runner.invoke(cli_app, ["project", "info", "--local"])
         assert "No such option: --local" not in result.output
-
-    def test_project_info_accepts_cloud_flag(self, app_config):
-        """project info should accept --cloud flag."""
-        result = runner.invoke(cli_app, ["project", "info", "--cloud"])
-        assert "No such option: --cloud" not in result.output
 
     def test_project_default_accepts_local_flag(self, app_config):
         """project default should accept --local flag."""
@@ -249,31 +174,16 @@ class TestProjectCommandsAcceptFlags:
         result = runner.invoke(cli_app, ["project", "sync-config", "test", "--local"])
         assert "No such option: --local" not in result.output
 
-    def test_project_move_local_only(self, app_config):
-        """project move should reject --cloud flag."""
-        result = runner.invoke(cli_app, ["project", "move", "test", "/tmp/dest", "--cloud"])
-        assert result.exit_code == 2
-
     def test_project_ls_accepts_local_flag(self, app_config):
         """project ls should accept --local flag."""
         result = runner.invoke(cli_app, ["project", "ls", "--name", "test", "--local"])
         assert "No such option: --local" not in result.output
 
-    def test_project_ls_accepts_cloud_flag(self, app_config):
-        """project ls should accept --cloud flag."""
-        result = runner.invoke(cli_app, ["project", "ls", "--name", "test", "--cloud"])
-        assert "No such option: --cloud" not in result.output
-
 
 class TestStatusCommandAcceptsFlags:
-    """Tests that status command accepts routing flags."""
+    """Tests that status command accepts local routing flags."""
 
     def test_status_accepts_local_flag(self, app_config):
         """status should accept --local flag."""
         result = runner.invoke(cli_app, ["status", "--local"])
         assert "No such option: --local" not in result.output
-
-    def test_status_accepts_cloud_flag(self, app_config):
-        """status should accept --cloud flag."""
-        result = runner.invoke(cli_app, ["status", "--cloud"])
-        assert "No such option: --cloud" not in result.output

@@ -17,8 +17,8 @@ from basic_memory.repository.search_repository import SearchRepository, SearchIn
 from basic_memory.schemas.search import SearchQuery, SearchItemType, SearchRetrievalMode
 from basic_memory.services import FileService
 
-# Maximum size for content_stems field to stay under Postgres's 8KB index row limit.
-# We use 6000 characters to leave headroom for other indexed columns and overhead.
+# Maximum size for content_stems. This keeps indexed text bounded for local
+# SQLite search while preserving historical safety margins from upstream.
 MAX_CONTENT_STEMS_SIZE = 6000
 
 # Common glue words used to relax natural-language FTS queries after strict misses.
@@ -59,7 +59,7 @@ FTS_RELAXED_STOPWORDS = {
 
 
 def _strip_nul(value: str) -> str:
-    """Strip NUL bytes that PostgreSQL text columns cannot store.
+    """Strip NUL bytes that can appear in synced filesystem content.
 
     rclone preallocation on virtual filesystems (e.g. Google Drive File Stream)
     can pad files with \\x00 bytes. See: rclone/rclone#6801

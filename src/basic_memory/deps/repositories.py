@@ -150,11 +150,7 @@ async def get_search_repository(
     project_id: ProjectIdDep,
     app_config: AppConfigDep,
 ) -> SearchRepository:
-    """Create a backend-specific SearchRepository instance for the current project.
-
-    Uses factory function to return SQLiteSearchRepository or PostgresSearchRepository
-    based on database backend configuration.
-    """
+    """Create the active SQLite SearchRepository instance for the current project."""
     return create_search_repository(session_maker, project_id=project_id, app_config=app_config)
 
 

@@ -1,4 +1,4 @@
-"""MCP composition root for Basic Memory.
+"""MCP composition root for MemoryHub.
 
 This container owns reading ConfigManager and environment variables for the
 MCP server entrypoint. Downstream modules receive config/dependencies explicitly
@@ -6,7 +6,7 @@ rather than reading globals.
 
 Design principles:
 - Only this module reads ConfigManager directly
-- Runtime mode (cloud/local/test) is resolved here
+- Runtime mode (local/test) is resolved here
 - File sync decisions are centralized here
 """
 
@@ -52,9 +52,8 @@ class McpContainer:
         Sync is enabled when:
         - sync_changes is True in config
         - Not in test mode (tests manage their own sync)
-        - Not in cloud mode (cloud handles sync differently)
         """
-        return self.config.sync_changes and not self.mode.is_test and not self.mode.is_cloud
+        return self.config.sync_changes and not self.mode.is_test
 
     @property
     def sync_skip_reason(self) -> str | None:
@@ -64,8 +63,6 @@ class McpContainer:
         """
         if self.mode.is_test:
             return "Test environment detected"
-        if self.mode.is_cloud:
-            return "Cloud mode enabled"
         if not self.config.sync_changes:
             return "Sync changes disabled"
         return None

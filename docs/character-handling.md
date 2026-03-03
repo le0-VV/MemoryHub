@@ -1,16 +1,19 @@
 # Character Handling and Conflict Resolution
 
-Basic Memory handles various character encoding scenarios and file naming conventions to provide consistent permalink generation and conflict resolution. This document explains how the system works and how to resolve common character-related issues.
+MemoryHub handles character encoding and file naming so permalink generation stays deterministic
+across platforms. This document explains the current local-only behavior and the common failure
+cases you may hit in a markdown workspace.
 
 ## Overview
 
-Basic Memory uses a sophisticated system to generate permalinks from file paths while maintaining consistency across different operating systems and character encodings. The system normalizes file paths and generates unique permalinks to prevent conflicts.
+The app normalizes file paths and frontmatter permalinks so the same logical note resolves to a
+stable identifier in SQLite and in `memory://` URLs.
 
 ## Character Normalization Rules
 
 ### 1. Permalink Generation
 
-When Basic Memory processes a file path, it applies these normalization rules:
+When MemoryHub processes a file path, it applies these normalization rules:
 
 ```
 Original: "Finance/My Investment Strategy.md"
@@ -67,7 +70,8 @@ Directory: Finance/investment.md
 Directory: finance/investment.md  (different on filesystem, same permalink)
 ```
 
-**Resolution:** Basic Memory detects case conflicts and prevents them during sync operations with helpful error messages.
+**Resolution:** MemoryHub detects case conflicts and prevents them during local sync/index
+operations with explicit error messages.
 
 **Best Practice:** Use consistent casing for directory and file names.
 
@@ -81,7 +85,8 @@ File 1: "café.md" (é as single character)
 File 2: "café.md" (e + combining accent)
 ```
 
-**Resolution:** Basic Memory normalizes Unicode characters using NFD normalization to detect these conflicts.
+**Resolution:** MemoryHub normalizes Unicode characters using NFD normalization to detect these
+conflicts.
 
 ### 4. Forward Slash Conflicts
 
@@ -94,7 +99,7 @@ permalink: finance/investment/strategy
 ---
 ```
 
-**Resolution:** Basic Memory validates frontmatter permalinks and warns about path separator conflicts.
+**Resolution:** MemoryHub validates frontmatter permalinks and warns about path separator conflicts.
 
 ## Error Messages and Troubleshooting
 
@@ -136,7 +141,7 @@ permalink: finance/investment/strategy
 ```
 ✅ Good:
 - finance/investment-strategy.md
-- projects/basic-memory-features.md
+- projects/memoryhub-features.md
 - docs/api-reference.md
 
 ❌ Problematic:
@@ -181,14 +186,13 @@ finance/           (lowercase f)
 
 ### Identifying Conflicts
 
-Use Basic Memory's built-in conflict detection:
+Use the built-in consistency checks:
 
 ```bash
-# Sync will report conflicts
-basic-memory sync
-
-# Check sync status for warnings
 basic-memory status
+
+# Run an end-to-end file <-> database check in a temp project
+basic-memory doctor
 ```
 
 ### Resolving Existing Conflicts
@@ -238,4 +242,5 @@ If you encounter character-related conflicts not covered in this guide:
 3. **Report issues** with examples of the conflicting files
 4. **Consider the file naming best practices** outlined above
 
-The Basic Memory system is designed to handle most character conflicts automatically while providing clear guidance for manual resolution when needed.
+The system is designed to catch most character and permalink conflicts automatically while still
+making manual cleanup understandable when collisions happen.

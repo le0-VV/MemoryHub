@@ -1,15 +1,11 @@
-"""
-Basic Memory FastMCP server.
-"""
+"""MemoryHub FastMCP server."""
 
-import time
 from contextlib import asynccontextmanager
 
 from fastmcp import FastMCP
 from loguru import logger
 
 from basic_memory import db
-from basic_memory.cli.auth import CLIAuth
 from basic_memory.mcp.container import McpContainer, set_container
 from basic_memory.services.initialization import initialize_app
 
@@ -20,7 +16,7 @@ async def lifespan(app: FastMCP):
 
     Handles:
     - Database initialization and migrations
-    - File sync via SyncCoordinator (if enabled and not in cloud mode)
+    - File sync via SyncCoordinator
     - Proper cleanup on shutdown
     """
     # --- Composition Root ---
@@ -29,7 +25,7 @@ async def lifespan(app: FastMCP):
     set_container(container)
 
     config = container.config
-    logger.info(f"Starting Basic Memory MCP server (mode={container.mode.name})")
+    logger.info(f"Starting MemoryHub MCP server (mode={container.mode.name})")
     logger.info(
         f"Config: database_backend={config.database_backend.value}, "
         f"semantic_search_enabled={config.semantic_search_enabled}, "
@@ -43,24 +39,10 @@ async def lifespan(app: FastMCP):
             f"batch_size={config.semantic_embedding_batch_size}"
         )
 
-    # Log configured projects with their routing mode
+    # Log configured projects
     for name, entry in config.projects.items():
         default = " (default)" if name == config.default_project else ""
-        logger.info(f"Project: {name} -> {entry.path} [mode={entry.mode.value}]{default}")
-
-    # Check cloud auth status (local file check, no network call)
-    auth = CLIAuth(client_id=config.cloud_client_id, authkit_domain=config.cloud_domain)
-    tokens = auth.load_tokens()
-    if tokens is not None:
-        if not auth.is_token_valid(tokens):
-            expires_at = tokens.get("expires_at", 0)
-            expired_ago = int(time.time() - expires_at)
-            logger.warning(f"Cloud token expired {expired_ago}s ago - may need 'bm cloud login'")
-        else:
-            logger.info("Cloud: authenticated (OAuth token valid)")
-
-    if config.cloud_api_key:
-        logger.info("Cloud: API key configured")
+        logger.info(f"Project: {name} -> {entry.path}{default}")
 
     # Track if we created the engine (vs test fixtures providing it)
     # This prevents disposing an engine provided by test fixtures when
@@ -78,7 +60,7 @@ async def lifespan(app: FastMCP):
         yield
     finally:
         # Shutdown - coordinator handles clean task cancellation
-        logger.debug("Shutting down Basic Memory MCP server")
+        logger.debug("Shutting down MemoryHub MCP server")
         await sync_coordinator.stop()
 
         # Only shutdown DB if we created it (not if test fixture provided it)

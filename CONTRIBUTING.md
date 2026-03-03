@@ -1,277 +1,127 @@
-# Contributing to Basic Memory
+# Contributing to MemoryHub
 
-Thank you for considering contributing to Basic Memory! This document outlines the process for contributing to the
-project and how to get started as a developer.
+MemoryHub is an experimental fork of Basic Memory. This repository is still in the transition phase: most code, modules, and commands still use inherited `basic_memory` / `basic-memory` naming, while the product direction is shifting toward a multi-project MCP hub.
+
+This document covers how to contribute to the fork without confusing it with the upstream project.
 
 ## Getting Started
 
-### Development Environment
+1. Clone this fork:
+    ```bash
+    git clone https://github.com/le0-VV/MemoryHub.git
+    cd MemoryHub
+    ```
+2. Install dependencies:
+    ```bash
+    just install
+    ```
+    Or:
+    ```bash
+    pip install -e ".[dev]"
+    ```
+3. Run the fast local check loop:
+    ```bash
+    just fast-check
+    ```
+4. Run the end-to-end consistency check when needed:
+    ```bash
+    just doctor
+    ```
 
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/basicmachines-co/basic-memory.git
-   cd basic-memory
-   ```
+## Current Naming Caveat
 
-2. **Install Dependencies**:
-   ```bash
-   # Using just (recommended)
-   just install
-   
-   # Or using uv
-   uv install -e ".[dev]"
-   
-   # Or using pip
-   pip install -e ".[dev]"
-   ```
+Until the rename is complete:
 
-   > **Note**: Basic Memory uses [just](https://just.systems) as a modern command runner. Install with `brew install just` or `cargo install just`.
+- The Python package is still `basic_memory`
+- The CLI entrypoints are still `basic-memory` and `bm`
+- The MCP server still identifies itself as `Basic Memory`
 
-3. **Activate the Virtual Environment**
-   ```bash
-   source .venv/bin/activate
-   ```
+If you want to run this fork, install from the local checkout. Do not use `uv tool install basic-memory`, because that installs the upstream package from PyPI.
 
-4. **Run the Tests**:
-   ```bash
-   # Run all tests with unified coverage (unit + integration)
-   just test
+## Development Workflow
 
-   # Run unit tests only (fast, no coverage)
-   just test-unit
+1. Create a branch from `main`.
+2. Make the smallest defensible change.
+3. Run the relevant checks:
+    ```bash
+    just lint
+    just typecheck
+    just test-sqlite
+    ```
+4. Run the full suite when the change warrants it:
+    ```bash
+    just test
+    ```
+5. Submit a pull request describing what changed, why it changed, and how you verified it.
 
-   # Run integration tests only (fast, no coverage)
-   just test-int
+## Pull Request Reviews
 
-   # Generate HTML coverage report
-   just coverage
+This fork no longer uses repository-local Claude GitHub Actions workflows for
+PR review or issue triage.
 
-   # Run a specific test
-   pytest tests/path/to/test_file.py::test_function_name
-   ```
+If you use AI-assisted review on GitHub, use the current Codex/GitHub native
+review flow instead of the deleted Claude workflow files.
 
-### Development Workflow
+## Release Automation Status
 
-1. **Fork the Repo**: Fork the repository on GitHub and clone your copy.
-2. **Create a Branch**: Create a new branch for your feature or fix.
-   ```bash
-   git checkout -b feature/your-feature-name
-   # or
-   git checkout -b fix/issue-you-are-fixing
-   ```
-3. **Make Your Changes**: Implement your changes with appropriate test coverage.
-4. **Check Code Quality**:
-   ```bash
-   # Run all checks at once
-   just check
-   
-   # Or run individual checks
-   just lint      # Run linting
-   just format    # Format code
-   just type-check  # Type checking
-   ```
-5. **Test Your Changes**: Ensure all tests pass locally and maintain 100% test coverage.
-   ```bash
-   just test
-   ```
-6. **Submit a PR**: Submit a pull request with a detailed description of your changes.
+During the rename transition:
 
-## LLM-Assisted Development
+- Dependabot remains enabled
+- GitHub Actions workflows are currently removed
+- Issue templates are currently removed
+- PyPI, Homebrew, and Docker publishing are not configured
 
-This project is designed for collaborative development between humans and LLMs (Large Language Models):
+Do not assume upstream Basic Memory release infrastructure applies to this fork.
 
-1. **CLAUDE.md**: The repository includes a `CLAUDE.md` file that serves as a project guide for both humans and LLMs.
-   This file contains:
-    - Key project information and architectural overview
-    - Development commands and workflows
-    - Code style guidelines
-    - Documentation standards
+## Priorities For This Fork
 
-2. **AI-Human Collaborative Workflow**:
-    - We encourage using LLMs like Claude for code generation, reviews, and documentation
-    - When possible, save context in markdown files that can be referenced later
-    - This enables seamless knowledge transfer between different development sessions
-    - Claude can help with implementation details while you focus on architecture and design
+Changes are especially helpful when they improve one of these areas:
 
-3. **Adding to CLAUDE.md**:
-    - If you discover useful project information or common commands, consider adding them to CLAUDE.md
-    - This helps all contributors (human and AI) maintain consistent knowledge of the project
+- Documentation that accurately reflects the fork status
+- Metadata and publishing config that stop pointing at the upstream project
+- Routing architecture for multi-project MCP usage
+- Tests that preserve upstream behavior while the fork evolves
 
-## Pull Request Process
+Avoid changing inherited package names or release semantics casually. Those changes affect installation, registry metadata, and compatibility, and should be done deliberately.
 
-1. **Create a Pull Request**: Open a PR against the `main` branch with a clear title and description.
-2. **Sign the Developer Certificate of Origin (DCO)**: All contributions require signing our DCO, which certifies that
-   you have the right to submit your contributions. This will be automatically checked by our CLA assistant when you
-   create a PR.
-3. **PR Description**: Include:
-    - What the PR changes
-    - Why the change is needed
-    - How you tested the changes
-    - Any related issues (use "Fixes #123" to automatically close issues)
-4. **Code Review**: Wait for code review and address any feedback.
-5. **CI Checks**: Ensure all CI checks pass.
-6. **Merge**: Once approved, a maintainer will merge your PR.
+## Agent Guidance
 
-## Developer Certificate of Origin
+This repository keeps agent-specific working guidance in [AGENTS.md](AGENTS.md). If you are using an LLM or coding agent, start there.
 
-By contributing to this project, you agree to the [Developer Certificate of Origin (DCO)](CLA.md). This means you
-certify that:
+Useful reference points:
 
-- You have the right to submit your contributions
-- You're not knowingly submitting code with patent or copyright issues
-- Your contributions are provided under the project's license (AGPL-3.0)
+- [README.md](README.md): current fork status and roadmap
+- [README_old.md](README_old.md): preserved upstream README
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): current code architecture
 
-This is a lightweight alternative to a Contributor License Agreement and helps ensure that all contributions can be
-properly incorporated into the project and potentially used in commercial applications.
+## Developer Certificate Of Origin
 
-### Signing Your Commits
-
-Sign your commit:
-
-**Using the `-s` or `--signoff` flag**:
+This fork uses the [Developer Certificate of Origin](CLA.md), not a separate
+copyright assignment CLA. Sign commits with:
 
 ```bash
 git commit -s -m "Your commit message"
 ```
 
-This adds a `Signed-off-by` line to your commit message, certifying that you adhere to the DCO.
+## Code Style And Testing
 
-The sign-off certifies that you have the right to submit your contribution under the project's license and verifies your
-agreement to the DCO.
+- Python 3.12+
+- Full type annotations
+- Ruff formatting and linting
+- Pyright type checking
+- 100-character line length
+- Tests are required for behavior changes
 
-## Code Style Guidelines
-
-- **Python Version**: Python 3.12+ with full type annotations (3.12+ required for type parameter syntax)
-- **Line Length**: 100 characters maximum
-- **Formatting**: Use ruff for consistent styling
-- **Import Order**: Standard lib, third-party, local imports
-- **Naming**: Use snake_case for functions/variables, PascalCase for classes
-- **Documentation**: Add docstrings to public functions, classes, and methods
-- **Type Annotations**: Use type hints for all functions and methods
-
-## Testing Guidelines
-
-### Test Structure
-
-Basic Memory uses two test directories with unified coverage reporting:
-
-- **`tests/`**: Unit tests that test individual components in isolation
-  - Fast execution with extensive mocking
-  - Test individual functions, classes, and modules
-  - Run with: `just test-unit` (no coverage, fast)
-
-- **`test-int/`**: Integration tests that test real-world scenarios
-  - Test full workflows with real database and file operations
-  - Include performance benchmarks
-  - More realistic but slower than unit tests
-  - Run with: `just test-int` (no coverage, fast)
-
-### Running Tests
+Common commands:
 
 ```bash
-# Run all tests with unified coverage report
+just fast-check
+just doctor
 just test
-
-# Run only unit tests (fast iteration)
-just test-unit
-
-# Run only integration tests
-just test-int
-
-# Generate HTML coverage report
-just coverage
-
-# Run specific test
+just test-sqlite
 pytest tests/path/to/test_file.py::test_function_name
-
-# Run tests excluding benchmarks
-pytest -m "not benchmark"
-
-# Run only benchmark tests
-pytest -m benchmark test-int/test_sync_performance_benchmark.py
 ```
 
-### Performance Benchmarks
-
-The `test-int/test_sync_performance_benchmark.py` file contains performance benchmarks that measure sync and indexing speed:
-
-- `test_benchmark_sync_100_files` - Small repository performance
-- `test_benchmark_sync_500_files` - Medium repository performance
-- `test_benchmark_sync_1000_files` - Large repository performance (marked slow)
-- `test_benchmark_resync_no_changes` - Re-sync performance baseline
-
-Run benchmarks with:
-```bash
-# Run all benchmarks (excluding slow ones)
-pytest test-int/test_sync_performance_benchmark.py -v -m "benchmark and not slow"
-
-# Run all benchmarks including slow ones
-pytest test-int/test_sync_performance_benchmark.py -v -m benchmark
-
-# Run specific benchmark
-pytest test-int/test_sync_performance_benchmark.py::test_benchmark_sync_100_files -v
-```
-
-See `test-int/BENCHMARKS.md` for detailed benchmark documentation.
-
-### Testing Best Practices
-
-- **Coverage Target**: We aim for high test coverage for all code
-- **Test Framework**: Use pytest for unit and integration tests
-- **Mocking**: Avoid mocking in integration tests; use sparingly in unit tests
-- **Edge Cases**: Test both normal operation and edge cases
-- **Database Testing**: Use in-memory SQLite for testing database operations
-- **Fixtures**: Use async pytest fixtures for setup and teardown
-- **Markers**: Use `@pytest.mark.benchmark` for benchmarks, `@pytest.mark.slow` for slow tests
-
-## Release Process
-
-Basic Memory uses automatic versioning based on git tags with `uv-dynamic-versioning`. Here's how releases work:
-
-### Version Management
-- **Development versions**: Automatically generated from git commits (e.g., `0.12.4.dev26+468a22f`)
-- **Beta releases**: Created by tagging with beta suffixes (e.g., `git tag v0.13.0b1`)
-- **Stable releases**: Created by tagging with version numbers (e.g., `git tag v0.13.0`)
-
-### Release Workflows
-
-#### Development Builds
-- Automatically published to PyPI on every commit to `main`
-- Version format: `0.12.4.dev26+468a22f` (base version + dev + commit count + hash)
-- Users install with: `pip install basic-memory --pre --force-reinstall`
-
-#### Beta Releases
-1. Create and push a beta tag: `git tag v0.13.0b1 && git push origin v0.13.0b1`
-2. GitHub Actions automatically builds and publishes to PyPI
-3. Users install with: `pip install basic-memory --pre`
-
-#### Stable Releases
-1. Create and push a version tag: `git tag v0.13.0 && git push origin v0.13.0`
-2. GitHub Actions automatically:
-   - Builds the package with version `0.13.0`
-   - Creates GitHub release with auto-generated notes
-   - Publishes to PyPI
-3. Users install with: `pip install basic-memory`
-
-### For Contributors
-- No manual version bumping required
-- Versions are automatically derived from git tags
-- Focus on code changes, not version management
-
-## Creating Issues
-
-If you're planning to work on something, please create an issue first to discuss the approach. Include:
-
-- A clear title and description
-- Steps to reproduce if reporting a bug
-- Expected behavior vs. actual behavior
-- Any relevant logs or screenshots
-- Your proposed solution, if you have one
-
-## Code of Conduct
+## Code Of Conduct
 
 All contributors must follow the [Code of Conduct](CODE_OF_CONDUCT.md).
-
-## Thank You!
-
-Your contributions help make Basic Memory better. We appreciate your time and effort!

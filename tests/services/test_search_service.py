@@ -266,20 +266,12 @@ async def test_no_criteria(search_service, test_graph):
 
 
 @pytest.mark.asyncio
-async def test_init_search_index(search_service, session_maker, app_config):
+async def test_init_search_index(search_service, session_maker):
     """Test search index initialization."""
-    from basic_memory.config import DatabaseBackend
-
     async with db.scoped_session(session_maker) as session:
-        # Use database-specific query to check table existence
-        if app_config.database_backend == DatabaseBackend.POSTGRES:
-            result = await session.execute(
-                text("SELECT tablename FROM pg_catalog.pg_tables WHERE tablename='search_index';")
-            )
-        else:
-            result = await session.execute(
-                text("SELECT name FROM sqlite_master WHERE type='table' AND name='search_index';")
-            )
+        result = await session.execute(
+            text("SELECT name FROM sqlite_master WHERE type='table' AND name='search_index';")
+        )
         assert result.scalar() == "search_index"
 
 
@@ -1132,11 +1124,10 @@ async def test_index_entity_markdown_strips_nul_bytes(search_service, session_ma
     """Content with NUL bytes should be stripped before indexing.
 
     rclone preallocation on virtual filesystems (e.g. Google Drive File Stream)
-    can pad files with \\x00 bytes, causing PostgreSQL CharacterNotInRepertoireError.
+    can pad files with \\x00 bytes and corrupt downstream indexing.
 
-    Note: NUL bytes arrive via file content read from disk, not from the database.
-    Postgres rejects \\x00 in text columns at the ORM level, so we only test
-    the content path (passed to index_entity) rather than observation creation.
+    Note: NUL bytes arrive via file content read from disk, not from the database,
+    so we only test the content path passed to `index_entity`.
     """
     from basic_memory.repository import EntityRepository
     from basic_memory.repository.search_repository import SearchRepository

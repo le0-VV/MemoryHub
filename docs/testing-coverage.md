@@ -1,6 +1,6 @@
 ## Coverage policy (practical 100%)
 
-Basic Memory’s test suite intentionally mixes:
+MemoryHub’s test suite intentionally mixes:
 - unit tests (fast, deterministic)
 - integration tests (real filesystem + real DB via `test-int/`)
 
@@ -15,14 +15,12 @@ Coverage excludes are configured in `pyproject.toml` under `[tool.coverage.repor
 
 Current exclusions include:
 - `src/basic_memory/cli/**`: interactive wrappers; behavior is validated via higher-level tests and smoke tests.
-- `src/basic_memory/db.py`: platform/backend tuning paths (SQLite/Postgres/Windows), covered by integration tests and targeted runs.
+- `src/basic_memory/db.py`: platform and initialization paths that are better covered by integration runs than by strict unit coverage.
 - `src/basic_memory/services/initialization.py`: startup orchestration/background tasks; covered indirectly by app/MCP entrypoints.
 - `src/basic_memory/sync/sync_service.py`: heavy filesystem↔DB integration; validated in integration suite (not enforced in unit coverage).
 
 ### Recommended additional runs
 
 If you want extra confidence locally/CI:
-- **Postgres backend**: run tests with `BASIC_MEMORY_TEST_POSTGRES=1`.
-- **Strict backend-complete coverage**: run coverage on SQLite + Postgres and combine the results (recommended).
-
-
+- **SQLite backend**: the fork runs tests against SQLite only.
+- **Coverage check**: run `just coverage` for the SQLite-only suite.

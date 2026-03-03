@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.basicmachines-co/basic-memory",
-  "description": "Local-first knowledge management with bi-directional LLM sync via Markdown files.",
+  "name": "io.github.le0-vv/memoryhub",
+  "description": "Experimental MemoryHub fork of Basic Memory. The current runtime command remains 'basic-memory mcp' during the rename transition.",
   "repository": {
-    "url": "https://github.com/basicmachines-co/basic-memory.git",
+    "url": "https://github.com/le0-VV/MemoryHub.git",
     "source": "github"
   },
-  "version": "0.18.5",
+  "version": "0.0.0",
   "packages": [
     {
       "registryType": "pypi",
       "identifier": "basic-memory",
-      "version": "0.18.5",
+      "version": "0.0.0",
       "runtimeHint": "uvx",
       "runtimeArguments": [
         {"type": "positional", "value": "basic-memory"},

@@ -1,0 +1,15 @@
+MemoryHub is a modified fork of Basic Memory:
+https://github.com/basicmachines-co/basic-memory
+
+This repository remains licensed under the GNU Affero General Public License
+version 3.0 or later. See LICENSE for the full license text.
+
+Upstream portions of this codebase remain copyright their original authors.
+Additional modifications in this fork are copyright their respective
+contributors.
+
+The current fork-specific documentation lives in README.md.
+The upstream README is preserved in README_old.md for historical reference.
+
+Until the rename is complete, some package names, module names, commands, and
+server metadata still use inherited "basic-memory" / "basic_memory" naming.

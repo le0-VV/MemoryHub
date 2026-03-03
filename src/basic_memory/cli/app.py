@@ -9,7 +9,7 @@ from typing import Optional  # noqa: E402
 import typer  # noqa: E402
 
 from basic_memory.cli.container import CliContainer, set_container  # noqa: E402
-from basic_memory.cli.promo import maybe_show_cloud_promo, maybe_show_init_line  # noqa: E402
+from basic_memory.cli.promo import maybe_show_init_line  # noqa: E402
 from basic_memory.config import init_cli_logging  # noqa: E402
 
 
@@ -52,11 +52,6 @@ def app_callback(
     # Outcome: one-time plain line printed before the subcommand runs.
     maybe_show_init_line(ctx.invoked_subcommand)
 
-    # Trigger: register promo as a post-command callback.
-    # Why: promo output should appear after the command's own output, not before.
-    # Outcome: promo panel renders below the command results (status tree, table, etc.).
-    ctx.call_on_close(lambda: maybe_show_cloud_promo(ctx.invoked_subcommand))
-
     # Run initialization for commands that don't use the API
     # Skip for 'mcp' command - it has its own lifespan that handles initialization
     # Skip for API-using commands (status, sync, etc.) - they handle initialization via deps.py
@@ -89,9 +84,3 @@ app.add_typer(import_app, name="import")
 
 claude_app = typer.Typer(help="Import Conversations from Claude JSON export.")
 import_app.add_typer(claude_app, name="claude")
-
-
-## cloud
-
-cloud_app = typer.Typer(help="Access Basic Memory Cloud")
-app.add_typer(cloud_app, name="cloud")

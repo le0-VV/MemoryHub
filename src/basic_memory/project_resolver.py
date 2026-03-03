@@ -3,6 +3,7 @@
 import os
 from dataclasses import dataclass
 from enum import Enum, auto
+from pathlib import Path
 from typing import Optional
 
 from loguru import logger
@@ -13,6 +14,7 @@ class ResolutionMode(Enum):
 
     ENV_CONSTRAINT = auto()  # BASIC_MEMORY_MCP_PROJECT env var
     EXPLICIT = auto()  # Explicit project parameter
+    CWD = auto()  # Current working directory maps to a configured project
     DEFAULT = auto()  # default_project from config
     DISCOVERY = auto()  # Discovery mode allowed (no project)
     NONE = auto()  # No resolution possible
@@ -41,16 +43,51 @@ class ProjectResolver:
 
     default_project: Optional[str] = None
     constrained_project: Optional[str] = None
+    project_paths: Optional[dict[str, str]] = None
+    cwd: Optional[str] = None
 
     @classmethod
     def from_env(
         cls,
         default_project: Optional[str] = None,
+        project_paths: Optional[dict[str, str]] = None,
+        cwd: Optional[str] = None,
     ) -> "ProjectResolver":
         """Create resolver with constrained_project from environment."""
         return cls(
             default_project=default_project,
             constrained_project=os.environ.get("BASIC_MEMORY_MCP_PROJECT"),
+            project_paths=project_paths,
+            cwd=cwd if cwd is not None else os.getcwd(),
+        )
+
+    def _resolve_from_cwd(self) -> Optional[ResolvedProject]:
+        """Resolve a configured project from the current working directory."""
+        if not self.cwd or not self.project_paths:
+            return None
+
+        cwd_path = Path(self.cwd).expanduser().resolve(strict=False)
+        best_match: Optional[tuple[str, Path]] = None
+
+        for project_name, project_path in self.project_paths.items():
+            candidate_path = Path(project_path).expanduser().resolve(strict=False)
+            try:
+                cwd_path.relative_to(candidate_path)
+            except ValueError:
+                continue
+
+            if best_match is None or len(candidate_path.parts) > len(best_match[1].parts):
+                best_match = (project_name, candidate_path)
+
+        if best_match is None:
+            return None
+
+        project_name, project_path = best_match
+        logger.debug(f"Resolved project '{project_name}' from cwd '{cwd_path}'")
+        return ResolvedProject(
+            project=project_name,
+            mode=ResolutionMode.CWD,
+            reason=f"Current working directory '{cwd_path}' is inside '{project_path}'",
         )
 
     def resolve(
@@ -74,6 +111,10 @@ class ProjectResolver:
                 mode=ResolutionMode.EXPLICIT,
                 reason=f"Explicit parameter: {project}",
             )
+
+        cwd_match = self._resolve_from_cwd()
+        if cwd_match is not None:
+            return cwd_match
 
         if self.default_project:
             logger.debug(f"Using default project from config: {self.default_project}")

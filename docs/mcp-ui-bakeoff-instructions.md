@@ -2,9 +2,12 @@
 
 Last updated: 2026-02-02
 
+> Historical/internal note: this is an experimental MCP UI comparison document for the fork. It is
+> not a product guarantee or a supported distribution guide.
+
 ## Scope
 
-Compare three presentation paths for Basic Memory MCP tools:
+Compare three presentation paths for MemoryHub MCP tools:
 
 1. **Tool‑UI (React)** via MCP App resources.
 2. **MCP‑UI Python SDK** embedded UI resources (legacy host path).
@@ -16,14 +19,14 @@ This doc is the running instruction set and test plan. Update as implementation 
 
 ## Prerequisites
 
-- Repo: `basic-memory` (worktree: `basic-memory-mcp-ui-poc`)
+- Repo: `MemoryHub`
 - Node for tool‑ui build (already used for POC)
 - Python 3.12+ with `uv`
 
 Optional (for MCP‑UI Python SDK path):
 
 - Local repo: `/Users/phernandez/dev/mcp-ui`
-- Install the server SDK into the Basic Memory venv:
+- Install the server SDK into the project venv:
   - `uv pip install -e /Users/phernandez/dev/mcp-ui/sdks/python/server`
 
 ---

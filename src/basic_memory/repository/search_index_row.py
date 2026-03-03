@@ -79,7 +79,6 @@ class SearchIndexRow:
 
         Args:
             serialize_json: If True, converts metadata dict to JSON string (for SQLite).
-                           If False, keeps metadata as dict (for Postgres JSONB).
         """
         return {
             "id": self.id,

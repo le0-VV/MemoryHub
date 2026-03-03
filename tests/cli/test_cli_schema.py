@@ -292,11 +292,12 @@ def test_diff_error_response(mock_mcp, mock_config_cls):
 # --- Routing flags ---
 
 
-def test_schema_routing_both_flags_error():
-    """Schema commands exit with error when both --local and --cloud are specified."""
+def test_schema_cloud_flag_is_rejected():
+    """Schema commands reject the removed --cloud flag."""
     result = runner.invoke(
         cli_app,
-        ["schema", "validate", "person", "--local", "--cloud"],
+        ["schema", "validate", "person", "--cloud"],
     )
 
-    assert result.exit_code == 1
+    assert result.exit_code != 0
+    assert "No such option: --cloud" in result.output

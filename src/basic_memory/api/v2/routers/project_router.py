@@ -113,7 +113,7 @@ async def add_project(
             )
 
     try:  # pragma: no cover
-        # The service layer handles cloud mode validation and path sanitization
+        # The service layer handles local path validation and path sanitization.
         await project_service.add_project(
             project_data.name, project_data.path, set_default=project_data.set_default
         )
@@ -453,8 +453,7 @@ async def delete_project_by_id(
                 status_code=404, detail=f"Project with external_id '{project_id}' not found"
             )
 
-        # Check if trying to delete the default project
-        # Use is_default from database, not ConfigManager (which doesn't work in cloud mode)
+        # Check if trying to delete the default project using the authoritative DB flag.
         if old_project.is_default:
             available_projects = await project_service.list_projects()
             other_projects = [p.name for p in available_projects if p.external_id != project_id]

@@ -7,10 +7,9 @@
 
 ## Overview
 
-Implementation plan for the Basic Memory Schema System. The system is entirely programmatic —
-no LLM agent runtime or API key required. The LLM already in the user's session (Claude Code,
-Claude Desktop, etc.) provides the intelligence layer by reading schema notes via existing
-MCP tools.
+Implementation plan for the MemoryHub schema system. The system is entirely programmatic. No
+embedded agent runtime or hosted service is required; the assistant already in the user's session
+provides the reasoning layer by reading schema notes via existing MCP tools.
 
 ## Architecture
 

@@ -58,3 +58,4 @@ claude-output
 .mcpregistry_*
 /.testmondata
 .benchmarks/
+.agents/TODO.md

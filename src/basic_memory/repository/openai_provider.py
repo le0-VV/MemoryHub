@@ -1,4 +1,4 @@
-"""OpenAI-based embedding provider for cloud or API-backed semantic indexing."""
+"""OpenAI-based embedding provider for semantic indexing."""
 
 from __future__ import annotations
 

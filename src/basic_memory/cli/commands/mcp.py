@@ -40,25 +40,18 @@ def mcp(
     - sse: Server-Sent Events (for compatibility with existing clients)
 
     Initialization, file sync, and cleanup are handled by the MCP server's lifespan.
-
-    Note: This command is available regardless of cloud mode setting.
-    Users who have cloud mode enabled can still use local MCP for Claude Code
-    and Claude Desktop while using cloud MCP for web and mobile access.
     """
     # --- Routing setup ---
     # Trigger: MCP server command invocation.
     # Why: HTTP/SSE transports serve as local API endpoints and must never
-    #      route through cloud. Stdio is a client-facing protocol that
-    #      should honor per-project routing (local or cloud).
-    # Outcome: HTTP/SSE get explicit local override; stdio passes through
-    #          whatever env vars are already set (honoring external overrides)
-    #          and defaults to per-project routing resolution.
+    #      bypass explicit local routing. Stdio is also local-only in this fork,
+    #      but it does not need extra env overrides to work.
+    # Outcome: HTTP/SSE get explicit local override; stdio runs with the
+    #          normal local configuration.
     if transport in ("streamable-http", "sse"):
         os.environ["BASIC_MEMORY_FORCE_LOCAL"] = "true"
-        os.environ.pop("BASIC_MEMORY_FORCE_CLOUD", None)
         os.environ["BASIC_MEMORY_EXPLICIT_ROUTING"] = "true"
-    # stdio: no env var manipulation — per-project routing applies by default,
-    # and externally-set env vars (e.g. BASIC_MEMORY_FORCE_CLOUD) are honored.
+    # stdio: no env var manipulation needed.
 
     # Import mcp tools/prompts to register them with the server
     import basic_memory.mcp.tools  # noqa: F401  # pragma: no cover

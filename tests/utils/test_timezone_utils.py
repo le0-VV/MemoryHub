@@ -2,8 +2,6 @@
 
 from datetime import datetime, timezone
 
-
-from basic_memory.config import DatabaseBackend
 from basic_memory.utils import ensure_timezone_aware
 
 
@@ -17,8 +15,8 @@ class TestEnsureTimezoneAware:
         assert result == dt
         assert result.tzinfo == timezone.utc
 
-    def test_naive_datetime_cloud_mode_true_interprets_as_utc(self):
-        """In cloud mode, naive datetimes should be interpreted as UTC."""
+    def test_naive_datetime_legacy_utc_mode_interprets_as_utc(self):
+        """Legacy UTC compatibility mode should tag naive datetimes as UTC."""
         naive_dt = datetime(2024, 1, 15, 12, 30, 0)
         result = ensure_timezone_aware(naive_dt, cloud_mode=True)
 
@@ -31,7 +29,7 @@ class TestEnsureTimezoneAware:
         assert result.hour == 12
         assert result.minute == 30
 
-    def test_naive_datetime_cloud_mode_false_interprets_as_local(self):
+    def test_naive_datetime_local_mode_interprets_as_local(self):
         """In local mode, naive datetimes should be interpreted as local time."""
         naive_dt = datetime(2024, 1, 15, 12, 30, 0)
         result = ensure_timezone_aware(naive_dt, cloud_mode=False)
@@ -41,8 +39,8 @@ class TestEnsureTimezoneAware:
         # The datetime should be converted to local timezone
         # We can't assert exact timezone as it depends on system
 
-    def test_cloud_mode_true_does_not_shift_time(self):
-        """Cloud mode should use replace() not astimezone() - time values unchanged."""
+    def test_legacy_utc_mode_does_not_shift_time(self):
+        """Legacy UTC mode should use replace() so time values stay unchanged."""
         naive_dt = datetime(2024, 6, 15, 18, 0, 0)  # Summer time
         result = ensure_timezone_aware(naive_dt, cloud_mode=True)
 
@@ -50,10 +48,8 @@ class TestEnsureTimezoneAware:
         assert result.hour == 18
         assert result.tzinfo == timezone.utc
 
-    def test_explicit_cloud_mode_skips_config_loading(self):
-        """When cloud_mode is explicitly passed, config should not be loaded."""
-        # This test verifies we can call ensure_timezone_aware without
-        # triggering ConfigManager import when cloud_mode is explicit
+    def test_explicit_mode_skips_config_loading(self):
+        """Explicit mode flags should not need config lookup."""
         naive_dt = datetime(2024, 1, 15, 12, 30, 0)
 
         # Should work without any config setup
@@ -63,31 +59,18 @@ class TestEnsureTimezoneAware:
         result_local = ensure_timezone_aware(naive_dt, cloud_mode=False)
         assert result_local.tzinfo is not None
 
-    def test_none_cloud_mode_falls_back_to_database_backend(self, config_manager):
-        """When cloud_mode is None, should infer from database backend."""
+    def test_none_cloud_mode_defaults_to_local_semantics(self, config_manager):
+        """Omitting the flag should keep the local SQLite default."""
         naive_dt = datetime(2024, 1, 15, 12, 30, 0)
-        # Use the real config file (via test fixtures) rather than mocking.
-        cfg = config_manager.config
-        cfg.database_backend = DatabaseBackend.POSTGRES
-        config_manager.save_config(cfg)
 
         result = ensure_timezone_aware(naive_dt, cloud_mode=None)
 
-        # Should have used cloud mode (UTC)
-        assert result.tzinfo == timezone.utc
+        assert result.tzinfo is not None
 
-    def test_asyncpg_naive_utc_scenario(self):
-        """Simulate asyncpg returning naive datetime that's actually UTC.
+    def test_legacy_utc_mode_preserves_old_asyncpg_timestamp_interpretation(self):
+        """Compatibility flag should preserve old UTC-tagging behavior."""
+        legacy_value = datetime(2024, 1, 15, 18, 30, 0)
 
-        asyncpg binary protocol returns timestamps in UTC but as naive datetimes.
-        In cloud mode, we interpret these as UTC rather than local time.
-        """
-        # Simulate what asyncpg returns: a naive datetime that's actually UTC
-        asyncpg_result = datetime(2024, 1, 15, 18, 30, 0)  # 6:30 PM UTC
-
-        # In cloud mode, interpret as UTC
-        cloud_result = ensure_timezone_aware(asyncpg_result, cloud_mode=True)
-        assert cloud_result == datetime(2024, 1, 15, 18, 30, 0, tzinfo=timezone.utc)
-
-        # The hour should remain 18, not shifted
-        assert cloud_result.hour == 18
+        result = ensure_timezone_aware(legacy_value, cloud_mode=True)
+        assert result == datetime(2024, 1, 15, 18, 30, 0, tzinfo=timezone.utc)
+        assert result.hour == 18

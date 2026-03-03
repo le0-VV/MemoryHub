@@ -1,25 +1,18 @@
-"""Runtime mode resolution for Basic Memory.
+"""Runtime mode resolution for MemoryHub.
 
-This module centralizes runtime mode detection, ensuring cloud/local/test
-determination happens in one place rather than scattered across modules.
-
-Composition roots (containers) read ConfigManager and use this module
-to resolve the runtime mode, then pass the result downstream.
+This module centralizes runtime mode detection for the active local-only fork.
+Composition roots read ConfigManager and use this module to resolve whether the
+process is running in normal local mode or in the test environment.
 """
 
 from enum import Enum, auto
 
 
 class RuntimeMode(Enum):
-    """Runtime modes for Basic Memory."""
+    """Supported runtime modes for MemoryHub."""
 
     LOCAL = auto()  # Local standalone mode (default)
-    CLOUD = auto()  # Cloud mode with remote sync
     TEST = auto()  # Test environment
-
-    @property
-    def is_cloud(self) -> bool:
-        return self == RuntimeMode.CLOUD
 
     @property
     def is_local(self) -> bool:
@@ -46,7 +39,7 @@ def resolve_runtime_mode(
     """
     # Trigger: test environment is detected
     # Why: tests need special handling (no file sync, isolated DB)
-    # Outcome: returns TEST mode, skipping cloud mode check
+    # Outcome: returns TEST mode instead of the normal local runtime
     if is_test_env:
         return RuntimeMode.TEST
 

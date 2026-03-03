@@ -244,7 +244,7 @@ class EntityRepository(Repository[Entity]):
         """Find entities with any of the given checksums (batch query for move detection).
 
         This is a batch-optimized version of find_by_checksum() that queries multiple checksums
-        in a single database query. Used for efficient move detection in cloud indexing.
+        in a single database query. Used for efficient move detection in indexing.
 
         Performance: For 1000 new files, this makes 1 query vs 1000 individual queries (~100x faster).
 
@@ -344,7 +344,6 @@ class EntityRepository(Repository[Entity]):
             except IntegrityError as e:
                 # Check if this is a FOREIGN KEY constraint failure
                 # SQLite: "FOREIGN KEY constraint failed"
-                # Postgres: "violates foreign key constraint"
                 error_str = str(e)
                 if (
                     "FOREIGN KEY constraint failed" in error_str
@@ -508,12 +507,8 @@ class EntityRepository(Repository[Entity]):
         except IntegrityError as e:  # pragma: no cover
             # Check if this is a FOREIGN KEY constraint failure
             # SQLite: "FOREIGN KEY constraint failed"
-            # Postgres: "violates foreign key constraint"
             error_str = str(e)
-            if (
-                "FOREIGN KEY constraint failed" in error_str
-                or "violates foreign key constraint" in error_str
-            ):
+            if "FOREIGN KEY constraint failed" in error_str:
                 # Import locally to avoid circular dependency (repository -> services -> repository)
                 from basic_memory.services.exceptions import SyncFatalError
 

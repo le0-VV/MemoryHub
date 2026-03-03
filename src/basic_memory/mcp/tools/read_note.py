@@ -69,7 +69,6 @@ def _parse_opening_frontmatter(content: str) -> tuple[str, dict | None]:
 async def read_note(
     identifier: str,
     project: Optional[str] = None,
-    workspace: Optional[str] = None,
     page: int = 1,
     page_size: int = 10,
     output_format: Literal["text", "json"] = "text",
@@ -139,7 +138,7 @@ async def read_note(
         if detected:
             project = detected
 
-    async with get_project_client(project, workspace, context) as (client, active_project):
+    async with get_project_client(project, context) as (client, active_project):
         # Resolve identifier with project-prefix awareness for memory:// URLs
         _, entity_path, _ = await resolve_project_and_path(client, identifier, project, context)
 
@@ -244,7 +243,6 @@ async def read_note(
             query=identifier,
             search_type="title",
             project=active_project.name,
-            workspace=workspace,
             output_format="json",
             context=context,
         )
@@ -296,7 +294,6 @@ async def read_note(
             query=identifier,
             search_type="text",
             project=active_project.name,
-            workspace=workspace,
             output_format="json",
             context=context,
         )
