@@ -3,7 +3,7 @@
 Provides project lookup utilities for MCP tools.
 Handles project validation and context management in one place.
 
-Note: This module uses ProjectResolver for unified project resolution.
+Note: This module uses ProjectSelector for unified project resolution.
 The resolve_project_parameter function is a thin wrapper for backwards
 compatibility with existing MCP tools.
 """
@@ -20,7 +20,7 @@ from fastmcp import Context
 from mcp.server.fastmcp.exceptions import ToolError
 
 from memoryhub.config import BasicMemoryConfig, ConfigManager
-from memoryhub.project_resolver import ProjectResolver
+from memoryhub.project_selection import ProjectSelector
 from memoryhub.schemas.project_info import ProjectItem, ProjectList
 from memoryhub.schemas.v2 import ProjectResolveResponse
 from memoryhub.schemas.memory import memory_url_path
@@ -32,10 +32,10 @@ async def resolve_project_parameter(
     allow_discovery: bool = False,
     default_project: Optional[str] = None,
 ) -> Optional[str]:
-    """Resolve project parameter using unified linear priority chain.
+    """Resolve project parameter using unified local selection rules.
 
-    This is a thin wrapper around ProjectResolver for backwards compatibility.
-    New code should consider using ProjectResolver directly for more detailed
+    This is a thin wrapper around ProjectSelector for backwards compatibility.
+    New code should consider using ProjectSelector directly for more detailed
     resolution information.
 
     Resolution order:
@@ -53,23 +53,13 @@ async def resolve_project_parameter(
     Returns:
         Resolved project name or None if no resolution possible
     """
-    # Load config for any values not explicitly provided
-    if default_project is None:
-        config = ConfigManager().config
-        default_project = config.default_project
-        project_paths = {name: entry.path for name, entry in config.projects.items()}
-    else:
-        project_paths = {
-            name: entry.path for name, entry in ConfigManager().config.projects.items()
-        }
-
-    # Create resolver with configuration and resolve
-    resolver = ProjectResolver.from_env(
+    selector = ProjectSelector.from_config()
+    selection = selector.resolve(
+        project=project,
+        allow_discovery=allow_discovery,
         default_project=default_project,
-        project_paths=project_paths,
     )
-    result = resolver.resolve(project=project, allow_discovery=allow_discovery)
-    return result.project
+    return selection.project
 
 
 async def get_project_names(client: AsyncClient, headers: HeaderTypes | None = None) -> List[str]:

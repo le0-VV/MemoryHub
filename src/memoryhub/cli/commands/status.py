@@ -12,11 +12,11 @@ from rich.panel import Panel
 from rich.tree import Tree
 
 from memoryhub.cli.app import app
-from memoryhub.config import ConfigManager
 from memoryhub.mcp.async_client import get_client
 from memoryhub.mcp.clients import ProjectClient
 from memoryhub.schemas import SyncReportResponse
 from memoryhub.mcp.project_context import get_active_project
+from memoryhub.project_selection import ProjectSelector
 
 # Create rich console
 console = Console()
@@ -148,8 +148,7 @@ async def run_status(
 
     Returns (project_name, sync_report) for the caller to render.
     """
-    # Resolve default project so get_client() can route per-project
-    project = project or ConfigManager().default_project
+    project = ProjectSelector.from_config().resolve(project=project).project
 
     async with get_client(project_name=project) as client:
         project_item = await get_active_project(client, project, None)

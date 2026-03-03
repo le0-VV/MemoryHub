@@ -49,6 +49,20 @@ async def test_returns_project_when_specified():
 
 
 @pytest.mark.asyncio
+async def test_canonicalizes_configured_project_permalink(config_manager, config_home):
+    from memoryhub.config import ProjectEntry
+    from memoryhub.mcp.project_context import resolve_project_parameter
+
+    cfg = config_manager.load_config()
+    (config_home / "My Research").mkdir(parents=True, exist_ok=True)
+    cfg.projects["My Research"] = ProjectEntry(path=str(config_home / "My Research"))
+    cfg.default_project = None
+    config_manager.save_config(cfg)
+
+    assert await resolve_project_parameter(project="my-research") == "My Research"
+
+
+@pytest.mark.asyncio
 async def test_uses_env_var_priority(monkeypatch):
     from memoryhub.mcp.project_context import resolve_project_parameter
 

@@ -40,13 +40,12 @@ def _parse_json_output(output: str) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def _mock_config_manager():
-    """Create a mock ConfigManager that avoids reading real config."""
-    mock_cm = MagicMock()
-    mock_cm.config = MagicMock()
-    mock_cm.default_project = "test-project"
-    mock_cm.get_project.return_value = ("test-project", "/tmp/test")
-    return mock_cm
+def _mock_project_selector():
+    """Create a mock ProjectSelector that avoids reading real config."""
+    mock_selector = MagicMock()
+    mock_selector.resolve.return_value.project = "test-project"
+    mock_selector.require_configured_project.return_value.project = "test-project"
+    return mock_selector
 
 
 SYNC_REPORT_WITH_CHANGES = SyncReportResponse(
@@ -146,12 +145,12 @@ _MOCK_PROJECT_ITEM.name = "test-project"
 _MOCK_PROJECT_ITEM.external_id = "11111111-1111-1111-1111-111111111111"
 
 
-@patch("memoryhub.cli.commands.status.ConfigManager")
+@patch("memoryhub.cli.commands.status.ProjectSelector.from_config")
 @patch("memoryhub.cli.commands.status.get_active_project", new_callable=AsyncMock)
 @patch("memoryhub.cli.commands.status.get_client")
-def test_status_json_outputs_sync_report(mock_get_client, mock_get_active, mock_config_cls):
+def test_status_json_outputs_sync_report(mock_get_client, mock_get_active, mock_selector_factory):
     """bm status --json outputs a valid JSON sync report with changes."""
-    mock_config_cls.return_value = _mock_config_manager()
+    mock_selector_factory.return_value = _mock_project_selector()
     mock_get_active.return_value = _MOCK_PROJECT_ITEM
 
     mock_project_client = AsyncMock()
@@ -175,12 +174,12 @@ def test_status_json_outputs_sync_report(mock_get_client, mock_get_active, mock_
     assert "moves" in data
 
 
-@patch("memoryhub.cli.commands.status.ConfigManager")
+@patch("memoryhub.cli.commands.status.ProjectSelector.from_config")
 @patch("memoryhub.cli.commands.status.get_active_project", new_callable=AsyncMock)
 @patch("memoryhub.cli.commands.status.get_client")
-def test_status_json_no_changes(mock_get_client, mock_get_active, mock_config_cls):
+def test_status_json_no_changes(mock_get_client, mock_get_active, mock_selector_factory):
     """bm status --json with empty report outputs total: 0."""
-    mock_config_cls.return_value = _mock_config_manager()
+    mock_selector_factory.return_value = _mock_project_selector()
     mock_get_active.return_value = _MOCK_PROJECT_ITEM
 
     mock_project_client = AsyncMock()
@@ -202,12 +201,14 @@ def test_status_json_no_changes(mock_get_client, mock_get_active, mock_config_cl
     assert data["modified"] == []
 
 
-@patch("memoryhub.cli.commands.status.ConfigManager")
+@patch("memoryhub.cli.commands.status.ProjectSelector.from_config")
 @patch("memoryhub.cli.commands.status.get_active_project", new_callable=AsyncMock)
 @patch("memoryhub.cli.commands.status.get_client")
-def test_status_json_with_skipped_files(mock_get_client, mock_get_active, mock_config_cls):
+def test_status_json_with_skipped_files(
+    mock_get_client, mock_get_active, mock_selector_factory
+):
     """bm status --json serializes skipped_files with datetime fields."""
-    mock_config_cls.return_value = _mock_config_manager()
+    mock_selector_factory.return_value = _mock_project_selector()
     mock_get_active.return_value = _MOCK_PROJECT_ITEM
 
     mock_project_client = AsyncMock()
@@ -235,15 +236,15 @@ def test_status_json_with_skipped_files(mock_get_client, mock_get_active, mock_c
 # ---------------------------------------------------------------------------
 
 
-@patch("memoryhub.cli.commands.schema.ConfigManager")
+@patch("memoryhub.cli.commands.schema.ProjectSelector.from_config")
 @patch(
     "memoryhub.cli.commands.schema.mcp_schema_validate",
     new_callable=AsyncMock,
     return_value=VALIDATE_REPORT,
 )
-def test_schema_validate_json(mock_mcp, mock_config_cls):
+def test_schema_validate_json(mock_mcp, mock_selector_factory):
     """bm schema validate person --json outputs the validation report as JSON."""
-    mock_config_cls.return_value = _mock_config_manager()
+    mock_selector_factory.return_value = _mock_project_selector()
 
     result = runner.invoke(cli_app, ["schema", "validate", "person", "--json"])
 
@@ -254,15 +255,15 @@ def test_schema_validate_json(mock_mcp, mock_config_cls):
     assert len(data["results"]) == 2
 
 
-@patch("memoryhub.cli.commands.schema.ConfigManager")
+@patch("memoryhub.cli.commands.schema.ProjectSelector.from_config")
 @patch(
     "memoryhub.cli.commands.schema.mcp_schema_validate",
     new_callable=AsyncMock,
     return_value={"error": "No schema found for type 'person'"},
 )
-def test_schema_validate_json_error(mock_mcp, mock_config_cls):
+def test_schema_validate_json_error(mock_mcp, mock_selector_factory):
     """bm schema validate --json with error dict outputs the error as JSON."""
-    mock_config_cls.return_value = _mock_config_manager()
+    mock_selector_factory.return_value = _mock_project_selector()
 
     result = runner.invoke(cli_app, ["schema", "validate", "person", "--json"])
 
@@ -271,15 +272,15 @@ def test_schema_validate_json_error(mock_mcp, mock_config_cls):
     assert "error" in data
 
 
-@patch("memoryhub.cli.commands.schema.ConfigManager")
+@patch("memoryhub.cli.commands.schema.ProjectSelector.from_config")
 @patch(
     "memoryhub.cli.commands.schema.mcp_schema_validate",
     new_callable=AsyncMock,
     return_value=VALIDATE_REPORT,
 )
-def test_schema_validate_json_strict_exit(mock_mcp, mock_config_cls):
+def test_schema_validate_json_strict_exit(mock_mcp, mock_selector_factory):
     """bm schema validate --json --strict exits 1 when errors present."""
-    mock_config_cls.return_value = _mock_config_manager()
+    mock_selector_factory.return_value = _mock_project_selector()
 
     result = runner.invoke(cli_app, ["schema", "validate", "person", "--json", "--strict"])
 
@@ -294,15 +295,15 @@ def test_schema_validate_json_strict_exit(mock_mcp, mock_config_cls):
 # ---------------------------------------------------------------------------
 
 
-@patch("memoryhub.cli.commands.schema.ConfigManager")
+@patch("memoryhub.cli.commands.schema.ProjectSelector.from_config")
 @patch(
     "memoryhub.cli.commands.schema.mcp_schema_infer",
     new_callable=AsyncMock,
     return_value=INFER_REPORT,
 )
-def test_schema_infer_json(mock_mcp, mock_config_cls):
+def test_schema_infer_json(mock_mcp, mock_selector_factory):
     """bm schema infer person --json outputs the inference report as JSON."""
-    mock_config_cls.return_value = _mock_config_manager()
+    mock_selector_factory.return_value = _mock_project_selector()
 
     result = runner.invoke(cli_app, ["schema", "infer", "person", "--json"])
 
@@ -318,15 +319,15 @@ def test_schema_infer_json(mock_mcp, mock_config_cls):
 # ---------------------------------------------------------------------------
 
 
-@patch("memoryhub.cli.commands.schema.ConfigManager")
+@patch("memoryhub.cli.commands.schema.ProjectSelector.from_config")
 @patch(
     "memoryhub.cli.commands.schema.mcp_schema_diff",
     new_callable=AsyncMock,
     return_value=DIFF_REPORT_WITH_DRIFT,
 )
-def test_schema_diff_json(mock_mcp, mock_config_cls):
+def test_schema_diff_json(mock_mcp, mock_selector_factory):
     """bm schema diff person --json outputs the drift report as JSON."""
-    mock_config_cls.return_value = _mock_config_manager()
+    mock_selector_factory.return_value = _mock_project_selector()
 
     result = runner.invoke(cli_app, ["schema", "diff", "person", "--json"])
 

@@ -38,25 +38,13 @@ def test_default_project_property(project_service: ProjectService):
 
 
 def test_current_project_property(project_service: ProjectService):
-    """Test the current_project property."""
-    # Save original environment
+    """current_project should ignore unsupported BASIC_MEMORY_PROJECT overrides."""
     original_env = os.environ.get("BASIC_MEMORY_PROJECT")
 
     try:
-        # Test with environment variable not set
-        if "BASIC_MEMORY_PROJECT" in os.environ:
-            del os.environ["BASIC_MEMORY_PROJECT"]
-
-        # Should return default_project when env var not set
+        os.environ["BASIC_MEMORY_PROJECT"] = "legacy-project"
         assert project_service.current_project == project_service.default_project
-
-        # Now set the environment variable
-        os.environ["BASIC_MEMORY_PROJECT"] = "test-project"
-
-        # Should return env var value
-        assert project_service.current_project == "test-project"
     finally:
-        # Restore original environment
         if original_env is not None:
             os.environ["BASIC_MEMORY_PROJECT"] = original_env
         elif "BASIC_MEMORY_PROJECT" in os.environ:

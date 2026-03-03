@@ -19,10 +19,10 @@ from rich.table import Table
 
 from memoryhub.cli.app import app
 from memoryhub.cli.commands.command_utils import run_with_cleanup
-from memoryhub.config import ConfigManager
 from memoryhub.mcp.tools import schema_diff as mcp_schema_diff
 from memoryhub.mcp.tools import schema_infer as mcp_schema_infer
 from memoryhub.mcp.tools import schema_validate as mcp_schema_validate
+from memoryhub.project_selection import ProjectSelector
 
 console = Console()
 
@@ -31,15 +31,18 @@ app.add_typer(schema_app, name="schema")
 
 
 def _resolve_project_name(project: Optional[str]) -> Optional[str]:
-    """Resolve project name from CLI argument or config default."""
-    config_manager = ConfigManager()
-    if project is not None:
-        project_name, _ = config_manager.get_project(project)
-        if not project_name:
-            typer.echo(f"No project found named: {project}", err=True)
-            raise typer.Exit(1)
-        return project_name
-    return config_manager.default_project
+    """Resolve project name from CLI argument, cwd, or config default."""
+    selector = ProjectSelector.from_config()
+    try:
+        if project is not None:
+            return selector.require_configured_project(
+                project,
+                error_message=f"No project found named: {project}",
+            ).project
+        return selector.resolve().project
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1) from exc
 
 
 # --- Rendering helpers ---

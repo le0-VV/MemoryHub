@@ -9,10 +9,10 @@ import typer
 from rich.console import Console
 
 from memoryhub import db
-from memoryhub.config import ConfigManager
 from memoryhub.mcp.async_client import get_client
 from memoryhub.mcp.clients import ProjectClient
 from memoryhub.mcp.project_context import get_active_project
+from memoryhub.project_selection import ProjectSelector
 
 console = Console()
 
@@ -54,8 +54,7 @@ async def run_sync(
         run_in_background: If True, return immediately; if False, wait for completion
     """
 
-    # Resolve default project so get_client() can route to the correct local project
-    project = project or ConfigManager().default_project
+    project = ProjectSelector.from_config().resolve(project=project).project
 
     try:
         async with get_client(project_name=project) as client:
@@ -87,8 +86,9 @@ async def run_sync(
 async def get_project_info(project: str):
     """Get project information via API endpoint."""
     try:
-        async with get_client(project_name=project) as client:
-            project_item = await get_active_project(client, project, None)
+        selected_project = ProjectSelector.from_config().resolve(project=project).project
+        async with get_client(project_name=selected_project) as client:
+            project_item = await get_active_project(client, selected_project, None)
             return await ProjectClient(client).get_info(project_item.external_id)
     except (ToolError, ValueError) as e:
         console.print(f"[red]Project info failed: {e}[/red]")

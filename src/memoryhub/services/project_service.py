@@ -28,6 +28,7 @@ from memoryhub.config import (
     get_project_config,
     ProjectConfig,
 )
+from memoryhub.project_selection import ProjectSelector
 from memoryhub.utils import generate_permalink
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -88,7 +89,7 @@ class ProjectService:
         Returns:
             The name of the current project, or None if not set
         """
-        return os.environ.get("BASIC_MEMORY_PROJECT", self.config_manager.default_project)
+        return ProjectSelector.from_config().resolve().project
 
     async def list_projects(self) -> Sequence[Project]:
         """List all projects without loading entity relationships.
