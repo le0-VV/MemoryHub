@@ -1,15 +1,10 @@
 """Integration tests for CLI routing flags in the local-only fork.
 
-These tests verify that the routing flags work correctly
-across CLI commands, and that MCP routing varies by transport.
-
-Note: Environment variable behavior during command execution is tested
-in unit tests (tests/cli/test_routing.py) which can properly monkeypatch
-the modules before they are imported. These integration tests focus on
-CLI behavior: flag acceptance and error handling.
+These tests verify that the remaining routing-related CLI surface behaves
+correctly: removed cloud flags fail fast, `--local` is still accepted where
+it remains for compatibility, and the MCP command passes the right transport
+options to the server.
 """
-
-import os
 
 import pytest
 from typer.testing import CliRunner
@@ -43,21 +38,16 @@ class TestRemovedCloudFlags:
 
 
 class TestMcpCommandRouting:
-    """Tests that MCP routing varies by transport."""
+    """Tests that MCP command transport wiring matches the local-only fork."""
 
-    def test_mcp_stdio_does_not_force_local(self, monkeypatch):
-        """Stdio transport should not inject explicit local routing env vars."""
-        # Ensure env is clean before test
-        monkeypatch.delenv("BASIC_MEMORY_FORCE_LOCAL", raising=False)
-        monkeypatch.delenv("BASIC_MEMORY_EXPLICIT_ROUTING", raising=False)
-
-        env_at_run = {}
+    def test_mcp_stdio_uses_stdio_transport(self, monkeypatch):
+        """Stdio transport should call the MCP server without HTTP-only kwargs."""
+        run_kwargs = {}
 
         import memoryhub.cli.commands.mcp as mcp_mod
 
         def mock_run(*args, **kwargs):
-            env_at_run["FORCE_LOCAL"] = os.environ.get("BASIC_MEMORY_FORCE_LOCAL")
-            env_at_run["EXPLICIT"] = os.environ.get("BASIC_MEMORY_EXPLICIT_ROUTING")
+            run_kwargs.update(kwargs)
             raise SystemExit(0)
 
         monkeypatch.setattr(mcp_mod.mcp_server, "run", mock_run)
@@ -65,42 +55,16 @@ class TestMcpCommandRouting:
 
         runner.invoke(cli_app, ["mcp"])  # default transport is stdio
 
-        # Command should not have set these vars
-        assert env_at_run["FORCE_LOCAL"] is None
-        assert env_at_run["EXPLICIT"] is None
+        assert run_kwargs == {"transport": "stdio"}
 
-    def test_mcp_stdio_honors_external_local_override(self, monkeypatch):
-        """Stdio transport should pass through externally-set local routing env vars."""
-        monkeypatch.setenv("BASIC_MEMORY_FORCE_LOCAL", "true")
-        monkeypatch.setenv("BASIC_MEMORY_EXPLICIT_ROUTING", "true")
-
-        env_at_run = {}
+    def test_mcp_streamable_http_passes_http_options(self, monkeypatch):
+        """Streamable-HTTP transport should pass host/port/path to the MCP server."""
+        run_kwargs = {}
 
         import memoryhub.cli.commands.mcp as mcp_mod
 
         def mock_run(*args, **kwargs):
-            env_at_run["FORCE_LOCAL"] = os.environ.get("BASIC_MEMORY_FORCE_LOCAL")
-            env_at_run["EXPLICIT"] = os.environ.get("BASIC_MEMORY_EXPLICIT_ROUTING")
-            raise SystemExit(0)
-
-        monkeypatch.setattr(mcp_mod.mcp_server, "run", mock_run)
-        monkeypatch.setattr(mcp_mod, "init_mcp_logging", lambda: None)
-
-        runner.invoke(cli_app, ["mcp"])
-
-        # Externally-set vars should be preserved
-        assert env_at_run["FORCE_LOCAL"] == "true"
-        assert env_at_run["EXPLICIT"] == "true"
-
-    def test_mcp_streamable_http_forces_local(self, monkeypatch):
-        """Streamable-HTTP transport should force local routing."""
-        env_at_run = {}
-
-        import memoryhub.cli.commands.mcp as mcp_mod
-
-        def mock_run(*args, **kwargs):
-            env_at_run["FORCE_LOCAL"] = os.environ.get("BASIC_MEMORY_FORCE_LOCAL")
-            env_at_run["EXPLICIT"] = os.environ.get("BASIC_MEMORY_EXPLICIT_ROUTING")
+            run_kwargs.update(kwargs)
             raise SystemExit(0)
 
         monkeypatch.setattr(mcp_mod.mcp_server, "run", mock_run)
@@ -108,18 +72,22 @@ class TestMcpCommandRouting:
 
         runner.invoke(cli_app, ["mcp", "--transport", "streamable-http"])
 
-        assert env_at_run["FORCE_LOCAL"] == "true"
-        assert env_at_run["EXPLICIT"] == "true"
+        assert run_kwargs == {
+            "transport": "streamable-http",
+            "host": "0.0.0.0",
+            "port": 8000,
+            "path": "/mcp",
+            "log_level": "INFO",
+        }
 
-    def test_mcp_sse_forces_local(self, monkeypatch):
-        """SSE transport should force local routing."""
-        env_at_run = {}
+    def test_mcp_sse_passes_http_options(self, monkeypatch):
+        """SSE transport should pass host/port/path to the MCP server."""
+        run_kwargs = {}
 
         import memoryhub.cli.commands.mcp as mcp_mod
 
         def mock_run(*args, **kwargs):
-            env_at_run["FORCE_LOCAL"] = os.environ.get("BASIC_MEMORY_FORCE_LOCAL")
-            env_at_run["EXPLICIT"] = os.environ.get("BASIC_MEMORY_EXPLICIT_ROUTING")
+            run_kwargs.update(kwargs)
             raise SystemExit(0)
 
         monkeypatch.setattr(mcp_mod.mcp_server, "run", mock_run)
@@ -127,8 +95,13 @@ class TestMcpCommandRouting:
 
         runner.invoke(cli_app, ["mcp", "--transport", "sse"])
 
-        assert env_at_run["FORCE_LOCAL"] == "true"
-        assert env_at_run["EXPLICIT"] == "true"
+        assert run_kwargs == {
+            "transport": "sse",
+            "host": "0.0.0.0",
+            "port": 8000,
+            "path": "/mcp",
+            "log_level": "INFO",
+        }
 
 
 class TestToolCommandsAcceptFlags:
@@ -150,6 +123,7 @@ class TestToolCommandsAcceptFlags:
         result = runner.invoke(cli_app, full_args)
         # Should not fail due to flag parsing (No such option error)
         assert "No such option: --local" not in result.output
+
 
 class TestProjectCommandsAcceptFlags:
     """Tests that project commands accept local routing flags."""

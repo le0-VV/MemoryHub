@@ -1,44 +1,27 @@
 """Legacy CLI routing helpers for local-only command execution."""
 
-import os
 from contextlib import contextmanager
 from typing import Generator
 
 
 @contextmanager
 def force_routing(local: bool = False) -> Generator[None, None, None]:
-    """Context manager to temporarily force local routing.
+    """Context manager kept for CLI call-site compatibility.
 
-    This helper is a transition shim. The supported product surface is already
-    local-only, but some CLI commands still use the historical explicit-routing
-    environment flags while the entrypoint layer is being simplified.
+    MemoryHub is local-only, so there is no routing mode to switch anymore.
+    This helper remains only to avoid broad call-site churn while the CLI
+    entrypoint layer is simplified.
 
     Args:
-        local: If True, force local ASGI transport
+        local: Compatibility parameter retained for old call sites
 
     Usage:
         with force_routing(local=True):
-            # All API calls will use local ASGI transport
+            # All API calls already use local ASGI transport
             await some_api_call()
     """
-    original_force_local = os.environ.get("BASIC_MEMORY_FORCE_LOCAL")
-    original_explicit = os.environ.get("BASIC_MEMORY_EXPLICIT_ROUTING")
-
-    try:
-        if local:
-            os.environ["BASIC_MEMORY_FORCE_LOCAL"] = "true"
-            os.environ["BASIC_MEMORY_EXPLICIT_ROUTING"] = "true"
-        yield
-    finally:
-        if original_force_local is None:
-            os.environ.pop("BASIC_MEMORY_FORCE_LOCAL", None)
-        else:
-            os.environ["BASIC_MEMORY_FORCE_LOCAL"] = original_force_local
-
-        if original_explicit is None:
-            os.environ.pop("BASIC_MEMORY_EXPLICIT_ROUTING", None)
-        else:
-            os.environ["BASIC_MEMORY_EXPLICIT_ROUTING"] = original_explicit
+    del local
+    yield
 
 
 def validate_routing_flags(local: bool, cloud: bool = False) -> None:
@@ -52,3 +35,4 @@ def validate_routing_flags(local: bool, cloud: bool = False) -> None:
         ValueError: Reserved for future validation failures
     """
     del local
+    del cloud

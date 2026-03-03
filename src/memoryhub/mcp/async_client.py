@@ -1,4 +1,3 @@
-import os
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from typing import AsyncIterator, Callable, Optional
 
@@ -6,16 +5,6 @@ from httpx import ASGITransport, AsyncClient, Timeout
 from loguru import logger
 
 from memoryhub.api.app import app as fastapi_app
-
-
-def _force_local_mode() -> bool:
-    """Check whether a legacy compatibility flag forces local routing."""
-    return os.environ.get("BASIC_MEMORY_FORCE_LOCAL", "").lower() in ("true", "1", "yes")
-
-
-def _explicit_routing() -> bool:
-    """Check whether a legacy compatibility flag requested explicit routing."""
-    return os.environ.get("BASIC_MEMORY_EXPLICIT_ROUTING", "").lower() in ("true", "1", "yes")
 
 
 def _build_timeout() -> Timeout:
@@ -60,9 +49,7 @@ async def get_client(
     1. Factory injection.
     2. Local ASGI transport.
 
-    MemoryHub supports local ASGI routing only. The explicit-routing environment
-    flags remain as transitional shims while the CLI and client layers are
-    simplified around that single supported path.
+    MemoryHub supports local ASGI routing only.
     """
     if _client_factory:
         async with _client_factory() as client:
@@ -73,10 +60,8 @@ async def get_client(
 
     if project_name is not None:
         logger.debug(f"Project '{project_name}' uses local ASGI routing")
-    elif _explicit_routing() and _force_local_mode():
-        logger.debug("Explicit local routing enabled - using ASGI client")
     else:
-        logger.debug("Default routing - using ASGI client for local MemoryHub API")
+        logger.debug("Using local ASGI client for MemoryHub API")
 
     async with _asgi_client(timeout) as client:
         yield client

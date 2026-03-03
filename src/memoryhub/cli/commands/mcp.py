@@ -41,18 +41,6 @@ def mcp(
 
     Initialization, file sync, and cleanup are handled by the MCP server's lifespan.
     """
-    # --- Routing setup ---
-    # Trigger: MCP server command invocation.
-    # Why: HTTP/SSE transports serve as local API endpoints and must never
-    #      bypass explicit local routing. Stdio is also local-only in this fork,
-    #      but it does not need extra env overrides to work.
-    # Outcome: HTTP/SSE get explicit local override; stdio runs with the
-    #          normal local configuration.
-    if transport in ("streamable-http", "sse"):
-        os.environ["BASIC_MEMORY_FORCE_LOCAL"] = "true"
-        os.environ["BASIC_MEMORY_EXPLICIT_ROUTING"] = "true"
-    # stdio: no env var manipulation needed.
-
     # Import mcp tools/prompts to register them with the server
     import memoryhub.mcp.tools  # noqa: F401  # pragma: no cover
     import memoryhub.mcp.prompts  # noqa: F401  # pragma: no cover

@@ -70,8 +70,8 @@ async function run() {
 
   await mkdir(htmlDir, { recursive: true });
 
-  const searchHtml = buildHtml("Basic Memory Tool UI Search", css, searchJs);
-  const noteHtml = buildHtml("Basic Memory Tool UI Note Preview", css, noteJs);
+  const searchHtml = buildHtml("MemoryHub Tool UI Search", css, searchJs);
+  const noteHtml = buildHtml("MemoryHub Tool UI Note Preview", css, noteJs);
 
   await Promise.all([
     writeFile(path.join(htmlDir, "search-results-tool-ui.html"), searchHtml, "utf8"),
