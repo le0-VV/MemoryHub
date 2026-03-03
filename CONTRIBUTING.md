@@ -17,7 +17,12 @@ This document covers how to contribute to the fork without confusing it with the
     ```
 Or:
     ```bash
-    pip install -e ".[dev]"
+    uv sync
+    ```
+Or, with plain `pip`:
+    ```bash
+    pip install -e .
+    pip install --group dev
     ```
 3. Run the fast local check loop:
     ```bash

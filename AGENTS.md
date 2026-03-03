@@ -93,7 +93,7 @@ Do not use deprecated module-level HTTP clients or hand-managed auth headers.
 
 #### Core Commands
 
-- Install: `just install` or `pip install -e ".[dev]"`
+- Install: `just install`, `uv sync`, or `pip install -e . && pip install --group dev`
 - Fast local loop: `just fast-check`
 - Full check: `just check`
 - Unit tests: `just test-unit-sqlite`
