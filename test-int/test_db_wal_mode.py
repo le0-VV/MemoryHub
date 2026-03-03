@@ -89,7 +89,7 @@ async def test_windows_locking_mode_when_on_windows(tmp_path, monkeypatch, confi
 
     # Set HOME environment variable
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.setenv("BASIC_MEMORY_HOME", str(tmp_path / "memoryhub"))
+    monkeypatch.setenv("MEMORYHUB_HOME", str(tmp_path / "memoryhub"))
 
     db_path = tmp_path / "test_windows.db"
 
@@ -117,7 +117,7 @@ async def test_null_pool_on_windows(tmp_path, monkeypatch):
 
     # Set HOME environment variable
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.setenv("BASIC_MEMORY_HOME", str(tmp_path / "memoryhub"))
+    monkeypatch.setenv("MEMORYHUB_HOME", str(tmp_path / "memoryhub"))
 
     db_path = tmp_path / "test_windows_pool.db"
 
@@ -142,7 +142,7 @@ async def test_memory_database_no_null_pool_on_windows(tmp_path, monkeypatch):
 
     # Set HOME environment variable
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.setenv("BASIC_MEMORY_HOME", str(tmp_path / "memoryhub"))
+    monkeypatch.setenv("MEMORYHUB_HOME", str(tmp_path / "memoryhub"))
 
     db_path = tmp_path / "test_memory.db"
 

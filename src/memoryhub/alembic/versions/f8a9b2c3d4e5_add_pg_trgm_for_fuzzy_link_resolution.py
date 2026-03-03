@@ -1,7 +1,7 @@
 """Add project_id to relation/observation for local-only SQLite
 
 Revision ID: f8a9b2c3d4e5
-Revises: 314f1ea54dc4
+Revises: e7e1f4367280
 Create Date: 2025-12-01 12:00:00.000000
 
 """
@@ -33,7 +33,7 @@ def index_exists(connection, index_name: str) -> bool:
 
 # revision identifiers, used by Alembic.
 revision: str = "f8a9b2c3d4e5"
-down_revision: Union[str, None] = "314f1ea54dc4"
+down_revision: Union[str, None] = "e7e1f4367280"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

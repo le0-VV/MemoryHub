@@ -18,7 +18,7 @@ def isolated_home(tmp_path, monkeypatch) -> Path:
     This prevents tests from reading/writing to ~/.memoryhub/.bmignore
     or other user-specific configuration.
 
-    Sets BASIC_MEMORY_HOME to tmp_path directly so the default project
+    Sets MEMORYHUB_HOME to tmp_path directly so the default project
     writes files to tmp_path, which is where tests expect to find them.
     """
     # Clear config cache to ensure fresh config for each test
@@ -31,7 +31,7 @@ def isolated_home(tmp_path, monkeypatch) -> Path:
         monkeypatch.setenv("USERPROFILE", str(tmp_path))
     # Set to tmp_path directly (not tmp_path/memoryhub) so default project
     # home is tmp_path - tests expect to find imported files there
-    monkeypatch.setenv("BASIC_MEMORY_HOME", str(tmp_path))
+    monkeypatch.setenv("MEMORYHUB_HOME", str(tmp_path))
     return tmp_path
 
 

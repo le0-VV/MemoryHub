@@ -60,6 +60,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from httpx import AsyncClient, ASGITransport
 
+from memoryhub import db
 from memoryhub.config import BasicMemoryConfig, ProjectConfig, ConfigManager
 from memoryhub.db import engine_session_factory, DatabaseType
 from memoryhub.models import Project
@@ -123,8 +124,8 @@ async def test_project(config_home, engine_factory) -> Project:
 @pytest.fixture
 def config_home(tmp_path, monkeypatch) -> Path:
     monkeypatch.setenv("HOME", str(tmp_path))
-    # Set BASIC_MEMORY_HOME to the test directory
-    monkeypatch.setenv("BASIC_MEMORY_HOME", str(tmp_path / "memoryhub"))
+    # Set MEMORYHUB_HOME to the test directory
+    monkeypatch.setenv("MEMORYHUB_HOME", str(tmp_path / "memoryhub"))
     return tmp_path
 
 

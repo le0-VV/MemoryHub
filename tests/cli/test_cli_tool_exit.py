@@ -85,7 +85,7 @@ print("OK")
             # touch the real user profile/AppData (which can be slow/flaky on CI Windows).
             env = dict(os.environ)
             bm_home = tmp_path / "memoryhub-home"
-            env["BASIC_MEMORY_HOME"] = str(bm_home)
+            env["MEMORYHUB_HOME"] = str(bm_home)
             env["HOME"] = str(tmp_path)
             env["USERPROFILE"] = str(tmp_path)
 

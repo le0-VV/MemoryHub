@@ -63,8 +63,8 @@ def config_home(tmp_path, monkeypatch) -> Path:
     # On Windows, also set USERPROFILE
     if os.name == "nt":
         monkeypatch.setenv("USERPROFILE", str(tmp_path))
-    # Set BASIC_MEMORY_HOME to the test directory
-    monkeypatch.setenv("BASIC_MEMORY_HOME", str(tmp_path / "memoryhub"))
+    # Set MEMORYHUB_HOME to the test directory
+    monkeypatch.setenv("MEMORYHUB_HOME", str(tmp_path / "memoryhub"))
     return tmp_path
 
 
