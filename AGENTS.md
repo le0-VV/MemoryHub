@@ -13,13 +13,6 @@ The active fork direction is:
 
 `README.md` describes the current fork status. `README_old.md` preserves the upstream product README for reference.
 
-- Read a file fully before editing it.
-- Keep diffs narrow and task-focused.
-- Prefer fail-fast behavior over silent fallback logic.
-- Do not guess at attribute names, control flow, or config behavior.
-- Add tests for new behavior unless the change is strictly docs/metadata cleanup.
-- Keep comments rare and useful. Explain why or constraints, not obvious mechanics.
-
 See `docs/ARCHITECTURE.md` for the fuller design write-up.
 
 - `/src/memoryhub/api` - FastAPI app and routers
@@ -62,6 +55,38 @@ async with get_client(project_name=project_name) as client:
 
 Do not use deprecated module-level HTTP clients or hand-managed auth headers.
 
+### Coding etiquette
+
+- Find up-to-date documentations for any library, framework and programming languages used in this project, and record their source URLs in `./.agents/DOCUMENTATIONS.md`
+- While you write code, **CONSTANTLY** refer to sources you recorded in `./.agents/DOCUMENTATIONS.md` to make sure you're writing accurate, working and standard-complying code.
+- Anything the user asks you to remember, record it under the `## Memory` section in this file
+- When .agents/DOCUMENTATIONS.md is updated, commit ONLY .agents/DOCUMENTATIONS.md with commit message: "docs(agent docs): agent added more doc sources"
+- When the `## Memory` section is updated, commit ONLY .agents/MEMORY.md with commit message: "docs(agent memory): update memory"
+- If you have **ANY** questions or concerns, **IMMEDIATELY** clarify with the user.
+- Before making any changes to the codebase, THOROUGHLY plan out your work, write down every step you're going to take in ./.agents/TODO.md, and follow it during your work.
+- Tick off every item you completed in ./.agents/TODO.md.
+- Read a file fully before editing it.
+- Keep diffs narrow and task-focused.
+- Do not guess at attribute names, control flow, or config behaviour.
+- Prefer fail-fast behaviour over silent fallback logic.
+- Add tests for new behaviour unless the change is strictly docs/metadata cleanup.
+- Keep comments rare and useful. Explain why or constraints, not obvious mechanics.
+- **Only** stop working when you finished everything listed in /.agents/TODO.md **OR** you encountered an interruption to your work that **REQUIRES** user intervention.
+- If everything is ticked off in ./.agents/TODO.md and you need to plan for a new round of work, clear out ./.agents/TODO.md and write down your new list of steps
+- When making commits, write the commit message according to this format: {type}({scope}): {description}, where types should be one of the following:
+    - build
+    - chore
+    - CI
+    - docs
+    - feat
+    - fix
+    - perf
+    - refactor
+    - revert
+    - style
+    - test
+- Keep comments rare and useful. Explain why or constraints, not obvious mechanics.
+
 ## Preferences
 
 ### Development Workflow
@@ -89,7 +114,7 @@ Project requires Python 3.12+.
 
 1. Make the change.
 2. Run `just fast-check`.
-3. Run `just doctor` when the change affects file/database or end-to-end behavior.
+3. Run `just doctor` when the change affects file/database or end-to-end behaviour.
 4. Run `just test` or `just check` before larger merges.
 
 ### Product Surface
