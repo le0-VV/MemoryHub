@@ -27,10 +27,49 @@ from memoryhub.schemas.memory import memory_url_path
 from memoryhub.utils import generate_permalink, normalize_project_reference
 
 
+def _extract_context_cwd_candidate(value: object) -> Optional[str]:
+    """Extract a cwd-like string from context metadata or state values."""
+    if isinstance(value, str):
+        normalized = value.strip()
+        return normalized or None
+
+    if isinstance(value, dict):
+        for key in ("cwd", "workspace_cwd", "repository_root", "repo_root", "root"):
+            nested = _extract_context_cwd_candidate(value.get(key))
+            if nested is not None:
+                return nested
+
+    return None
+
+
+async def get_context_cwd(context: Optional[Context]) -> Optional[str]:
+    """Return a routing cwd from session state or request metadata when available."""
+    if context is None:
+        return None
+
+    for key in ("workspace_cwd", "cwd", "repository_root", "repo_root"):
+        value = await context.get_state(key)
+        candidate = _extract_context_cwd_candidate(value)
+        if candidate is not None:
+            return candidate
+
+    request_context = getattr(context, "request_context", None)
+    meta = getattr(request_context, "meta", None)
+    meta_extra = getattr(meta, "model_extra", None)
+    if isinstance(meta_extra, dict):
+        for key in ("workspace_cwd", "cwd", "repository_root", "repo_root", "workspace"):
+            candidate = _extract_context_cwd_candidate(meta_extra.get(key))
+            if candidate is not None:
+                return candidate
+
+    return None
+
+
 async def resolve_project_parameter(
     project: Optional[str] = None,
     allow_discovery: bool = False,
     default_project: Optional[str] = None,
+    context: Optional[Context] = None,
 ) -> Optional[str]:
     """Resolve project parameter using unified local selection rules.
 
@@ -50,11 +89,12 @@ async def resolve_project_parameter(
         allow_discovery: If True, allows returning None for discovery mode
             (used by tools like recent_activity that can operate across all projects)
         default_project: Optional explicit default project. If not provided, reads from ConfigManager.
+        context: Optional FastMCP context that may provide workspace cwd metadata.
 
     Returns:
         Resolved project name or None if no resolution possible
     """
-    selector = ProjectSelector.from_config()
+    selector = ProjectSelector.from_config(cwd=await get_context_cwd(context))
     selection = selector.resolve(
         project=project,
         allow_discovery=allow_discovery,
@@ -95,7 +135,7 @@ async def get_active_project(
     # Deferred import to avoid circular dependency with tools
     from memoryhub.mcp.tools.utils import call_post
 
-    resolved_project = await resolve_project_parameter(project)
+    resolved_project = await resolve_project_parameter(project, context=context)
     if not resolved_project:
         project_names = await get_project_names(client, headers)
         raise ValueError(
@@ -195,7 +235,7 @@ async def resolve_project_and_path(
             if "project not found" not in str(exc).lower():
                 raise
         else:
-            resolved_project = await resolve_project_parameter(project_prefix)
+            resolved_project = await resolve_project_parameter(project_prefix, context=context)
             if resolved_project and generate_permalink(resolved_project) != generate_permalink(
                 project_prefix
             ):
@@ -284,7 +324,7 @@ async def get_project_client(
     """Resolve a project, create a local client, and validate the project."""
     from memoryhub.mcp.async_client import get_client
 
-    resolved_project = await resolve_project_parameter(project)
+    resolved_project = await resolve_project_parameter(project, context=context)
     if not resolved_project:
         async with get_client() as client:
             project_names = await get_project_names(client)

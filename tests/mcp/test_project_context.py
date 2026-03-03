@@ -8,8 +8,9 @@ import pytest
 class _ContextState:
     """Minimal FastMCP context-state stub for unit tests."""
 
-    def __init__(self):
+    def __init__(self, request_context: object | None = None):
         self._state: dict[str, object] = {}
+        self.request_context = request_context
 
     async def get_state(self, key: str):
         return self._state.get(key)
@@ -114,6 +115,55 @@ async def test_uses_cwd_project_when_default_missing(config_manager, config_home
     monkeypatch.delenv("BASIC_MEMORY_MCP_PROJECT", raising=False)
 
     assert await resolve_project_parameter(project=None) == "cwd-project"
+
+
+@pytest.mark.asyncio
+async def test_uses_context_state_cwd_when_project_not_explicit(config_manager, config_home):
+    from memoryhub.mcp.project_context import resolve_project_parameter
+    from memoryhub.config import ProjectEntry
+
+    project_root = config_home / "state-project"
+    nested_dir = project_root / "nested" / "worktree"
+    nested_dir.mkdir(parents=True, exist_ok=True)
+
+    cfg = config_manager.load_config()
+    cfg.default_project = None
+    cfg.projects["state-project"] = ProjectEntry(path=str(project_root))
+    config_manager.save_config(cfg)
+
+    context = _ContextState()
+    await context.set_state("workspace_cwd", str(nested_dir))
+
+    assert await resolve_project_parameter(project=None, context=context) == "state-project"
+
+
+@pytest.mark.asyncio
+async def test_uses_request_meta_cwd_when_available(config_manager, config_home):
+    from memoryhub.mcp.project_context import resolve_project_parameter
+    from memoryhub.config import ProjectEntry
+
+    class _Meta:
+        def __init__(self, **extra):
+            self.model_extra = extra
+
+    class _RequestContext:
+        def __init__(self, meta):
+            self.meta = meta
+
+    project_root = config_home / "meta-project"
+    nested_dir = project_root / "nested" / "worktree"
+    nested_dir.mkdir(parents=True, exist_ok=True)
+
+    cfg = config_manager.load_config()
+    cfg.default_project = None
+    cfg.projects["meta-project"] = ProjectEntry(path=str(project_root))
+    config_manager.save_config(cfg)
+
+    context = _ContextState(
+        request_context=_RequestContext(_Meta(workspace={"cwd": str(nested_dir)}))
+    )
+
+    assert await resolve_project_parameter(project=None, context=context) == "meta-project"
 
 
 class TestDetectProjectFromUrlPrefix:
