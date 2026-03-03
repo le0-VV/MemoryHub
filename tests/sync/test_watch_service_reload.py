@@ -145,18 +145,23 @@ async def test_run_reloads_projects_each_cycle(monkeypatch, tmp_path):
 
 @pytest.mark.asyncio
 async def test_run_filters_non_local_project_paths_each_cycle(monkeypatch, tmp_path):
-    """Projects without absolute local paths are filtered out."""
+    """Legacy slug-only project entries are filtered out when no absolute path exists."""
     config = BasicMemoryConfig(
         watch_project_reload_interval=1,
         projects={
             "local-project": {"path": str(tmp_path / "local"), "mode": "local"},
-            "cloud-only": {"path": "cloud-slug", "mode": "cloud"},
+            "legacy-slug-project": {"path": "legacy-slug", "mode": "cloud"},
         },
     )
     repo = _Repo(
         projects_return=[
             Project(id=1, name="local-project", path=str(tmp_path / "local"), permalink="local"),
-            Project(id=2, name="cloud-only", path="cloud-slug", permalink="cloud-only"),
+            Project(
+                id=2,
+                name="legacy-slug-project",
+                path="legacy-slug",
+                permalink="legacy-slug-project",
+            ),
         ]
     )
     watch_service = WatchService(config, repo, quiet=True)
@@ -186,7 +191,7 @@ async def test_run_keeps_projects_with_absolute_local_paths(monkeypatch, tmp_pat
         watch_project_reload_interval=1,
         projects={
             "local-project": {"path": str(tmp_path / "local"), "mode": "local"},
-            "cloud-bisync": {"path": str(tmp_path / "cloud"), "mode": "cloud"},
+            "legacy-sync-project": {"path": str(tmp_path / "legacy"), "mode": "cloud"},
         },
     )
     repo = _Repo(
@@ -194,9 +199,9 @@ async def test_run_keeps_projects_with_absolute_local_paths(monkeypatch, tmp_pat
             Project(id=1, name="local-project", path=str(tmp_path / "local"), permalink="local"),
             Project(
                 id=2,
-                name="cloud-bisync",
-                path=str(tmp_path / "cloud"),
-                permalink="cloud-bisync",
+                name="legacy-sync-project",
+                path=str(tmp_path / "legacy"),
+                permalink="legacy-sync-project",
             ),
         ]
     )
@@ -217,7 +222,7 @@ async def test_run_keeps_projects_with_absolute_local_paths(monkeypatch, tmp_pat
 
     await watch_service.run()
 
-    assert seen_project_names == [["local-project", "cloud-bisync"]]
+    assert seen_project_names == [["local-project", "legacy-sync-project"]]
 
 
 @pytest.mark.asyncio

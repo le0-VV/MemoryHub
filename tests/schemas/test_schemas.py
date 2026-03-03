@@ -512,10 +512,10 @@ class TestTimeframeParsing:
 
 
 class TestProjectItemSchema:
-    """Test ProjectItem schema with optional cloud-injected fields."""
+    """Test ProjectItem schema with optional compatibility/enrichment fields."""
 
     def test_project_item_defaults(self):
-        """ProjectItem has sensible defaults for cloud-injected fields."""
+        """ProjectItem has sensible defaults for optional enrichment fields."""
         from memoryhub.schemas.project_info import ProjectItem
 
         project = ProjectItem(
@@ -529,7 +529,7 @@ class TestProjectItemSchema:
         assert project.is_default is False
 
     def test_project_item_with_display_name(self):
-        """ProjectItem accepts display_name from cloud proxy enrichment."""
+        """ProjectItem accepts optional display metadata from compatibility layers."""
         from memoryhub.schemas.project_info import ProjectItem
 
         project = ProjectItem(
@@ -547,8 +547,8 @@ class TestProjectItemSchema:
     def test_project_item_deserialization_from_json(self):
         """ProjectItem correctly deserializes display_name and is_private from JSON.
 
-        This is the actual path: the cloud proxy enriches the JSON response from
-        memoryhub API, and the MCP tools deserialize it back into ProjectItem.
+        This mirrors the compatibility path where an API adapter enriches the
+        JSON response before MCP tooling deserializes it into ProjectItem.
         """
         from memoryhub.schemas.project_info import ProjectItem
 
@@ -566,7 +566,7 @@ class TestProjectItemSchema:
         assert project.is_private is True
 
     def test_project_item_deserialization_without_cloud_fields(self):
-        """ProjectItem works when cloud fields are absent (non-cloud usage)."""
+        """ProjectItem works when optional enrichment fields are absent."""
         from memoryhub.schemas.project_info import ProjectItem
 
         json_data = {
