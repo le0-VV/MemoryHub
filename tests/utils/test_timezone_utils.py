@@ -15,62 +15,46 @@ class TestEnsureTimezoneAware:
         assert result == dt
         assert result.tzinfo == timezone.utc
 
-    def test_naive_datetime_legacy_utc_mode_interprets_as_utc(self):
-        """Legacy UTC compatibility mode should tag naive datetimes as UTC."""
+    def test_naive_datetime_interprets_as_local_time(self):
+        """Naive datetimes should be treated as local time in the fork."""
         naive_dt = datetime(2024, 1, 15, 12, 30, 0)
-        result = ensure_timezone_aware(naive_dt, cloud_mode=True)
+        result = ensure_timezone_aware(naive_dt)
 
-        # Should have UTC timezone
-        assert result.tzinfo == timezone.utc
-        # Time values should be unchanged (just tagged as UTC)
+        assert result.tzinfo is not None
         assert result.year == 2024
         assert result.month == 1
         assert result.day == 15
         assert result.hour == 12
         assert result.minute == 30
 
-    def test_naive_datetime_local_mode_interprets_as_local(self):
-        """In local mode, naive datetimes should be interpreted as local time."""
-        naive_dt = datetime(2024, 1, 15, 12, 30, 0)
-        result = ensure_timezone_aware(naive_dt, cloud_mode=False)
-
-        # Should have some timezone info (local)
-        assert result.tzinfo is not None
-        # The datetime should be converted to local timezone
-        # We can't assert exact timezone as it depends on system
-
-    def test_legacy_utc_mode_does_not_shift_time(self):
-        """Legacy UTC mode should use replace() so time values stay unchanged."""
+    def test_naive_datetime_preserves_wall_clock_fields(self):
+        """Local timezone attachment should not rewrite the original wall clock fields."""
         naive_dt = datetime(2024, 6, 15, 18, 0, 0)  # Summer time
-        result = ensure_timezone_aware(naive_dt, cloud_mode=True)
+        result = ensure_timezone_aware(naive_dt)
 
-        # Hour should remain 18, not be shifted by timezone offset
         assert result.hour == 18
-        assert result.tzinfo == timezone.utc
+        assert result.minute == 0
+        assert result.tzinfo is not None
 
-    def test_explicit_mode_skips_config_loading(self):
-        """Explicit mode flags should not need config lookup."""
+    def test_naive_datetime_does_not_require_mode_selection(self):
+        """The helper should work without any cloud/local branching inputs."""
         naive_dt = datetime(2024, 1, 15, 12, 30, 0)
-
-        # Should work without any config setup
-        result_cloud = ensure_timezone_aware(naive_dt, cloud_mode=True)
-        assert result_cloud.tzinfo == timezone.utc
-
-        result_local = ensure_timezone_aware(naive_dt, cloud_mode=False)
-        assert result_local.tzinfo is not None
-
-    def test_none_cloud_mode_defaults_to_local_semantics(self, config_manager):
-        """Omitting the flag should keep the local SQLite default."""
-        naive_dt = datetime(2024, 1, 15, 12, 30, 0)
-
-        result = ensure_timezone_aware(naive_dt, cloud_mode=None)
+        result = ensure_timezone_aware(naive_dt)
 
         assert result.tzinfo is not None
 
-    def test_legacy_utc_mode_preserves_old_asyncpg_timestamp_interpretation(self):
-        """Compatibility flag should preserve old UTC-tagging behavior."""
-        legacy_value = datetime(2024, 1, 15, 18, 30, 0)
+    def test_timezone_aware_local_datetime_is_returned_unchanged(self):
+        """Already-aware local datetimes should pass through unchanged."""
+        local_dt = datetime.now().astimezone().replace(
+            year=2024,
+            month=1,
+            day=15,
+            hour=18,
+            minute=30,
+            second=0,
+            microsecond=0,
+        )
 
-        result = ensure_timezone_aware(legacy_value, cloud_mode=True)
-        assert result == datetime(2024, 1, 15, 18, 30, 0, tzinfo=timezone.utc)
+        result = ensure_timezone_aware(local_dt)
+        assert result == local_dt
         assert result.hour == 18

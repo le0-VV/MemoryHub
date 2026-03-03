@@ -671,8 +671,8 @@ class SyncService:
         created = file_metadata.created_at
         modified = file_metadata.modified_at
 
-        # Parse markdown content with file metadata (avoids redundant file read/stat)
-        # This enables cloud implementations (S3FileService) to provide metadata from head_object
+        # Parse markdown content with file metadata to avoid redundant read/stat work.
+        # FileService remains the single source of filesystem metadata for sync.
         abs_path = self.file_service.base_path / path
         entity_markdown = await self.entity_parser.parse_markdown_content(
             file_path=abs_path,

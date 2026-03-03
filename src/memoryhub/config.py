@@ -64,7 +64,11 @@ class ProjectEntry(BaseModel):
 
 
 class BasicMemoryConfig(BaseSettings):
-    """Pydantic model for MemoryHub global configuration."""
+    """Pydantic model for MemoryHub global configuration.
+
+    The class name is retained for compatibility while the supported product
+    surface continues to converge on MemoryHub naming.
+    """
 
     env: Environment = Field(default="dev", description="Environment name")
 
@@ -256,7 +260,8 @@ class BasicMemoryConfig(BaseSettings):
     def migrate_legacy_projects(cls, data: Any) -> Any:
         """Migrate old-format config (Dict[str, str]) to ProjectEntry format.
 
-        Upstream format stored projects as several cloud-aware structures.
+        Older upstream configs stored projects in several cloud/workspace-aware
+        shapes.
         MemoryHub normalizes those to the current local-only format:
           projects: {"name": {"path": "/local/path"}}
         """
@@ -458,7 +463,7 @@ _CONFIG_CACHE: Optional[BasicMemoryConfig] = None
 
 
 class ConfigManager:
-    """Manages Basic Memory configuration."""
+    """Manages MemoryHub configuration."""
 
     def __init__(self) -> None:
         """Initialize the configuration manager."""
@@ -680,15 +685,16 @@ def get_project_config(project_name: Optional[str] = None) -> ProjectConfig:
     config_manager = ConfigManager()
     app_config = config_manager.load_config()
 
-    # Get project name from environment variable
+    # BASIC_MEMORY_PROJECT is retained only as an unsupported compatibility env var.
+    # Ignore it so explicit args and config-driven defaults continue to work predictably.
     os_project_name = os.environ.get("BASIC_MEMORY_PROJECT", None)
     if os_project_name:  # pragma: no cover
         logger.warning(
-            f"BASIC_MEMORY_PROJECT is not supported anymore. Set the default project in the config instead. Setting default project to {os_project_name}"
+            "BASIC_MEMORY_PROJECT is unsupported and ignored. "
+            "Set the default project in config or pass an explicit project name."
         )
-        actual_project_name = project_name
     # if the project_name is passed in, use it
-    elif not project_name:
+    if not project_name:
         # use default
         actual_project_name = app_config.default_project
     else:  # pragma: no cover

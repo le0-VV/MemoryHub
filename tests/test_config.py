@@ -7,6 +7,7 @@ from memoryhub.config import (
     BasicMemoryConfig,
     ConfigManager,
     ProjectEntry,
+    get_project_config,
 )
 from pathlib import Path
 
@@ -580,6 +581,36 @@ class TestConfigManager:
             raw = json.loads(config_manager.config_file.read_text(encoding="utf-8"))
             assert raw["init_message_shown"] is True
             assert "cloud_promo_first_run_shown" not in raw
+
+    def test_get_project_config_ignores_unsupported_basic_memory_project_env(self, monkeypatch):
+        """Unsupported BASIC_MEMORY_PROJECT should not override explicit selection."""
+        import memoryhub.config
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            config_manager = ConfigManager()
+            config_manager.config_dir = temp_path / "memoryhub"
+            config_manager.config_file = config_manager.config_dir / "config.json"
+            config_manager.config_dir.mkdir(parents=True, exist_ok=True)
+
+            config_manager.save_config(
+                BasicMemoryConfig(
+                    projects={
+                        "main": {"path": str(temp_path / "main")},
+                        "research": {"path": str(temp_path / "research")},
+                    },
+                    default_project="main",
+                )
+            )
+
+            monkeypatch.setenv("BASIC_MEMORY_CONFIG_DIR", str(config_manager.config_dir))
+            monkeypatch.setenv("BASIC_MEMORY_PROJECT", "ignored-project")
+            memoryhub.config._CONFIG_CACHE = None
+
+            project = get_project_config("research")
+
+            assert project.name == "research"
+            assert project.home == temp_path / "research"
 
 
 class TestPlatformNativePathSeparators:

@@ -193,8 +193,8 @@ async def scoped_session(
     factory = get_scoped_session_factory(session_maker)
     session = factory()
     try:
-        # Only enable foreign keys for SQLite (Postgres has them enabled by default)
-        # Detect database type from session's bind (engine) dialect
+        # Enable SQLite foreign key enforcement explicitly on each connection.
+        # Detect the active dialect from the bound engine rather than assuming.
         engine = session.get_bind()
         dialect_name = engine.dialect.name
 

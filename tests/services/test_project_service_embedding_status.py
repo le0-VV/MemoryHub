@@ -138,8 +138,8 @@ async def test_embedding_status_healthy(project_service: ProjectService, test_gr
 
     # Drop any existing virtual table (may have been created by search_service init)
     # and recreate as a simple regular table for testing the join logic.
-    # Uses chunk_id as PK — Postgres queries join on chunk_id,
-    # SQLite queries join on rowid which aliases INTEGER PRIMARY KEY.
+    # Uses chunk_id as PK. The SQLite test table joins through rowid,
+    # which aliases INTEGER PRIMARY KEY.
     await project_service.repository.execute_query(
         text("DROP TABLE IF EXISTS search_vector_embeddings"), {}
     )

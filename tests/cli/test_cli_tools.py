@@ -1,4 +1,4 @@
-"""Tests for the Basic Memory CLI tools.
+"""Tests for the MemoryHub CLI tools.
 
 These tests verify CLI tool functionality. Some tests that previously used
 subprocess have been removed due to a pre-existing CLI architecture issue
@@ -16,7 +16,7 @@ from memoryhub.config import DatabaseBackend
 def test_ensure_migrations_functionality(app_config, monkeypatch):
     """Test the database initialization functionality.
 
-    ensure_initialization is a SQLite-only code path (Postgres manages its own schema),
+    ensure_initialization is a SQLite-only code path in this fork,
     so force SQLite backend regardless of the test environment.
     """
     import memoryhub.services.initialization as init_mod
@@ -35,7 +35,7 @@ def test_ensure_migrations_functionality(app_config, monkeypatch):
 def test_ensure_migrations_propagates_errors(app_config, monkeypatch):
     """Test that initialization errors propagate to caller.
 
-    ensure_initialization is a SQLite-only code path (Postgres manages its own schema),
+    ensure_initialization is a SQLite-only code path in this fork,
     so force SQLite backend regardless of the test environment.
     """
     import memoryhub.services.initialization as init_mod
