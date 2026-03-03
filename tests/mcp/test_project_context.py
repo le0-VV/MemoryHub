@@ -66,8 +66,19 @@ async def test_canonicalizes_configured_project_permalink(config_manager, config
 async def test_uses_env_var_priority(monkeypatch):
     from memoryhub.mcp.project_context import resolve_project_parameter
 
+    monkeypatch.delenv("MEMORYHUB_MCP_PROJECT", raising=False)
     monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", "env-project")
     assert await resolve_project_parameter(project="explicit-project") == "env-project"
+
+
+@pytest.mark.asyncio
+async def test_prefers_memoryhub_env_var_priority(monkeypatch):
+    from memoryhub.mcp.project_context import resolve_project_parameter
+
+    monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", "legacy-project")
+    monkeypatch.setenv("MEMORYHUB_MCP_PROJECT", "memoryhub-project")
+
+    assert await resolve_project_parameter(project="explicit-project") == "memoryhub-project"
 
 
 @pytest.mark.asyncio

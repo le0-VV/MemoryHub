@@ -91,3 +91,16 @@ def test_routing_context_exposes_canonical_constraint(config_manager, config_hom
     assert routing_context.constrained_project == "My Research"
     assert routing_context.is_constrained is True
     assert routing_context.requested_project == "ignored-project"
+
+
+def test_routing_context_prefers_memoryhub_constraint_alias(config_manager, monkeypatch):
+    """Routing context should prefer the MemoryHub env alias over the legacy name."""
+    monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", "legacy-project")
+    monkeypatch.setenv("MEMORYHUB_MCP_PROJECT", "memoryhub-project")
+
+    routing_context = ProjectSelector.from_config(config_manager).routing_context(
+        allow_discovery=True
+    )
+
+    assert routing_context.project == "memoryhub-project"
+    assert routing_context.constrained_project == "memoryhub-project"

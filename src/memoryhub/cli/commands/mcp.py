@@ -9,6 +9,7 @@ from loguru import logger
 from memoryhub.cli.app import app
 from memoryhub.config import init_mcp_logging
 from memoryhub.project_selection import ProjectSelector
+from memoryhub.project_resolver import PROJECT_CONSTRAINT_ENV_VARS
 
 
 class _DeferredMcpServer:
@@ -62,8 +63,9 @@ def mcp(
             typer.echo(str(exc), err=True)
             raise typer.Exit(1) from exc
 
-        # Set env var with validated project name
-        os.environ["BASIC_MEMORY_MCP_PROJECT"] = project_name
+        # Export both names during the transition to keep older entry points working.
+        for env_var in PROJECT_CONSTRAINT_ENV_VARS:
+            os.environ[env_var] = project_name
         logger.info(f"MCP server constrained to project: {project_name}")
 
     # Run the MCP server (blocks)

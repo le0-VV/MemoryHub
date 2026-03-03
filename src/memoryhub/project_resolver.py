@@ -8,11 +8,22 @@ from typing import Optional
 
 from loguru import logger
 
+PROJECT_CONSTRAINT_ENV_VARS = ("MEMORYHUB_MCP_PROJECT", "BASIC_MEMORY_MCP_PROJECT")
+
+
+def get_project_constraint_env() -> Optional[str]:
+    """Return the active project-constraint env var value, preferring MemoryHub naming."""
+    for env_var in PROJECT_CONSTRAINT_ENV_VARS:
+        value = os.environ.get(env_var)
+        if value:
+            return value
+    return None
+
 
 class ResolutionMode(Enum):
     """How the project was resolved."""
 
-    ENV_CONSTRAINT = auto()  # BASIC_MEMORY_MCP_PROJECT env var
+    ENV_CONSTRAINT = auto()  # MEMORYHUB_MCP_PROJECT / BASIC_MEMORY_MCP_PROJECT env var
     EXPLICIT = auto()  # Explicit project parameter
     CWD = auto()  # Current working directory maps to a configured project
     DEFAULT = auto()  # default_project from config
@@ -56,7 +67,7 @@ class ProjectResolver:
         """Create resolver with constrained_project from environment."""
         return cls(
             default_project=default_project,
-            constrained_project=os.environ.get("BASIC_MEMORY_MCP_PROJECT"),
+            constrained_project=get_project_constraint_env(),
             project_paths=project_paths,
             cwd=cwd if cwd is not None else os.getcwd(),
         )
@@ -101,7 +112,7 @@ class ProjectResolver:
             return ResolvedProject(
                 project=self.constrained_project,
                 mode=ResolutionMode.ENV_CONSTRAINT,
-                reason=f"Environment constraint: BASIC_MEMORY_MCP_PROJECT={self.constrained_project}",
+                reason=f"Environment constraint: {self.constrained_project}",
             )
 
         if project:
@@ -156,6 +167,8 @@ class ProjectResolver:
 
 
 __all__ = [
+    "PROJECT_CONSTRAINT_ENV_VARS",
+    "get_project_constraint_env",
     "ProjectResolver",
     "ResolvedProject",
     "ResolutionMode",

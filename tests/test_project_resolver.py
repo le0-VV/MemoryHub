@@ -150,9 +150,19 @@ class TestProjectResolver:
     def test_from_env_with_env_var(self, monkeypatch):
         """from_env with BASIC_MEMORY_MCP_PROJECT set."""
         monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", "env-project")
+        monkeypatch.delenv("MEMORYHUB_MCP_PROJECT", raising=False)
         resolver = ProjectResolver.from_env()
 
         assert resolver.constrained_project == "env-project"
+
+    def test_from_env_prefers_memoryhub_constraint(self, monkeypatch):
+        """MEMORYHUB_MCP_PROJECT should override the legacy compatibility env var."""
+        monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", "legacy-project")
+        monkeypatch.setenv("MEMORYHUB_MCP_PROJECT", "memoryhub-project")
+
+        resolver = ProjectResolver.from_env()
+
+        assert resolver.constrained_project == "memoryhub-project"
 
 
 class TestResolvedProject:

@@ -36,5 +36,6 @@ def test_mcp_command_canonicalizes_project_constraint(monkeypatch):
     result = runner.invoke(app, ["mcp", "--project", "my-research"])
 
     assert result.exit_code == 0, result.output
+    assert os.environ["MEMORYHUB_MCP_PROJECT"] == "My Research"
     assert os.environ["BASIC_MEMORY_MCP_PROJECT"] == "My Research"
     assert run_calls == [{"transport": "stdio"}]

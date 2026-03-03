@@ -39,7 +39,7 @@ async def resolve_project_parameter(
     resolution information.
 
     Resolution order:
-    1. ENV_CONSTRAINT: BASIC_MEMORY_MCP_PROJECT env var (highest priority)
+    1. ENV_CONSTRAINT: MEMORYHUB_MCP_PROJECT env var (or BASIC_MEMORY_MCP_PROJECT during compatibility)
     2. EXPLICIT: project parameter passed directly
     3. DEFAULT: default_project from config (if set)
     4. Fallback: discovery (if allowed) → NONE

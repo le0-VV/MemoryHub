@@ -17,7 +17,7 @@ MemoryHub creates a semantic knowledge graph from markdown files. Focus on build
 ## Project Management
 
 **Resolution priority:**
-1. Project constraint: `BASIC_MEMORY_MCP_PROJECT` env var (highest priority)
+1. Project constraint: `MEMORYHUB_MCP_PROJECT` env var (or `BASIC_MEMORY_MCP_PROJECT` during compatibility)
 2. Explicit parameter: `project="name"` in tool calls
 3. Configured CWD match
 4. Default project: `default_project` in config (fallback)
