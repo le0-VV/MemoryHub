@@ -149,8 +149,8 @@ class MarkdownProcessor:
         This method handles serialization only - it does not write to files.
         Use FileService.write_file() to persist the output.
 
-        This enables cloud environments to override file operations via
-        dependency injection while reusing the serialization logic.
+        Keeping serialization separate lets services reuse the same markdown
+        formatting logic regardless of how they persist the file.
 
         Args:
             markdown: EntityMarkdown schema to serialize

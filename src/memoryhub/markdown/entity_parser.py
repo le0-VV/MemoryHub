@@ -231,8 +231,8 @@ class EntityParser:
     ) -> EntityMarkdown:
         """Parse markdown content without requiring file to exist on disk.
 
-        Useful for parsing content from S3 or other remote sources where the file
-        is not available locally.
+        Useful for parsing freshly written or generated content before it is
+        read back from disk.
 
         Args:
             file_path: Path for metadata (doesn't need to exist on disk)
@@ -253,7 +253,7 @@ class EntityParser:
         # We use frontmatter.parse() instead of frontmatter.loads() because
         # loads() does Post(content, handler, **metadata), which crashes when
         # the YAML contains reserved keys like 'content' or 'handler'.
-        # See memoryhub-cloud#375.
+        # See issue #375.
         try:
             fm_metadata, fm_content = frontmatter.parse(content)
             post = frontmatter.Post(fm_content)
@@ -273,7 +273,7 @@ class EntityParser:
         # Ensure required string fields are always strings.
         # YAML can parse these as lists when authors use block sequence syntax
         # (e.g. "title:\n  - My Title"), causing 'list' has no attribute 'strip'
-        # downstream.  See memoryhub-cloud#376.
+        # downstream. See issue #376.
         title = metadata.get("title")
         if title is not None:
             title = _coerce_to_string(title)

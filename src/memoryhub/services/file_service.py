@@ -250,7 +250,7 @@ class FileService:
         """Read file content as bytes using true async I/O with aiofiles.
 
         This method reads files in binary mode, suitable for non-text files
-        like images, PDFs, etc. For cloud compatibility with S3FileService.
+        like images and PDFs.
 
         Args:
             path: Path to read (Path or string)
@@ -340,9 +340,8 @@ class FileService:
     async def move_file(self, source: FilePath, destination: FilePath) -> None:
         """Move/rename a file from source to destination.
 
-        This method abstracts the underlying storage (filesystem vs cloud).
-        Default implementation uses atomic filesystem rename, but cloud-backed
-        implementations (e.g., S3) can override to copy+delete.
+        The current fork only supports local filesystem moves. Keeping this
+        logic centralized makes rename behavior consistent across callers.
 
         Args:
             source: Source path (relative to base_path or absolute)
@@ -492,8 +491,8 @@ class FileService:
     async def get_file_metadata(self, path: FilePath) -> FileMetadata:
         """Return file metadata for a given path.
 
-        This method is async to support cloud implementations (S3FileService)
-        where file metadata requires async operations (head_object).
+        This method stays async so callers can use the same service API without
+        blocking the event loop on filesystem metadata reads.
 
         Args:
             path: Path to the file (Path or string)

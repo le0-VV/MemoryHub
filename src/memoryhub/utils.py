@@ -16,9 +16,9 @@ from unidecode import unidecode
 def normalize_project_path(path: str) -> str:
     """Normalize project path by stripping mount point prefix.
 
-    In cloud deployments, the S3 bucket is mounted at /app/data. We strip this
-    prefix from project paths to avoid leaking implementation details and to
-    ensure paths match the actual S3 bucket structure.
+    Older upstream configs sometimes stored project paths beneath an `/app/data`
+    mount prefix. Strip that prefix during normalization so the local fork keeps
+    a consistent on-disk path shape.
 
     For local paths (including Windows paths), returns the path unchanged.
 
@@ -259,8 +259,8 @@ def setup_logging(
     Args:
         log_level: DEBUG, INFO, WARNING, ERROR
         log_to_file: Write to ~/.memoryhub/memoryhub.log with rotation
-        log_to_stdout: Write to stderr (for Docker/cloud deployments)
-        structured_context: Bind tenant_id, fly_region, etc. for cloud observability
+        log_to_stdout: Write to stderr for foreground or containerized runs
+        structured_context: Bind optional env metadata when present
     """
     # Remove default handler and any existing handlers
     logger.remove()
@@ -288,11 +288,11 @@ def setup_logging(
             colorize=False,
         )
 
-    # Add stdout handler (for Docker/cloud)
+    # Add stderr handler for foreground or containerized runs.
     if log_to_stdout:
         logger.add(sys.stderr, level=log_level, backtrace=True, diagnose=True, colorize=True)
 
-    # Bind structured context for cloud observability
+    # Bind optional structured context from environment variables.
     if structured_context:
         logger.configure(
             extra={

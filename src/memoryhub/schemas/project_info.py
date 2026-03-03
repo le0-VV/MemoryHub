@@ -64,7 +64,7 @@ class SystemStatus(BaseModel):
     """System status information."""
 
     # Version information
-    version: str = Field(description="Basic Memory version")
+    version: str = Field(description="MemoryHub version")
 
     # Database status
     database_path: str = Field(description="Path to the SQLite database")
@@ -205,7 +205,7 @@ class ProjectItem(BaseModel):
     name: str
     path: str
     is_default: bool = False
-    # Optional metadata injected by cloud hosting layer (not stored in DB)
+    # Optional display metadata from compatibility adapters or API enrichers.
     display_name: Optional[str] = None
     is_private: bool = False
 

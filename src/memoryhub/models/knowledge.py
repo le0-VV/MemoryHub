@@ -94,9 +94,9 @@ class Entity(Base):
         onupdate=lambda: datetime.now().astimezone(),
     )
 
-    # Who created this entity (cloud user_profile_id UUID, null for local/CLI usage)
+    # Optional audit identity for the creator.
     created_by: Mapped[Optional[str]] = mapped_column(String, nullable=True, default=None)
-    # Who last modified this entity (cloud user_profile_id UUID, null for local/CLI usage)
+    # Optional audit identity for the last editor.
     last_updated_by: Mapped[Optional[str]] = mapped_column(String, nullable=True, default=None)
 
     # Relationships
@@ -173,10 +173,9 @@ class Observation(Base):
         We can construct these because observations are always defined in
         and owned by a single entity.
 
-        Content is truncated to 200 chars to stay under PostgreSQL's
-        btree index limit of 2704 bytes.
+        Content is truncated to keep synthetic permalinks short and stable.
         """
-        # Truncate content to avoid exceeding PostgreSQL's btree index limit
+        # Truncate content to keep observation permalinks reasonably bounded.
         content_for_permalink = self.content[:200] if len(self.content) > 200 else self.content
         return generate_permalink(
             f"{self.entity.permalink}/observations/{self.category}/{content_for_permalink}"

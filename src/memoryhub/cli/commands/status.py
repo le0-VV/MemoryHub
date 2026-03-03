@@ -12,7 +12,6 @@ from rich.panel import Panel
 from rich.tree import Tree
 
 from memoryhub.cli.app import app
-from memoryhub.cli.commands.routing import force_routing, validate_routing_flags
 from memoryhub.config import ConfigManager
 from memoryhub.mcp.async_client import get_client
 from memoryhub.mcp.clients import ProjectClient
@@ -180,14 +179,7 @@ def status(
     from memoryhub.cli.commands.command_utils import run_with_cleanup
 
     try:
-        validate_routing_flags(local)
-        # Trigger: no explicit routing flag provided.
-        # Why: status inspects the local filesystem and SQLite index directly.
-        # Outcome: default to local routing.
-        if not local:
-            local = True
-        with force_routing(local=local):
-            project_name, sync_report = run_with_cleanup(run_status(project))
+        project_name, sync_report = run_with_cleanup(run_status(project))
 
         if json_output:
             print(json.dumps(sync_report.model_dump(mode="json"), indent=2, default=str))

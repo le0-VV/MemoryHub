@@ -13,7 +13,6 @@ from rich.text import Text
 
 from memoryhub.cli.app import app
 from memoryhub.cli.commands.command_utils import get_project_info, run_with_cleanup
-from memoryhub.cli.commands.routing import force_routing
 from memoryhub.config import ConfigManager
 from memoryhub.mcp.async_client import get_client
 from memoryhub.mcp.clients import ProjectClient
@@ -55,8 +54,7 @@ def list_projects(
             return await ProjectClient(client).list_projects()
 
     try:
-        with force_routing(local=True):
-            result = run_with_cleanup(_list_projects())
+        result = run_with_cleanup(_list_projects())
 
         project_rows = [
             {
@@ -104,8 +102,7 @@ def add_project(
             return await ProjectClient(client).create_project(data)
 
     try:
-        with force_routing(local=True):
-            result = run_with_cleanup(_add_project())
+        result = run_with_cleanup(_add_project())
         console.print(f"[green]{result.message}[/green]")
     except Exception as e:
         console.print(f"[red]Error adding project: {str(e)}[/red]")
@@ -131,8 +128,7 @@ def remove_project(
             )
 
     try:
-        with force_routing(local=True):
-            result = run_with_cleanup(_remove_project())
+        result = run_with_cleanup(_remove_project())
         console.print(f"[green]{result.message}[/green]")
     except Exception as e:
         console.print(f"[red]Error removing project: {str(e)}[/red]")
@@ -152,8 +148,7 @@ def set_default_project(
             return await project_client.set_default(target_project.external_id)
 
     try:
-        with force_routing(local=True):
-            result = run_with_cleanup(_set_default())
+        result = run_with_cleanup(_set_default())
         console.print(f"[green]{result.message}[/green]")
     except Exception as e:
         console.print(f"[red]Error setting default project: {str(e)}[/red]")
@@ -178,8 +173,7 @@ def move_project(
             )
 
     try:
-        with force_routing(local=True):
-            result = run_with_cleanup(_move_project())
+        result = run_with_cleanup(_move_project())
         console.print(f"[green]{result.message}[/green]")
         console.print()
         console.print(
@@ -236,8 +230,7 @@ def ls_project_command(
             return await ProjectClient(client).resolve_project(name)
 
     try:
-        with force_routing(local=True):
-            project_data = run_with_cleanup(_resolve_project())
+        project_data = run_with_cleanup(_resolve_project())
         files = _list_local_files(project_data.path, path)
 
         if files:
@@ -264,8 +257,7 @@ def display_project_info(
 ):
     """Display detailed information and statistics about a local project."""
     try:
-        with force_routing(local=True):
-            info = run_with_cleanup(get_project_info(name))
+        info = run_with_cleanup(get_project_info(name))
 
         if json_output:
             print(json.dumps(info.model_dump(), indent=2, default=str))

@@ -1,4 +1,4 @@
-"""Base import service for Basic Memory."""
+"""Base import service for MemoryHub."""
 
 import logging
 from abc import abstractmethod
@@ -21,8 +21,8 @@ T = TypeVar("T", bound=ImportResult)
 class Importer[T: ImportResult]:
     """Base class for all import services.
 
-    All file operations are delegated to FileService, which can be overridden
-    in cloud environments to use S3 or other storage backends.
+    All file operations are delegated to FileService so importers share the
+    same local path handling, formatting, and checksum behavior.
     """
 
     def __init__(
@@ -63,8 +63,8 @@ class Importer[T: ImportResult]:
         """Write entity to file using FileService.
 
         This method serializes the entity to markdown and writes it using
-        FileService, which handles directory creation and storage backend
-        abstraction (local filesystem vs cloud storage).
+        FileService, which handles directory creation and file writes for the
+        local project workspace.
 
         Args:
             entity: EntityMarkdown instance to write.
@@ -100,8 +100,8 @@ class Importer[T: ImportResult]:
     async def ensure_folder_exists(self, folder: str) -> None:
         """Ensure folder exists using FileService.
 
-        For cloud storage (S3), this is essentially a no-op since S3 doesn't
-        have actual folders - they're just key prefixes.
+        This delegates to FileService so importer code does not need to manage
+        directory creation directly.
 
         Args:
             folder: Relative folder path within the project. FileService handles base_path.

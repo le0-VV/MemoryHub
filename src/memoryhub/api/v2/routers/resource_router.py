@@ -73,14 +73,14 @@ async def get_resource_content(
             detail="Entity contains invalid file path",
         )
 
-    # Check file exists via file_service (for cloud compatibility)
+    # Check file existence via FileService so path handling stays centralized.
     if not await file_service.exists(entity.file_path):
         raise HTTPException(  # pragma: no cover
             status_code=404,
             detail=f"File not found: {entity.file_path}",
         )
 
-    # Read content via file_service as bytes (works with both local and S3)
+    # Read bytes via FileService so the router stays storage-agnostic.
     content = await file_service.read_file_bytes(entity.file_path)
     content_type = file_service.content_type(entity.file_path)
 
@@ -134,8 +134,7 @@ async def create_resource(
                 f"Use PUT /resource/{existing_entity.external_id} to update it.",
             )
 
-        # Cloud compatibility: avoid assuming a local filesystem path.
-        # Delegate directory creation + writes to FileService (local or S3).
+        # Delegate directory creation and writes to FileService.
         await file_service.ensure_directory(PathLib(data.file_path).parent)
         checksum = await file_service.write_file(data.file_path, data.content)
 
@@ -234,10 +233,10 @@ async def update_resource(
 
         # If moving file, handle the move
         if data.file_path and data.file_path != entity.file_path:
-            # Ensure new parent directory exists (no-op for S3)
+            # Ensure the new parent directory exists before writing.
             await file_service.ensure_directory(PathLib(target_file_path).parent)
 
-            # If old file exists, remove it via file_service (for cloud compatibility)
+            # Remove the old file through FileService before rewriting to the new path.
             if await file_service.exists(entity.file_path):
                 await file_service.delete_file(entity.file_path)
         else:

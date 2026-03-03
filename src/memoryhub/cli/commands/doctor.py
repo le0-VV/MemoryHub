@@ -13,7 +13,6 @@ import typer
 
 from memoryhub.cli.app import app
 from memoryhub.cli.commands.command_utils import run_with_cleanup
-from memoryhub.cli.commands.routing import force_routing, validate_routing_flags
 from memoryhub.markdown.entity_parser import EntityParser
 from memoryhub.markdown.markdown_processor import MarkdownProcessor
 from memoryhub.markdown.schemas import EntityFrontmatter, EntityMarkdown
@@ -139,12 +138,7 @@ def doctor(
 ) -> None:
     """Run local consistency checks to verify file/database sync."""
     try:
-        validate_routing_flags(local)
-        # Doctor runs local filesystem checks — always default to local routing
-        if not local:
-            local = True
-        with force_routing(local=local):
-            run_with_cleanup(run_doctor())
+        run_with_cleanup(run_doctor())
     except (ToolError, ValueError) as e:
         console.print(f"[red]Doctor failed: {e}[/red]")
         raise typer.Exit(code=1)

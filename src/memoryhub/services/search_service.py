@@ -412,7 +412,7 @@ class SearchService:
                 entity_id=entity.id,
                 type=SearchItemType.ENTITY.value,
                 title=_strip_nul(entity.title),
-                permalink=entity.permalink,  # Required for Postgres NOT NULL constraint
+                permalink=entity.permalink,  # Search rows require a stable permalink key
                 file_path=entity.file_path,
                 metadata={
                     "note_type": entity.note_type,
@@ -484,7 +484,7 @@ class SearchService:
 
         entity_content_stems = _strip_nul("\n".join(p for p in content_stems if p and p.strip()))
 
-        # Truncate to stay under Postgres's 8KB index row limit
+        # Keep indexed text bounded for SQLite FTS rows and predictable memory use.
         if len(entity_content_stems) > MAX_CONTENT_STEMS_SIZE:  # pragma: no cover
             entity_content_stems = entity_content_stems[:MAX_CONTENT_STEMS_SIZE]  # pragma: no cover
 
@@ -522,7 +522,7 @@ class SearchService:
             obs_content_stems = _strip_nul(
                 "\n".join(p for p in self._generate_variants(obs.content) if p and p.strip())
             )
-            # Truncate to stay under Postgres's 8KB index row limit
+            # Keep indexed text bounded for SQLite FTS rows and predictable memory use.
             if len(obs_content_stems) > MAX_CONTENT_STEMS_SIZE:  # pragma: no cover
                 obs_content_stems = obs_content_stems[:MAX_CONTENT_STEMS_SIZE]  # pragma: no cover
             rows_to_index.append(

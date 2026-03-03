@@ -19,7 +19,6 @@ from rich.table import Table
 
 from memoryhub.cli.app import app
 from memoryhub.cli.commands.command_utils import run_with_cleanup
-from memoryhub.cli.commands.routing import force_routing, validate_routing_flags
 from memoryhub.config import ConfigManager
 from memoryhub.mcp.tools import schema_diff as mcp_schema_diff
 from memoryhub.mcp.tools import schema_infer as mcp_schema_infer
@@ -191,9 +190,6 @@ def validate(
     This fork supports local routing only.
     """
     try:
-        validate_routing_flags(local)
-        if not local:
-            local = True
         project_name = _resolve_project_name(project)
 
         # Heuristic: if target contains / or ., treat as identifier; otherwise as note type
@@ -204,15 +200,14 @@ def validate(
             else:
                 note_type = target
 
-        with force_routing(local=local):
-            result = run_with_cleanup(
-                mcp_schema_validate(
-                    note_type=note_type,
-                    identifier=identifier,
-                    project=project_name,
-                    output_format="json",
-                )
+        result = run_with_cleanup(
+            mcp_schema_validate(
+                note_type=note_type,
+                identifier=identifier,
+                project=project_name,
+                output_format="json",
             )
+        )
 
         # Handle error responses
         if isinstance(result, dict) and "error" in result:
@@ -276,20 +271,16 @@ def infer(
     This fork supports local routing only.
     """
     try:
-        validate_routing_flags(local)
-        if not local:
-            local = True
         project_name = _resolve_project_name(project)
 
-        with force_routing(local=local):
-            result = run_with_cleanup(
-                mcp_schema_infer(
-                    note_type=note_type,
-                    threshold=threshold,
-                    project=project_name,
-                    output_format="json",
-                )
+        result = run_with_cleanup(
+            mcp_schema_infer(
+                note_type=note_type,
+                threshold=threshold,
+                project=project_name,
+                output_format="json",
             )
+        )
 
         # Handle error responses
         if isinstance(result, dict) and "error" in result:
@@ -358,19 +349,15 @@ def diff(
     This fork supports local routing only.
     """
     try:
-        validate_routing_flags(local)
-        if not local:
-            local = True
         project_name = _resolve_project_name(project)
 
-        with force_routing(local=local):
-            result = run_with_cleanup(
-                mcp_schema_diff(
-                    note_type=note_type,
-                    project=project_name,
-                    output_format="json",
-                )
+        result = run_with_cleanup(
+            mcp_schema_diff(
+                note_type=note_type,
+                project=project_name,
+                output_format="json",
             )
+        )
 
         # Handle error responses
         if isinstance(result, dict) and "error" in result:

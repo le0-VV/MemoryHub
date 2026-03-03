@@ -22,11 +22,10 @@ if TYPE_CHECKING:  # pragma: no cover
 
 @dataclass
 class FileMetadata:
-    """File metadata for cloud-compatible file operations.
+    """Simple file metadata returned by FileService operations.
 
-    This dataclass provides a cloud-agnostic way to represent file metadata,
-    enabling S3FileService to return metadata from head_object responses
-    instead of mock stat_result with zeros.
+    Keeping this as a small shared dataclass makes file size and timestamps
+    easy to pass through service and API layers.
     """
 
     size: int

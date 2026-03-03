@@ -73,8 +73,8 @@ class EntityService(BaseService[EntityModel]):
         self.search_service = search_service
         self.app_config = app_config
         self._project_permalink: Optional[str] = None
-        # Callable that returns the current user ID (cloud user_profile_id UUID as string).
-        # Default returns None for local/CLI usage. Cloud overrides this to read from UserContext.
+        # Optional user-tracking hook retained from upstream. In the local-only
+        # fork this defaults to None unless a caller injects an audit identity.
         self.get_user_id: Callable[[], Optional[str]] = lambda: None
 
     async def detect_file_path_conflicts(
@@ -295,7 +295,7 @@ class EntityService(BaseService[EntityModel]):
         final_content = dump_frontmatter(post)
         checksum = await self.file_service.write_file(file_path, final_content)
 
-        # parse entity from content we just wrote (avoids re-reading file for cloud compatibility)
+        # Parse the content we just wrote to avoid a second filesystem read.
         entity_markdown = await self.entity_parser.parse_markdown_content(
             file_path=file_path,
             content=final_content,
@@ -316,7 +316,7 @@ class EntityService(BaseService[EntityModel]):
         # Convert file path string to Path
         file_path = Path(entity.file_path)
 
-        # Read existing content via file_service (for cloud compatibility)
+        # Read via FileService so file access stays centralized.
         existing_content = await self.file_service.read_file_content(file_path)
         existing_markdown = await self.entity_parser.parse_markdown_content(
             file_path=file_path,
@@ -363,7 +363,7 @@ class EntityService(BaseService[EntityModel]):
 
         # Create a new post with merged metadata.
         # Avoid **metadata unpacking — user frontmatter may contain reserved keys
-        # like 'content' or 'handler' that conflict with Post.__init__ (cloud#375).
+        # like 'content' or 'handler' that conflict with Post.__init__.
         merged_post = frontmatter.Post(post.content)
         merged_post.metadata.update(existing_markdown.frontmatter.metadata)
 
@@ -371,7 +371,7 @@ class EntityService(BaseService[EntityModel]):
         final_content = dump_frontmatter(merged_post)
         checksum = await self.file_service.write_file(file_path, final_content)
 
-        # parse entity from content we just wrote (avoids re-reading file for cloud compatibility)
+        # Parse the content we just wrote to avoid a second filesystem read.
         entity_markdown = await self.entity_parser.parse_markdown_content(
             file_path=file_path,
             content=final_content,
@@ -508,7 +508,7 @@ class EntityService(BaseService[EntityModel]):
         if has_frontmatter(new_content):
             content_frontmatter = parse_frontmatter(new_content)
 
-            # Coerce to string — YAML may parse these as lists (cloud#376)
+            # Coerce to string because malformed YAML can parse these fields as lists.
             if "title" in content_frontmatter:
                 update_data["title"] = _coerce_to_string(content_frontmatter["title"])
             if "type" in content_frontmatter:
@@ -635,7 +635,7 @@ class EntityService(BaseService[EntityModel]):
         # Mark as incomplete because we still need to add relations
         model.checksum = None
 
-        # Set user tracking fields for cloud usage
+        # Preserve audit fields when a caller provides a user identity hook.
         user_id = self.get_user_id()
         if user_id is not None:
             model.created_by = user_id
@@ -683,7 +683,7 @@ class EntityService(BaseService[EntityModel]):
         # checksum value is None == not finished with sync
         db_entity.checksum = None
 
-        # Set last_updated_by for cloud usage (preserve existing created_by)
+        # Preserve created_by and refresh last_updated_by when audit identity is available.
         user_id = self.get_user_id()
         if user_id is not None:
             db_entity.last_updated_by = user_id
@@ -825,7 +825,7 @@ class EntityService(BaseService[EntityModel]):
         # Write the updated content back to the file
         checksum = await self.file_service.write_file(file_path, new_content)
 
-        # Parse the content we just wrote (avoids re-reading file for cloud compatibility)
+        # Parse the content we just wrote to avoid a second filesystem read.
         entity_markdown = await self.entity_parser.parse_markdown_content(
             file_path=file_path,
             content=new_content,
@@ -1047,8 +1047,7 @@ class EntityService(BaseService[EntityModel]):
             raise ValueError(f"Invalid destination path: {destination_path}")
 
         # 3. Validate paths
-        # NOTE: In tenantless/cloud mode, we cannot rely on local filesystem paths.
-        # Use FileService for existence checks and moving.
+        # Use FileService so path resolution and file mutations stay centralized.
         if not await self.file_service.exists(current_path):
             raise ValueError(f"Source file not found: {current_path}")
 
@@ -1056,10 +1055,10 @@ class EntityService(BaseService[EntityModel]):
             raise ValueError(f"Destination already exists: {destination_path}")
 
         try:
-            # 4. Ensure destination directory if needed (no-op for S3)
+            # 4. Ensure destination directory exists if needed.
             await self.file_service.ensure_directory(Path(destination_path).parent)
 
-            # 5. Move physical file via FileService (filesystem rename or cloud move)
+            # 5. Move the file through FileService so all callers share the same behavior.
             await self.file_service.move_file(current_path, destination_path)
             logger.info(f"Moved file: {current_path} -> {destination_path}")
 

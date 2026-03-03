@@ -13,7 +13,6 @@ from loguru import logger
 
 from memoryhub.cli.app import app
 from memoryhub.cli.commands.command_utils import run_with_cleanup
-from memoryhub.cli.commands.routing import force_routing, validate_routing_flags
 from memoryhub.mcp.tools import build_context as mcp_build_context
 from memoryhub.mcp.tools import edit_note as mcp_edit_note
 from memoryhub.mcp.tools import list_memory_projects as mcp_list_projects
@@ -37,12 +36,6 @@ VALID_EDIT_OPERATIONS = ["append", "prepend", "find_replace", "replace_section"]
 def _print_json(result: Any) -> None:
     """Print a result as formatted JSON."""
     print(json.dumps(result, indent=2, ensure_ascii=True, default=str))
-
-
-def _default_local_routing(local: bool) -> bool:
-    """Validate routing flags and default to local mode when none are provided."""
-    validate_routing_flags(local)
-    return True if not local else local
 
 
 # --- Commands ---
@@ -89,8 +82,6 @@ def write_note(
     memoryhub tool write-note --title "My Note" --directory "notes" --local
     """
     try:
-        local = _default_local_routing(local)
-
         # If content is not provided, read from stdin
         if content is None:
             if not sys.stdin.isatty():
@@ -108,17 +99,16 @@ def write_note(
 
         assert content is not None
 
-        with force_routing(local=local):
-            result = run_with_cleanup(
-                mcp_write_note(
-                    title=title,
-                    content=content,
-                    directory=directory,
-                    project=project,
-                    tags=tags,
-                    output_format="json",
-                )
+        result = run_with_cleanup(
+            mcp_write_note(
+                title=title,
+                content=content,
+                directory=directory,
+                project=project,
+                tags=tags,
+                output_format="json",
             )
+        )
         _print_json(result)
     except ValueError as e:
         typer.echo(f"Error: {e}", err=True)
@@ -157,19 +147,16 @@ def read_note(
     memoryhub tool read-note my-note --page 2 --page-size 5
     """
     try:
-        local = _default_local_routing(local)
-
-        with force_routing(local=local):
-            result = run_with_cleanup(
-                mcp_read_note(
-                    identifier=identifier,
-                    project=project,
-                    page=page,
-                    page_size=page_size,
-                    include_frontmatter=include_frontmatter,
-                    output_format="json",
-                )
+        result = run_with_cleanup(
+            mcp_read_note(
+                identifier=identifier,
+                project=project,
+                page=page,
+                page_size=page_size,
+                include_frontmatter=include_frontmatter,
+                output_format="json",
             )
+        )
         _print_json(result)
     except ValueError as e:
         typer.echo(f"Error: {e}", err=True)
@@ -219,21 +206,18 @@ def edit_note(
     memoryhub tool edit-note my-note --operation replace_section --section "## Notes" --content "updated"
     """
     try:
-        local = _default_local_routing(local)
-
-        with force_routing(local=local):
-            result = run_with_cleanup(
-                mcp_edit_note(
-                    identifier=identifier,
-                    operation=operation,
-                    content=content,
-                    project=project,
-                    section=section,
-                    find_text=find_text,
-                    expected_replacements=expected_replacements,
-                    output_format="json",
-                )
+        result = run_with_cleanup(
+            mcp_edit_note(
+                identifier=identifier,
+                operation=operation,
+                content=content,
+                project=project,
+                section=section,
+                find_text=find_text,
+                expected_replacements=expected_replacements,
+                output_format="json",
             )
+        )
 
         # MCP tool returns error field on failure in JSON mode
         if isinstance(result, dict) and result.get("error"):
@@ -279,21 +263,18 @@ def build_context(
     memoryhub tool build-context specs/search --depth 2 --timeframe 30d
     """
     try:
-        local = _default_local_routing(local)
-
-        with force_routing(local=local):
-            result = run_with_cleanup(
-                mcp_build_context(
-                    url=url,
-                    project=project,
-                    depth=depth,
-                    timeframe=timeframe,
-                    page=page,
-                    page_size=page_size,
-                    max_related=max_related,
-                    output_format="json",
-                )
+        result = run_with_cleanup(
+            mcp_build_context(
+                url=url,
+                project=project,
+                depth=depth,
+                timeframe=timeframe,
+                page=page,
+                page_size=page_size,
+                max_related=max_related,
+                output_format="json",
             )
+        )
         _print_json(result)
     except ValueError as e:
         typer.echo(f"Error: {e}", err=True)
@@ -333,20 +314,17 @@ def recent_activity(
     memoryhub tool recent-activity --type entity --type observation
     """
     try:
-        local = _default_local_routing(local)
-
-        with force_routing(local=local):
-            result = run_with_cleanup(
-                mcp_recent_activity(
-                    type=type,  # pyright: ignore[reportArgumentType]
-                    depth=depth if depth is not None else 1,
-                    timeframe=timeframe if timeframe is not None else "7d",
-                    page=page,
-                    page_size=page_size,
-                    project=project,
-                    output_format="json",
-                )
+        result = run_with_cleanup(
+            mcp_recent_activity(
+                type=type,  # pyright: ignore[reportArgumentType]
+                depth=depth if depth is not None else 1,
+                timeframe=timeframe if timeframe is not None else "7d",
+                page=page,
+                page_size=page_size,
+                project=project,
+                output_format="json",
             )
+        )
         _print_json(result)
     except ValueError as e:
         typer.echo(f"Error: {e}", err=True)
@@ -421,8 +399,6 @@ def search_notes(
     memoryhub tool search-notes --meta status=draft
     """
     try:
-        local = _default_local_routing(local)
-
         mode_flags = [permalink, title, vector, hybrid]
         if sum(1 for enabled in mode_flags if enabled) > 1:  # pragma: no cover
             typer.echo(
@@ -471,24 +447,22 @@ def search_notes(
         if hybrid:
             search_type = "hybrid"
 
-        with force_routing(local=local):
-            result = run_with_cleanup(
-                mcp_search(
-                    query=query or None,
-                    project=project,
-
-                    search_type=search_type,
-                    output_format="json",
-                    page=page,
-                    after_date=after_date,
-                    page_size=page_size,
-                    note_types=note_types,
-                    entity_types=entity_types,
-                    metadata_filters=metadata_filters,
-                    tags=tags,
-                    status=status,
-                )
+        result = run_with_cleanup(
+            mcp_search(
+                query=query or None,
+                project=project,
+                search_type=search_type,
+                output_format="json",
+                page=page,
+                after_date=after_date,
+                page_size=page_size,
+                note_types=note_types,
+                entity_types=entity_types,
+                metadata_filters=metadata_filters,
+                tags=tags,
+                status=status,
             )
+        )
 
         # MCP tool may return a string error message
         if isinstance(result, str):
@@ -526,10 +500,7 @@ def list_projects(
     memoryhub tool list-projects --local
     """
     try:
-        local = _default_local_routing(local)
-
-        with force_routing(local=local):
-            result = run_with_cleanup(mcp_list_projects(output_format="json"))
+        result = run_with_cleanup(mcp_list_projects(output_format="json"))
         _print_json(result)
     except ValueError as e:
         typer.echo(f"Error: {e}", err=True)
@@ -572,8 +543,6 @@ def schema_validate(
     memoryhub tool schema-validate --project research
     """
     try:
-        local = _default_local_routing(local)
-
         # Heuristic: if target contains / or ., treat as identifier; otherwise as note type
         note_type, identifier = None, None
         if target:
@@ -582,15 +551,14 @@ def schema_validate(
             else:
                 note_type = target
 
-        with force_routing(local=local):
-            result = run_with_cleanup(
-                mcp_schema_validate(
-                    note_type=note_type,
-                    identifier=identifier,
-                    project=project,
-                    output_format="json",
-                )
+        result = run_with_cleanup(
+            mcp_schema_validate(
+                note_type=note_type,
+                identifier=identifier,
+                project=project,
+                output_format="json",
             )
+        )
         _print_json(result)
     except ValueError as e:
         typer.echo(f"Error: {e}", err=True)
@@ -633,17 +601,14 @@ def schema_infer(
     memoryhub tool schema-infer person --project research
     """
     try:
-        local = _default_local_routing(local)
-
-        with force_routing(local=local):
-            result = run_with_cleanup(
-                mcp_schema_infer(
-                    note_type=note_type,
-                    threshold=threshold,
-                    project=project,
-                    output_format="json",
-                )
+        result = run_with_cleanup(
+            mcp_schema_infer(
+                note_type=note_type,
+                threshold=threshold,
+                project=project,
+                output_format="json",
             )
+        )
         _print_json(result)
     except ValueError as e:
         typer.echo(f"Error: {e}", err=True)
@@ -682,16 +647,13 @@ def schema_diff(
     memoryhub tool schema-diff person --project research
     """
     try:
-        local = _default_local_routing(local)
-
-        with force_routing(local=local):
-            result = run_with_cleanup(
-                mcp_schema_diff(
-                    note_type=note_type,
-                    project=project,
-                    output_format="json",
-                )
+        result = run_with_cleanup(
+            mcp_schema_diff(
+                note_type=note_type,
+                project=project,
+                output_format="json",
             )
+        )
         _print_json(result)
     except ValueError as e:
         typer.echo(f"Error: {e}", err=True)
