@@ -31,7 +31,7 @@ async def initialize_database(app_config: BasicMemoryConfig) -> None:
         connection is first established via get_or_create_db().
     """
     try:
-        await db.get_or_create_db(app_config.database_path)
+        await db.get_or_create_db(app_config.database_path, config=app_config)
         logger.info("Database initialization completed")
     except Exception as e:
         logger.error(f"Error during database initialization: {e}")
@@ -53,6 +53,7 @@ async def reconcile_projects_with_config(app_config: BasicMemoryConfig):
     _, session_maker = await db.get_or_create_db(
         db_path=app_config.database_path,
         db_type=db.DatabaseType.FILESYSTEM,
+        config=app_config,
     )
     project_repository = ProjectRepository(session_maker)
 
@@ -96,6 +97,7 @@ async def initialize_file_sync(
     _, session_maker = await db.get_or_create_db(
         db_path=app_config.database_path,
         db_type=db.DatabaseType.FILESYSTEM,
+        config=app_config,
     )
     project_repository = ProjectRepository(session_maker)
 

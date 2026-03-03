@@ -314,13 +314,13 @@ class TestSearchErrorFormatting:
         """Test formatting for semantic-search-disabled errors."""
         result = _format_search_error_response(
             "test-project",
-            "Semantic search is disabled. Set BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED=true.",
+            "Semantic search is disabled. Set MEMORYHUB_SEMANTIC_SEARCH_ENABLED=true (legacy alias: BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED).",
             "semantic query",
             "vector",
         )
 
         assert "# Search Failed - Semantic Search Disabled" in result
-        assert "BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED=true" in result
+        assert "MEMORYHUB_SEMANTIC_SEARCH_ENABLED=true" in result
         assert 'search_type="text"' in result
 
     def test_format_search_error_semantic_dependencies_missing(self):

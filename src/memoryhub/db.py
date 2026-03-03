@@ -165,7 +165,8 @@ class DatabaseType(Enum):
             if not config.database_url.startswith("sqlite"):
                 raise ValueError(
                     "MemoryHub is SQLite-only in this fork. "
-                    "Use a sqlite+aiosqlite URL or unset BASIC_MEMORY_DATABASE_URL."
+                    "Use a sqlite+aiosqlite URL or unset MEMORYHUB_DATABASE_URL "
+                    "(legacy alias: BASIC_MEMORY_DATABASE_URL)."
                 )
             logger.info(f"Using SQLite database URL: {config.database_url}")
             return config.database_url
@@ -457,8 +458,7 @@ async def run_migrations(
         config.set_main_option("timezone", "UTC")
         config.set_main_option("revision_environment", "false")
 
-        # Get the correct database URL based on backend configuration
-        # No URL conversion needed - env.py now handles both async and sync engines
+        # Get the supported SQLite database URL for the Alembic environment.
         db_url = DatabaseType.get_db_url(app_config.database_path, database_type, app_config)
         config.set_main_option("sqlalchemy.url", db_url)
 

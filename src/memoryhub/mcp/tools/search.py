@@ -51,7 +51,7 @@ def _format_search_error_response(
             You requested `{search_type}` search for query '{query}', but semantic search is disabled.
 
             ## How to enable
-            1. Set `BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED=true`
+            1. Set `MEMORYHUB_SEMANTIC_SEARCH_ENABLED=true`
             2. Restart the MemoryHub server/process
 
             ## Alternative now

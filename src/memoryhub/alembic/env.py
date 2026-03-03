@@ -18,11 +18,11 @@ if sys.version_info < (3, 14):
         pass
 # For Python 3.14+, we rely on the thread-based fallback in run_migrations_online()
 
-from sqlalchemy import engine_from_config, pool
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from alembic import context
 
+from memoryhub.alembic.migrations import create_migration_connectable
 from memoryhub.config import ConfigManager
 
 # Trigger: only set test env when actually running under pytest
@@ -30,7 +30,8 @@ from memoryhub.config import ConfigManager
 #      but we only want test behavior during actual test runs
 # Outcome: prevents is_test_env from returning True in production, enabling watch service
 if os.getenv("PYTEST_CURRENT_TEST") is not None:
-    os.environ["BASIC_MEMORY_ENV"] = "test"
+    os.environ.setdefault("MEMORYHUB_ENV", "test")
+    os.environ.setdefault("BASIC_MEMORY_ENV", "test")
 
 # Import after setting environment variable  # noqa: E402
 from memoryhub.models import Base  # noqa: E402
@@ -39,8 +40,7 @@ from memoryhub.models import Base  # noqa: E402
 # access to the values within the .ini file in use.
 config = context.config
 
-# Load app config - this will read environment variables (BASIC_MEMORY_DATABASE_BACKEND, etc.)
-# due to Pydantic's env_prefix="BASIC_MEMORY_" setting
+# Load app config - this resolves supported MEMORYHUB_* env vars plus legacy aliases.
 app_config = ConfigManager().config
 
 # Set the SQLAlchemy URL based on database backend configuration
@@ -119,36 +119,15 @@ async def run_async_migrations(connectable):
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
-
-    Supports both sync engines (SQLite) and async engines (PostgreSQL with asyncpg).
-    """
+    """Run migrations in online mode for the supported SQLite engine."""
     # Check if a connection/engine was provided (e.g., from run_migrations)
     connectable = context.config.attributes.get("connection", None)
 
     if connectable is None:
-        # No connection provided, create engine from config
         url = context.config.get_main_option("sqlalchemy.url")
+        connectable = create_migration_connectable(url)
 
-        # Check if it's an async URL (sqlite+aiosqlite or postgresql+asyncpg)
-        if url and ("+asyncpg" in url or "+aiosqlite" in url):
-            # Create async engine for asyncpg or aiosqlite
-            connectable = create_async_engine(
-                url,
-                poolclass=pool.NullPool,
-                future=True,
-            )
-        else:
-            # Create sync engine for regular sqlite or postgresql
-            connectable = engine_from_config(
-                context.config.get_section(context.config.config_ini_section, {}),
-                prefix="sqlalchemy.",
-                poolclass=pool.NullPool,
-            )
-
-    # Handle async engines (PostgreSQL with asyncpg)
     if isinstance(connectable, AsyncEngine):
-        # Try to run async migrations
         # nest_asyncio allows asyncio.run() from within event loops, but doesn't work with uvloop
         try:
             asyncio.run(run_async_migrations(connectable))
@@ -173,13 +152,10 @@ def run_migrations_online() -> None:
             else:
                 raise
     else:
-        # Handle sync engines (SQLite) or sync connections
         if hasattr(connectable, "connect"):
-            # It's an engine, get a connection
             with connectable.connect() as connection:
                 do_run_migrations(connection)
         else:
-            # It's already a connection
             do_run_migrations(connectable)
 
 

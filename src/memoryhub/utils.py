@@ -265,7 +265,7 @@ def setup_logging(
     # Remove default handler and any existing handlers
     logger.remove()
 
-    from memoryhub.env_compat import RUNTIME_ENV_VARS, get_env_value
+    from memoryhub.env_compat import RUNTIME_ENV_VARS, TENANT_ID_ENV_VARS, get_env_value
 
     # In test mode, only log to stdout regardless of settings
     env = get_env_value(RUNTIME_ENV_VARS, "dev") or "dev"
@@ -298,7 +298,7 @@ def setup_logging(
     if structured_context:
         logger.configure(
             extra={
-                "tenant_id": os.getenv("BASIC_MEMORY_TENANT_ID", "local"),
+                "tenant_id": get_env_value(TENANT_ID_ENV_VARS, "local") or "local",
                 "fly_app_name": os.getenv("FLY_APP_NAME", "local"),
                 "fly_machine_id": os.getenv("FLY_MACHINE_ID", "local"),
                 "fly_region": os.getenv("FLY_REGION", "local"),

@@ -357,7 +357,8 @@ class SearchRepositoryBase(ABC):
     def _assert_semantic_available(self) -> None:
         if not self._semantic_enabled:
             raise SemanticSearchDisabledError(
-                "Semantic search is disabled. Set BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED=true."
+                "Semantic search is disabled. Set MEMORYHUB_SEMANTIC_SEARCH_ENABLED=true "
+                "(legacy alias: BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED)."
             )
         if self._embedding_provider is None:
             raise SemanticDependenciesMissingError(
