@@ -16,6 +16,7 @@ from fastapi import Depends
 from loguru import logger
 
 from memoryhub.deps.config import AppConfigDep
+from memoryhub.env_compat import RUNTIME_ENV_VARS, get_env_value
 from memoryhub.deps.projects import (
     ProjectConfigDep,
     ProjectConfigV2Dep,
@@ -456,7 +457,7 @@ def _log_task_failure(completed: asyncio.Task) -> None:
 class LocalTaskScheduler:
     """Default scheduler that runs tasks in-process via asyncio.create_task.
 
-    In test mode (BASIC_MEMORY_ENV=test), tasks run as no-ops to avoid
+    In test mode (MEMORYHUB_ENV=test or BASIC_MEMORY_ENV=test), tasks run as no-ops to avoid
     background asyncio tasks racing against test teardown and causing
     SQLite 'cannot commit transaction' errors.
     """
@@ -468,7 +469,9 @@ class LocalTaskScheduler:
     ) -> None:
         self._handlers = handlers
         self._test_mode = (
-            test_mode if test_mode is not None else os.environ.get("BASIC_MEMORY_ENV") == "test"
+            test_mode
+            if test_mode is not None
+            else (get_env_value(RUNTIME_ENV_VARS, "dev") == "test")
         )
 
     def schedule(self, task_name: str, **payload: Any) -> None:
@@ -479,7 +482,7 @@ class LocalTaskScheduler:
         if not handler:
             raise ValueError(f"Unknown task name: {task_name}")
 
-        # Trigger: running inside pytest (BASIC_MEMORY_ENV=test)
+        # Trigger: running inside pytest (MEMORYHUB_ENV/BASIC_MEMORY_ENV=test)
         # Why: background create_task() outlives test fixtures and races
         #      against engine disposal, causing flaky SQLite errors
         # Outcome: skip background scheduling; tests exercise the sync

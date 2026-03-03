@@ -8,16 +8,12 @@ from typing import Optional
 
 from loguru import logger
 
-PROJECT_CONSTRAINT_ENV_VARS = ("MEMORYHUB_MCP_PROJECT", "BASIC_MEMORY_MCP_PROJECT")
+from memoryhub.env_compat import PROJECT_CONSTRAINT_ENV_VARS, get_env_value
 
 
 def get_project_constraint_env() -> Optional[str]:
     """Return the active project-constraint env var value, preferring MemoryHub naming."""
-    for env_var in PROJECT_CONSTRAINT_ENV_VARS:
-        value = os.environ.get(env_var)
-        if value:
-            return value
-    return None
+    return get_env_value(PROJECT_CONSTRAINT_ENV_VARS)
 
 
 class ResolutionMode(Enum):

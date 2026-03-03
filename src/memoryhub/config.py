@@ -12,6 +12,13 @@ from loguru import logger
 from pydantic import AliasChoices, BaseModel, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from memoryhub.env_compat import (
+    CONFIG_DIR_ENV_VARS,
+    HOME_ENV_VARS,
+    LOG_LEVEL_ENV_VARS,
+    RUNTIME_ENV_VARS,
+    get_env_value,
+)
 from memoryhub.utils import setup_logging, generate_permalink
 
 
@@ -75,10 +82,10 @@ class BasicMemoryConfig(BaseSettings):
     projects: Dict[str, ProjectEntry] = Field(
         default_factory=lambda: {
             "main": ProjectEntry(
-                path=str(Path(os.getenv("BASIC_MEMORY_HOME", Path.home() / "memoryhub")))
+                path=str(Path(get_env_value(HOME_ENV_VARS, str(Path.home() / "memoryhub"))))
             )
         }
-        if os.getenv("BASIC_MEMORY_HOME")
+        if get_env_value(HOME_ENV_VARS)
         else {},
         description="Mapping of project names to their ProjectEntry configuration",
     )
@@ -202,7 +209,8 @@ class BasicMemoryConfig(BaseSettings):
             "Default value for write_note's overwrite parameter. "
             "When False (default), write_note errors if note already exists. "
             "Set to True to restore pre-v0.20 upsert behavior. "
-            "Env: BASIC_MEMORY_WRITE_NOTE_OVERWRITE_DEFAULT"
+            "Env: MEMORYHUB_WRITE_NOTE_OVERWRITE_DEFAULT "
+            "(legacy alias: BASIC_MEMORY_WRITE_NOTE_OVERWRITE_DEFAULT)"
         ),
     )
 
@@ -257,6 +265,22 @@ class BasicMemoryConfig(BaseSettings):
 
     @model_validator(mode="before")
     @classmethod
+    def apply_memoryhub_env_aliases(cls, data: Any) -> Any:
+        """Support MEMORYHUB_* env names alongside legacy BASIC_MEMORY_* names."""
+        if data is None:
+            data = {}
+        if not isinstance(data, dict):
+            return data
+
+        aliased = dict(data)
+        for field_name in cls.model_fields.keys():
+            env_value = os.environ.get(f"MEMORYHUB_{field_name.upper()}")
+            if env_value is not None and field_name not in aliased:
+                aliased[field_name] = env_value
+        return aliased
+
+    @model_validator(mode="before")
+    @classmethod
     def migrate_legacy_projects(cls, data: Any) -> Any:
         """Migrate old-format config (Dict[str, str]) to ProjectEntry format.
 
@@ -297,7 +321,7 @@ class BasicMemoryConfig(BaseSettings):
                         local_path = cp.get("local_path")
                     else:
                         local_path = getattr(cp, "local_path", None)
-                    if local_path and not os.path.isabs(path):
+                    if local_path:
                         entry["path"] = local_path
                 new_projects[name] = entry
 
@@ -338,14 +362,14 @@ class BasicMemoryConfig(BaseSettings):
 
         Returns True if any of:
         - env field is set to "test"
-        - BASIC_MEMORY_ENV environment variable is "test"
+        - MEMORYHUB_ENV or BASIC_MEMORY_ENV environment variable is "test"
         - PYTEST_CURRENT_TEST environment variable is set (pytest is running)
 
         Used to disable features like file watchers during tests.
         """
         return (
             self.env == "test"
-            or os.getenv("BASIC_MEMORY_ENV", "").lower() == "test"
+            or get_env_value(RUNTIME_ENV_VARS, "").lower() == "test"
             or os.getenv("PYTEST_CURRENT_TEST") is not None
         )
 
@@ -378,10 +402,10 @@ class BasicMemoryConfig(BaseSettings):
         """Ensure configuration is valid after initialization."""
         # Trigger: no projects configured (fresh install or empty config)
         # Why: every config needs at least one project to be functional
-        # Outcome: creates "main" project using BASIC_MEMORY_HOME or ~/memoryhub
+        # Outcome: creates "main" project using MEMORYHUB_HOME/BASIC_MEMORY_HOME or ~/memoryhub
         if not self.projects:
             self.projects["main"] = ProjectEntry(
-                path=str(Path(os.getenv("BASIC_MEMORY_HOME", Path.home() / "memoryhub")))
+                path=str(Path(get_env_value(HOME_ENV_VARS, str(Path.home() / "memoryhub"))))
             )
 
         # Trigger: default_project was not explicitly provided in the input data
@@ -404,7 +428,8 @@ class BasicMemoryConfig(BaseSettings):
         This is the single database that will store all knowledge data
         across all projects.
 
-        Uses BASIC_MEMORY_CONFIG_DIR when set so each process/worktree can
+        Uses MEMORYHUB_CONFIG_DIR (or BASIC_MEMORY_CONFIG_DIR during compatibility)
+        when set so each process/worktree can
         isolate both config and database state.
         """
         database_path = self.data_dir_path / APP_DATABASE_NAME
@@ -451,7 +476,7 @@ class BasicMemoryConfig(BaseSettings):
     @property
     def data_dir_path(self) -> Path:
         """Get app state directory for config and default SQLite database."""
-        if config_dir := os.getenv("BASIC_MEMORY_CONFIG_DIR"):
+        if config_dir := get_env_value(CONFIG_DIR_ENV_VARS):
             return Path(config_dir)
 
         home = os.getenv("HOME", Path.home())
@@ -472,7 +497,7 @@ class ConfigManager:
             home = Path(home)
 
         # Allow override via environment variable
-        if config_dir := os.getenv("BASIC_MEMORY_CONFIG_DIR"):
+        if config_dir := get_env_value(CONFIG_DIR_ENV_VARS):
             self.config_dir = Path(config_dir)
         else:
             self.config_dir = home / DATA_DIR_NAME
@@ -567,8 +592,11 @@ class ConfigManager:
                 # For fields that have env var overrides, use those instead of file values
                 # The env_prefix is "BASIC_MEMORY_" so we check those
                 for field_name in BasicMemoryConfig.model_fields.keys():
-                    env_var_name = f"BASIC_MEMORY_{field_name.upper()}"
-                    if env_var_name in os.environ:
+                    env_var_names = (
+                        f"MEMORYHUB_{field_name.upper()}",
+                        f"BASIC_MEMORY_{field_name.upper()}",
+                    )
+                    if any(env_var_name in os.environ for env_var_name in env_var_names):
                         # Environment variable is set, use it
                         merged_data[field_name] = env_dict[field_name]
 
@@ -732,7 +760,7 @@ def init_cli_logging() -> None:  # pragma: no cover
     CLI commands should not log to stdout to avoid interfering with
     command output and shell integration.
     """
-    log_level = os.getenv("BASIC_MEMORY_LOG_LEVEL", "INFO")
+    log_level = get_env_value(LOG_LEVEL_ENV_VARS, "INFO") or "INFO"
     setup_logging(log_level=log_level, log_to_file=True)
 
 
@@ -742,11 +770,11 @@ def init_mcp_logging() -> None:  # pragma: no cover
     MCP server must not log to stdout as it would corrupt the
     JSON-RPC protocol communication.
     """
-    log_level = os.getenv("BASIC_MEMORY_LOG_LEVEL", "INFO")
+    log_level = get_env_value(LOG_LEVEL_ENV_VARS, "INFO") or "INFO"
     setup_logging(log_level=log_level, log_to_file=True)
 
 
 def init_api_logging() -> None:  # pragma: no cover
     """Initialize logging for the local API server."""
-    log_level = os.getenv("BASIC_MEMORY_LOG_LEVEL", "INFO")
+    log_level = get_env_value(LOG_LEVEL_ENV_VARS, "INFO") or "INFO"
     setup_logging(log_level=log_level, log_to_file=True)

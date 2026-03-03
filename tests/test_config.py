@@ -37,6 +37,16 @@ class TestBasicMemoryConfig:
         # Should use the custom path from environment variable
         assert Path(config.projects["main"].path) == custom_path
 
+    def test_respects_memoryhub_home_alias_environment_variable(self, config_home, monkeypatch):
+        """Test that config prefers MEMORYHUB_HOME for the default project path."""
+        custom_path = config_home / "alias" / "data"
+        monkeypatch.setenv("MEMORYHUB_HOME", str(custom_path))
+        monkeypatch.delenv("BASIC_MEMORY_HOME", raising=False)
+
+        config = BasicMemoryConfig()
+
+        assert Path(config.projects["main"].path) == custom_path
+
     def test_model_post_init_respects_memoryhub_home_creates_main(
         self, config_home, monkeypatch
     ):
@@ -108,6 +118,18 @@ class TestBasicMemoryConfig:
         """Default SQLite DB should live under BASIC_MEMORY_CONFIG_DIR when set."""
         custom_config_dir = tmp_path / "instance-a" / "state"
         monkeypatch.setenv("BASIC_MEMORY_CONFIG_DIR", str(custom_config_dir))
+
+        config = BasicMemoryConfig(projects={"main": {"path": str(tmp_path / "project")}})
+
+        assert config.data_dir_path == custom_config_dir
+        assert config.app_database_path == custom_config_dir / "memory.db"
+        assert config.app_database_path.exists()
+
+    def test_app_database_path_uses_memoryhub_config_dir_alias(self, tmp_path, monkeypatch):
+        """Default SQLite DB should also honor MEMORYHUB_CONFIG_DIR."""
+        custom_config_dir = tmp_path / "instance-b" / "state"
+        monkeypatch.setenv("MEMORYHUB_CONFIG_DIR", str(custom_config_dir))
+        monkeypatch.delenv("BASIC_MEMORY_CONFIG_DIR", raising=False)
 
         config = BasicMemoryConfig(projects={"main": {"path": str(tmp_path / "project")}})
 
@@ -373,6 +395,19 @@ class TestConfigManager:
             # Verify config_file is in the custom directory
             assert config_manager.config_file == custom_config_dir / "config.json"
             # Verify the directory was created
+            assert config_manager.config_dir.exists()
+
+    def test_config_manager_respects_memoryhub_config_dir_alias(self, monkeypatch):
+        """Test that ConfigManager also respects MEMORYHUB_CONFIG_DIR."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            custom_config_dir = Path(temp_dir) / "custom" / "memoryhub-config"
+            monkeypatch.setenv("MEMORYHUB_CONFIG_DIR", str(custom_config_dir))
+            monkeypatch.delenv("BASIC_MEMORY_CONFIG_DIR", raising=False)
+
+            config_manager = ConfigManager()
+
+            assert config_manager.config_dir == custom_config_dir
+            assert config_manager.config_file == custom_config_dir / "config.json"
             assert config_manager.config_dir.exists()
 
     def test_config_manager_default_without_custom_config_dir(self, config_home, monkeypatch):
@@ -785,6 +820,18 @@ class TestSemanticSearchConfig:
         disabled = BasicMemoryConfig()
         assert disabled.semantic_search_enabled is False
 
+    def test_semantic_search_enabled_memoryhub_env_alias(self, monkeypatch):
+        """MEMORYHUB_* aliases should also override dependency-based defaults."""
+        import memoryhub.config as config_module
+
+        monkeypatch.setattr(config_module.importlib.util, "find_spec", lambda name: None)
+        monkeypatch.setenv("MEMORYHUB_SEMANTIC_SEARCH_ENABLED", "true")
+        monkeypatch.delenv("BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED", raising=False)
+
+        config = BasicMemoryConfig()
+
+        assert config.semantic_search_enabled is True
+
     def test_semantic_embedding_dimensions_defaults_to_none(self):
         """Dimensions should default to None, letting the provider choose."""
         config = BasicMemoryConfig()
@@ -898,6 +945,21 @@ class TestFormattingConfig:
         config = BasicMemoryConfig()
 
         assert config.formatters == {"md": "prettier --write {file}", "json": "jq . {file}"}
+
+    def test_formatting_memoryhub_env_vars(self, monkeypatch):
+        """Test that formatting config can be set via MEMORYHUB_* aliases."""
+        monkeypatch.setenv("MEMORYHUB_FORMAT_ON_SAVE", "true")
+        monkeypatch.setenv("MEMORYHUB_FORMATTER_COMMAND", "prettier --write {file}")
+        monkeypatch.setenv("MEMORYHUB_FORMATTER_TIMEOUT", "7.5")
+        monkeypatch.delenv("BASIC_MEMORY_FORMAT_ON_SAVE", raising=False)
+        monkeypatch.delenv("BASIC_MEMORY_FORMATTER_COMMAND", raising=False)
+        monkeypatch.delenv("BASIC_MEMORY_FORMATTER_TIMEOUT", raising=False)
+
+        config = BasicMemoryConfig()
+
+        assert config.format_on_save is True
+        assert config.formatter_command == "prettier --write {file}"
+        assert config.formatter_timeout == 7.5
 
     def test_save_and_load_formatting_config(self):
         """Test that formatting config survives save/load cycle."""

@@ -265,8 +265,10 @@ def setup_logging(
     # Remove default handler and any existing handlers
     logger.remove()
 
+    from memoryhub.env_compat import RUNTIME_ENV_VARS, get_env_value
+
     # In test mode, only log to stdout regardless of settings
-    env = os.getenv("BASIC_MEMORY_ENV", "dev")
+    env = get_env_value(RUNTIME_ENV_VARS, "dev") or "dev"
     if env == "test":
         logger.add(sys.stderr, level=log_level, backtrace=True, diagnose=True, colorize=True)
         return

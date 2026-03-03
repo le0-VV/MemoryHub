@@ -19,6 +19,7 @@ class TestGetUIVariant:
     def test_default_variant(self, monkeypatch):
         """Returns 'vanilla' when env var is not set."""
         monkeypatch.delenv("BASIC_MEMORY_MCP_UI_VARIANT", raising=False)
+        monkeypatch.delenv("MEMORYHUB_MCP_UI_VARIANT", raising=False)
         assert get_ui_variant() == "vanilla"
 
     def test_vanilla_variant(self, monkeypatch):
@@ -45,6 +46,16 @@ class TestGetUIVariant:
     def test_case_insensitive(self, monkeypatch):
         monkeypatch.setenv("BASIC_MEMORY_MCP_UI_VARIANT", "VANILLA")
         assert get_ui_variant() == "vanilla"
+
+    def test_memoryhub_alias_variant(self, monkeypatch):
+        monkeypatch.setenv("MEMORYHUB_MCP_UI_VARIANT", "tool-ui")
+        monkeypatch.delenv("BASIC_MEMORY_MCP_UI_VARIANT", raising=False)
+        assert get_ui_variant() == "tool-ui"
+
+    def test_memoryhub_alias_takes_precedence(self, monkeypatch):
+        monkeypatch.setenv("BASIC_MEMORY_MCP_UI_VARIANT", "vanilla")
+        monkeypatch.setenv("MEMORYHUB_MCP_UI_VARIANT", "mcp-ui")
+        assert get_ui_variant() == "mcp-ui"
 
 
 class TestLoadHtml:

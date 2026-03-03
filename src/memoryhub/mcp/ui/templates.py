@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
+
+from memoryhub.env_compat import UI_VARIANT_ENV_VARS, get_env_value
 
 DEFAULT_VARIANT = "vanilla"
 SUPPORTED_VARIANTS = {"vanilla", "tool-ui", "mcp-ui"}
@@ -11,7 +12,7 @@ SUPPORTED_VARIANTS = {"vanilla", "tool-ui", "mcp-ui"}
 
 def get_ui_variant() -> str:
     """Return the active UI variant from environment settings."""
-    value = os.getenv("BASIC_MEMORY_MCP_UI_VARIANT", DEFAULT_VARIANT).strip().lower()
+    value = (get_env_value(UI_VARIANT_ENV_VARS, DEFAULT_VARIANT) or DEFAULT_VARIANT).strip().lower()
     return value if value in SUPPORTED_VARIANTS else DEFAULT_VARIANT
 
 

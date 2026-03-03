@@ -1,17 +1,16 @@
 """CLI first-run messaging for the local MemoryHub fork."""
 
-import os
 import sys
 
 from rich.console import Console
 
 from memoryhub.config import ConfigManager
+from memoryhub.env_compat import NO_PROMOS_ENV_VARS, is_truthy_env
 
 
 def _promos_disabled_by_env() -> bool:
     """Check environment-level kill switch for promo output."""
-    value = os.getenv("BASIC_MEMORY_NO_PROMOS", "").strip().lower()
-    return value in {"1", "true", "yes"}
+    return is_truthy_env(NO_PROMOS_ENV_VARS)
 
 
 def _is_interactive_session() -> bool:
