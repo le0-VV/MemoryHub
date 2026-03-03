@@ -1,4 +1,3 @@
-import os
 from contextlib import asynccontextmanager
 
 import httpx
@@ -14,8 +13,6 @@ from memoryhub.mcp.async_client import (
 @pytest.fixture(autouse=True)
 def _reset_async_client_state(monkeypatch):
     async_client_module._client_factory = None
-    monkeypatch.delenv("BASIC_MEMORY_FORCE_LOCAL", raising=False)
-    monkeypatch.delenv("BASIC_MEMORY_EXPLICIT_ROUTING", raising=False)
     yield
     async_client_module._client_factory = None
 
@@ -45,23 +42,4 @@ async def test_get_client_default_uses_local_asgi_transport():
 @pytest.mark.asyncio
 async def test_get_client_with_project_name_uses_local_asgi_transport():
     async with get_client(project_name="research") as client:
-        assert isinstance(client._transport, httpx.ASGITransport)  # pyright: ignore[reportPrivateUsage]
-
-
-@pytest.mark.asyncio
-async def test_get_client_ignores_explicit_local_env(monkeypatch):
-    monkeypatch.setenv("BASIC_MEMORY_FORCE_LOCAL", "true")
-    monkeypatch.setenv("BASIC_MEMORY_EXPLICIT_ROUTING", "true")
-
-    async with get_client(project_name="research") as client:
-        assert isinstance(client._transport, httpx.ASGITransport)  # pyright: ignore[reportPrivateUsage]
-        assert os.environ["BASIC_MEMORY_FORCE_LOCAL"] == "true"
-        assert os.environ["BASIC_MEMORY_EXPLICIT_ROUTING"] == "true"
-
-
-@pytest.mark.asyncio
-async def test_get_client_with_explicit_routing_still_uses_local(monkeypatch):
-    monkeypatch.setenv("BASIC_MEMORY_EXPLICIT_ROUTING", "true")
-
-    async with get_client() as client:
         assert isinstance(client._transport, httpx.ASGITransport)  # pyright: ignore[reportPrivateUsage]
