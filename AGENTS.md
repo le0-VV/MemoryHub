@@ -136,6 +136,10 @@ or isolating it instead of extending it.
 
 ## Agent Files
 
+- `.agents/` contains agent-neutral workflow documents for this repository.
 - `AGENTS.md` is the main repository guide.
 - `.agents/commands/` contains reusable workflow notes for release/spec/test tasks.
 - `.agents/TODO.md` is a local ignored scratch plan for ongoing cleanup work.
+
+These files are intentionally system-agnostic. They should not assume a
+specific assistant product, slash-command syntax, or vendor-specific metadata.
