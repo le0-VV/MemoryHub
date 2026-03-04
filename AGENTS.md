@@ -61,7 +61,7 @@ Do not use deprecated module-level HTTP clients or hand-managed auth headers.
 - While you write code, **CONSTANTLY** refer to sources you recorded in `./.agents/DOCUMENTATIONS.md` to make sure you're writing accurate, working and standard-complying code.
 - Anything the user asks you to remember, record it under the `## Memory` section in this file
 - When .agents/DOCUMENTATIONS.md is updated, commit ONLY .agents/DOCUMENTATIONS.md with commit message: "docs(agent docs): agent added more doc sources"
-- When the `## Memory` section is updated, commit ONLY .agents/MEMORY.md with commit message: "docs(agent memory): update memory"
+- When the `## Memory` section is updated, commit ONLY `AGENTS.md` with commit message: "docs(agent memory): update memory"
 - If you have **ANY** questions or concerns, **IMMEDIATELY** clarify with the user.
 - Before making any changes to the codebase, THOROUGHLY plan out your work, write down every step you're going to take in ./.agents/TODO.md, and follow it during your work.
 - Tick off every item you completed in ./.agents/TODO.md.
@@ -154,5 +154,6 @@ If you find code that still assumes those features are current, prefer removing 
 - `AGENTS.md` is the main repository guide.
 - `.agents/commands/` contains reusable workflow notes for release/spec/test tasks.
 - `.agents/TODO.md` is a local ignored scratch plan for ongoing cleanup work.
+- Be stricter with types in this repository and treat Pylance cleanliness as part of done work.
 
 These files are intentionally system-agnostic. They should not assume a specific assistant product, slash-command syntax, or vendor-specific metadata.
