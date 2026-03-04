@@ -76,12 +76,16 @@ class ProjectResolver:
 
     def _resolve_from_cwd(self) -> Optional[ResolvedProject]:
         """Resolve a configured project from the current working directory."""
+        cwd = self.cwd
+        if cwd is None:
+            return None
+
         if self.project_registry is not None:
-            registry_match = self.project_registry.match_cwd(self.cwd)
+            registry_match = self.project_registry.match_cwd(cwd)
             if registry_match is None:
                 return None
 
-            cwd_path = Path(self.cwd).expanduser().resolve(strict=False)
+            cwd_path = Path(cwd).expanduser().resolve(strict=False)
             logger.debug(f"Resolved project '{registry_match.name}' from cwd '{cwd_path}'")
             return ResolvedProject(
                 project=registry_match.name,
@@ -89,10 +93,10 @@ class ProjectResolver:
                 reason=f"Current working directory '{cwd_path}' is inside '{registry_match.path}'",
             )
 
-        if not self.cwd or not self.project_paths:
+        if not self.project_paths:
             return None
 
-        cwd_path = Path(self.cwd).expanduser().resolve(strict=False)
+        cwd_path = Path(cwd).expanduser().resolve(strict=False)
         best_match: Optional[tuple[str, Path]] = None
 
         for project_name, project_path in self.project_paths.items():

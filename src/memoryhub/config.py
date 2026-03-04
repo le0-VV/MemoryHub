@@ -40,6 +40,11 @@ class DatabaseBackend(str, Enum):
     SQLITE = "sqlite"
 
 
+def _default_project_home() -> str:
+    """Return the default home path string for the implicit main project."""
+    return get_env_value(HOME_ENV_VARS) or str(Path.home() / "memoryhub")
+
+
 def _default_semantic_search_enabled() -> bool:
     """Enable semantic search by default when required local semantic dependencies exist."""
     required_modules = ("fastembed", "sqlite_vec")
@@ -81,9 +86,7 @@ class BasicMemoryConfig(BaseSettings):
 
     projects: Dict[str, ProjectEntry] = Field(
         default_factory=lambda: {
-            "main": ProjectEntry(
-                path=str(Path(get_env_value(HOME_ENV_VARS, str(Path.home() / "memoryhub"))))
-            )
+            "main": ProjectEntry(path=_default_project_home())
         }
         if get_env_value(HOME_ENV_VARS)
         else {},
@@ -375,7 +378,7 @@ class BasicMemoryConfig(BaseSettings):
         """
         return (
             self.env == "test"
-            or get_env_value(RUNTIME_ENV_VARS, "").lower() == "test"
+            or (get_env_value(RUNTIME_ENV_VARS) or "").lower() == "test"
             or os.getenv("PYTEST_CURRENT_TEST") is not None
         )
 
@@ -410,9 +413,7 @@ class BasicMemoryConfig(BaseSettings):
         # Why: every config needs at least one project to be functional
         # Outcome: creates "main" project using MEMORYHUB_HOME/BASIC_MEMORY_HOME or ~/memoryhub
         if not self.projects:
-            self.projects["main"] = ProjectEntry(
-                path=str(Path(get_env_value(HOME_ENV_VARS, str(Path.home() / "memoryhub"))))
-            )
+            self.projects["main"] = ProjectEntry(path=_default_project_home())
 
         # Trigger: default_project was not explicitly provided in the input data
         #          (config file omitted the key, or BasicMemoryConfig() called with no args)

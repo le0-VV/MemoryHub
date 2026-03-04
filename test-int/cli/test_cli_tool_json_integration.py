@@ -112,7 +112,7 @@ def test_read_note_include_frontmatter(app, app_config, test_project, config_man
 
 def test_recent_activity_json_output(app, app_config, test_project, config_manager, monkeypatch):
     """recent-activity returns valid JSON list."""
-    monkeypatch.setenv("BASIC_MEMORY_MCP_PROJECT", test_project.name)
+    monkeypatch.setenv("MEMORYHUB_MCP_PROJECT", test_project.name)
 
     # Write a note to ensure there's recent activity
     write_result = runner.invoke(

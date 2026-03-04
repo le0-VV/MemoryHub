@@ -16,7 +16,7 @@ def get_env_value(names: Iterable[str], default: Optional[str] = None) -> Option
 
 def is_truthy_env(names: Iterable[str]) -> bool:
     """Return True when the first matching env value is a truthy flag."""
-    value = get_env_value(names, default="")
+    value = get_env_value(names, default="") or ""
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 

@@ -55,13 +55,17 @@ def mcp(
     if project:
         selector = ProjectSelector.from_config()
         try:
-            project_name = selector.require_configured_project(
+            selection = selector.require_configured_project(
                 project,
                 error_message=f"No project found named: {project}",
-            ).project
+            )
         except ValueError as exc:
             typer.echo(str(exc), err=True)
             raise typer.Exit(1) from exc
+
+        project_name = selection.project
+        if project_name is None:  # pragma: no cover
+            raise typer.Exit(1)
 
         # Export both names during the transition to keep older entry points working.
         for env_var in PROJECT_CONSTRAINT_ENV_VARS:

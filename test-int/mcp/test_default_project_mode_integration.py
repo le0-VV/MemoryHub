@@ -141,7 +141,7 @@ async def test_cli_constraint_overrides_default_project(
         }
     )
 
-    os.environ["BASIC_MEMORY_MCP_PROJECT"] = other_project.name
+    os.environ["MEMORYHUB_MCP_PROJECT"] = other_project.name
 
     mock_config = BasicMemoryConfig(
         default_project=test_project.name,
@@ -168,8 +168,8 @@ async def test_cli_constraint_overrides_default_project(
                 assert f"[Session: Using project '{other_project.name}']" in response_text
 
     finally:
-        if "BASIC_MEMORY_MCP_PROJECT" in os.environ:
-            del os.environ["BASIC_MEMORY_MCP_PROJECT"]
+        os.environ.pop("MEMORYHUB_MCP_PROJECT", None)
+        os.environ.pop("BASIC_MEMORY_MCP_PROJECT", None)
 
 
 @pytest.mark.asyncio
@@ -283,7 +283,7 @@ async def test_project_resolution_hierarchy(
     )
 
     # Test 1: CLI constraint (highest priority)
-    os.environ["BASIC_MEMORY_MCP_PROJECT"] = cli_project.name
+    os.environ["MEMORYHUB_MCP_PROJECT"] = cli_project.name
 
     try:
         with patch.object(ConfigManager, "config", mock_config):
@@ -301,7 +301,8 @@ async def test_project_resolution_hierarchy(
                 assert f"project: {cli_project.name}" in response_text
 
     finally:
-        del os.environ["BASIC_MEMORY_MCP_PROJECT"]
+        os.environ.pop("MEMORYHUB_MCP_PROJECT", None)
+        os.environ.pop("BASIC_MEMORY_MCP_PROJECT", None)
 
     # Test 2: Explicit project (medium priority)
     with patch.object(ConfigManager, "config", mock_config):

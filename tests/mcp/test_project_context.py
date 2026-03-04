@@ -19,6 +19,13 @@ class _ContextState:
         self._state[key] = value
 
 
+@pytest.fixture(autouse=True)
+def clear_project_constraint_env(monkeypatch):
+    """Keep project-context tests isolated from ambient or leaked MCP constraint env vars."""
+    monkeypatch.delenv("MEMORYHUB_MCP_PROJECT", raising=False)
+    monkeypatch.delenv("BASIC_MEMORY_MCP_PROJECT", raising=False)
+
+
 @pytest.mark.asyncio
 async def test_returns_none_when_no_default_and_no_project(config_manager, monkeypatch):
     from memoryhub.mcp.project_context import resolve_project_parameter

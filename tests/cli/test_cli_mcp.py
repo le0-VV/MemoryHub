@@ -31,6 +31,7 @@ def test_mcp_command_canonicalizes_project_constraint(monkeypatch):
     monkeypatch.setattr(mcp_cmd.ProjectSelector, "from_config", lambda: selector)
     monkeypatch.setattr(mcp_cmd, "init_mcp_logging", lambda: None)
     monkeypatch.setattr(mcp_cmd.mcp_server, "run", lambda **kwargs: run_calls.append(kwargs))
+    monkeypatch.delenv("MEMORYHUB_MCP_PROJECT", raising=False)
     monkeypatch.delenv("BASIC_MEMORY_MCP_PROJECT", raising=False)
 
     result = runner.invoke(app, ["mcp", "--project", "my-research"])
