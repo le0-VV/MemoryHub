@@ -68,6 +68,7 @@ Do not use deprecated module-level HTTP clients or hand-managed auth headers.
 - Read a file fully before editing it.
 - Keep diffs narrow and task-focused.
 - Do not guess at attribute names, control flow, or config behaviour.
+- Be stricter with types in this repository and treat Pylance cleanliness as part of done work.
 - Prefer fail-fast behaviour over silent fallback logic.
 - Add tests for new behaviour unless the change is strictly docs/metadata cleanup.
 - Keep comments rare and useful. Explain why or constraints, not obvious mechanics.
@@ -154,6 +155,5 @@ If you find code that still assumes those features are current, prefer removing 
 - `AGENTS.md` is the main repository guide.
 - `.agents/commands/` contains reusable workflow notes for release/spec/test tasks.
 - `.agents/TODO.md` is a local ignored scratch plan for ongoing cleanup work.
-- Be stricter with types in this repository and treat Pylance cleanliness as part of done work.
 
 These files are intentionally system-agnostic. They should not assume a specific assistant product, slash-command syntax, or vendor-specific metadata.
