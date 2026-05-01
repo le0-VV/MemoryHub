@@ -6,6 +6,7 @@ from typing import cast
 from memoryhub.adapters.mcp.server import (
     CONTEXT_TOOL,
     PROJECT_LIST_TOOL,
+    PROJECT_RESOLVE_TOOL,
     READ_TOOL,
     SEARCH_TOOL,
     STATUS_TOOL,
@@ -52,6 +53,26 @@ def test_mcp_project_list_tool_returns_registered_projects(tmp_path: Path) -> No
     names = [project["name"] for project in _object_list(projects)]
 
     assert names == ["main", "demo"]
+
+
+def test_mcp_project_resolve_tool_uses_path_and_default(tmp_path: Path) -> None:
+    registry = ProjectRegistry(RuntimeLayout.from_root(tmp_path / "hub"))
+    repo_root = tmp_path / "repo"
+    nested = repo_root / "nested"
+    nested.mkdir(parents=True)
+    registry.add_project(repo_root, name="demo")
+
+    path_content = _call_tool(
+        registry,
+        PROJECT_RESOLVE_TOOL,
+        {"path": str(nested)},
+    )
+    path_project = _expect_object(path_content["project"])
+    default_content = _call_tool(registry, PROJECT_RESOLVE_TOOL, {})
+    default_project = _expect_object(default_content["project"])
+
+    assert path_project["name"] == "demo"
+    assert default_project["name"] == "main"
 
 
 def test_mcp_status_write_search_and_read_tools(tmp_path: Path) -> None:

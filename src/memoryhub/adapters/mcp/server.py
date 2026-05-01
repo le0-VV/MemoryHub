@@ -5,12 +5,13 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Mapping
+from pathlib import Path
 from typing import TextIO, cast
 
 from memoryhub import __version__
 from memoryhub.framework.errors import MemoryHubError
 from memoryhub.framework.library import MemoryHubLibrary
-from memoryhub.framework.registry import ProjectRegistry
+from memoryhub.framework.registry import ProjectRecord, ProjectRegistry
 from memoryhub.framework.runtime import doctor
 from memoryhub.openviking.resources import resource_descriptor, resource_from_document
 from memoryhub.sources.markdown.schema import MarkdownDocument
@@ -18,6 +19,7 @@ from memoryhub.storage.sqlite.models import SearchResult
 
 PROTOCOL_VERSION = "2025-06-18"
 PROJECT_LIST_TOOL = "project_list"
+PROJECT_RESOLVE_TOOL = "project_resolve"
 STATUS_TOOL = "status"
 SEARCH_TOOL = "search"
 CONTEXT_TOOL = "context"
@@ -101,6 +103,18 @@ def _tools_list_result() -> dict[str, object]:
                 "inputSchema": {
                     "type": "object",
                     "properties": {},
+                    "additionalProperties": False,
+                },
+            },
+            {
+                "name": PROJECT_RESOLVE_TOOL,
+                "description": "Resolve a MemoryHub project by name, path, or default.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string"},
+                        "path": {"type": "string"},
+                    },
                     "additionalProperties": False,
                 },
             },
@@ -190,6 +204,10 @@ def _tools_call_result(params: object, registry: ProjectRegistry) -> dict[str, o
     if tool_name == PROJECT_LIST_TOOL:
         return _tool_result(
             {"projects": [project.to_json() for project in registry.list_projects()]}
+        )
+    if tool_name == PROJECT_RESOLVE_TOOL:
+        return _tool_result(
+            {"project": _resolve_project(arguments, registry).to_json()}
         )
     if tool_name == STATUS_TOOL:
         registry.ensure_initialized()
@@ -283,6 +301,21 @@ def _tools_call_result(params: object, registry: ProjectRegistry) -> dict[str, o
         )
 
     raise MemoryHubError(f"unsupported tool: {tool_name}")
+
+
+def _resolve_project(
+    arguments: dict[str, object],
+    registry: ProjectRegistry,
+) -> ProjectRecord:
+    name = _optional_string(arguments.get("name"), "arguments.name")
+    path = _optional_string(arguments.get("path"), "arguments.path")
+    if name is not None and path is not None:
+        raise MemoryHubError("project_resolve accepts either name or path, not both")
+    if name is not None:
+        return registry.get_project(name)
+    if path is not None:
+        return registry.resolve_by_cwd(Path(path).expanduser())
+    return registry.get_default()
 
 
 def _tool_result(structured_content: dict[str, object]) -> dict[str, object]:

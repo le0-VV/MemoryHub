@@ -113,6 +113,11 @@ def _build_parser() -> argparse.ArgumentParser:
     list_parser = project_subparsers.add_parser("list")
     list_parser.add_argument("--json", action="store_true")
 
+    resolve_parser = project_subparsers.add_parser("resolve")
+    resolve_parser.add_argument("path", nargs="?")
+    resolve_parser.add_argument("--name")
+    resolve_parser.add_argument("--json", action="store_true")
+
     remove_parser = project_subparsers.add_parser("remove")
     remove_parser.add_argument("name")
     remove_parser.add_argument("--json", action="store_true")
@@ -255,6 +260,10 @@ def _project(
             stdout.write(f"{marker} {item.record.name}\t{item.record.source_path}\n")
         return 0
 
+    if project_command == "resolve":
+        record = _resolve_project(args, registry, cwd)
+        return _project_result(record, cast(bool, args.json), stdout)
+
     if project_command == "remove":
         record = registry.remove_project(cast(str, args.name))
         return _project_result(record, cast(bool, args.json), stdout)
@@ -265,6 +274,22 @@ def _project(
         return _project_result(record, cast(bool, args.json), stdout)
 
     raise MemoryHubError(f"unsupported project command: {project_command}")
+
+
+def _resolve_project(
+    args: argparse.Namespace,
+    registry: ProjectRegistry,
+    cwd: Path | None,
+) -> ProjectRecord:
+    name = cast(str | None, args.name)
+    path = cast(str | None, args.path)
+    if name is not None and path is not None:
+        raise MemoryHubError("project resolve accepts either --name or path, not both")
+    if name is not None:
+        return registry.get_project(name)
+    if path is None:
+        return registry.resolve_by_cwd(Path.cwd() if cwd is None else cwd)
+    return registry.resolve_by_cwd(_resolve_cli_path(path, cwd))
 
 
 def _project_result(record: ProjectRecord, as_json: bool, stdout: TextIO) -> int:

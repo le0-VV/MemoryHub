@@ -138,6 +138,41 @@ def test_cli_project_add_list_default_and_remove_json(tmp_path: Path) -> None:
     assert removed_project["name"] == "demo"
 
 
+def test_cli_project_resolve_by_path_and_default_json(tmp_path: Path) -> None:
+    config_dir = tmp_path / "hub"
+    repo_root = tmp_path / "repo"
+    nested = repo_root / "nested"
+    nested.mkdir(parents=True)
+    _run_cli(
+        ["project", "add", str(repo_root), "--name", "demo", "--json"],
+        config_dir,
+        tmp_path,
+    )
+
+    path_code, path_stdout, path_stderr = _run_cli(
+        ["project", "resolve", str(nested), "--json"],
+        config_dir,
+        tmp_path,
+    )
+    path_payload = _parse_object(path_stdout)
+    path_project = _expect_object(path_payload["project"])
+
+    default_code, default_stdout, default_stderr = _run_cli(
+        ["project", "resolve", "--json"],
+        config_dir,
+        tmp_path,
+    )
+    default_payload = _parse_object(default_stdout)
+    default_project = _expect_object(default_payload["project"])
+
+    assert path_code == 0
+    assert path_stderr == ""
+    assert path_project["name"] == "demo"
+    assert default_code == 0
+    assert default_stderr == ""
+    assert default_project["name"] == "main"
+
+
 def test_cli_write_reindex_search_and_read_json(tmp_path: Path) -> None:
     config_dir = tmp_path / "hub"
     repo_root = tmp_path / "repo"
