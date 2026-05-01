@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import TextIO, cast
 
 from memoryhub.adapters.mcp.server import run_stdio
+from memoryhub.framework.backup import create_backup, inspect_backup, restore_backup
 from memoryhub.framework.errors import MemoryHubError
 from memoryhub.framework.install import InstallReport, install_runtime
 from memoryhub.framework.layout import RuntimeLayout
@@ -58,6 +59,8 @@ def run(
             return _project(args, registry, cwd, out)
         if command == "reindex":
             return _reindex(args, registry, out)
+        if command == "backup":
+            return _backup(args, registry, cwd, out)
         if command == "search":
             return _search(args, registry, out)
         if command == "context":
@@ -117,6 +120,25 @@ def _build_parser() -> argparse.ArgumentParser:
 
     reindex_parser = subparsers.add_parser("reindex")
     reindex_parser.add_argument("--json", action="store_true")
+
+    backup_parser = subparsers.add_parser("backup")
+    backup_subparsers = backup_parser.add_subparsers(
+        dest="backup_command",
+        required=True,
+    )
+
+    backup_create_parser = backup_subparsers.add_parser("create")
+    backup_create_parser.add_argument("path")
+    backup_create_parser.add_argument("--force", action="store_true")
+    backup_create_parser.add_argument("--json", action="store_true")
+
+    backup_inspect_parser = backup_subparsers.add_parser("inspect")
+    backup_inspect_parser.add_argument("path")
+    backup_inspect_parser.add_argument("--json", action="store_true")
+
+    backup_restore_parser = backup_subparsers.add_parser("restore")
+    backup_restore_parser.add_argument("path")
+    backup_restore_parser.add_argument("--json", action="store_true")
 
     search_parser = subparsers.add_parser("search")
     search_parser.add_argument("query")
@@ -258,6 +280,49 @@ def _reindex(
             f"across {report.project_count} projects.\n"
         )
     return 0
+
+
+def _backup(
+    args: argparse.Namespace,
+    registry: ProjectRegistry,
+    cwd: Path | None,
+    stdout: TextIO,
+) -> int:
+    backup_command = cast(str, args.backup_command)
+    archive_path = _resolve_cli_path(cast(str, args.path), cwd)
+    if backup_command == "create":
+        report = create_backup(
+            registry,
+            archive_path,
+            force=cast(bool, args.force),
+        )
+        if cast(bool, args.json):
+            _write_json({"backup": report.to_json()}, stdout)
+        else:
+            stdout.write(f"Created MemoryHub backup: {report.archive_path}\n")
+        return 0
+
+    if backup_command == "inspect":
+        report = inspect_backup(archive_path)
+        if cast(bool, args.json):
+            _write_json({"backup": report.to_json()}, stdout)
+        else:
+            stdout.write(f"MemoryHub backup: {report.archive_path}\n")
+            stdout.write(f"Projects: {report.manifest.project_count}\n")
+            stdout.write(f"Markdown files: {report.manifest.file_count}\n")
+        return 0
+
+    if backup_command == "restore":
+        report = restore_backup(archive_path, registry.layout)
+        if cast(bool, args.json):
+            _write_json({"backup": report.to_json()}, stdout)
+        else:
+            stdout.write(f"Restored MemoryHub runtime: {report.runtime_root}\n")
+            stdout.write(f"Projects: {report.project_count}\n")
+            stdout.write(f"Markdown files: {report.file_count}\n")
+        return 0
+
+    raise MemoryHubError(f"unsupported backup command: {backup_command}")
 
 
 def _search(

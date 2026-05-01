@@ -12,6 +12,7 @@ The current source of truth is `roadmap.md`.
 - project context folders under each repository's `.agents/memoryhub/`
 - central project registry paths under `$MEMORYHUB_CONFIG_DIR/projects/`
 - JSON config for project registration
+- backup and safe restore for config plus Markdown source trees
 - thin CLI over framework services
 - MCP over stdio as the first agent interface
 
@@ -46,3 +47,11 @@ uv run memoryhub install
 By default this prepares `~/.memoryhub`, initializes `config.json`, creates the
 global `projects/main` context tree, and writes a launcher at
 `~/.memoryhub/bin/memoryhub`.
+
+Create, inspect, or restore a source-of-truth backup:
+
+```bash
+memoryhub backup create ~/memoryhub.zip
+memoryhub backup inspect ~/memoryhub.zip
+MEMORYHUB_CONFIG_DIR=/path/to/empty-runtime memoryhub backup restore ~/memoryhub.zip
+```

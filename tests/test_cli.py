@@ -236,6 +236,88 @@ def test_cli_search_filters_and_context_json(tmp_path: Path) -> None:
     assert "## Cache Pattern" in _expect_str(context["markdown"])
 
 
+def test_cli_backup_create_inspect_restore_and_read_json(tmp_path: Path) -> None:
+    config_dir = tmp_path / "hub"
+    repo_root = tmp_path / "repo"
+    archive_path = tmp_path / "memoryhub.zip"
+    restored_config_dir = tmp_path / "restored-hub"
+    repo_root.mkdir()
+    _run_cli(
+        ["project", "add", str(repo_root), "--name", "demo", "--default", "--json"],
+        config_dir,
+        tmp_path,
+    )
+    _run_cli(
+        [
+            "write",
+            "demo",
+            "agent/memories/patterns/cache.md",
+            "--title",
+            "Cache Pattern",
+            "--body",
+            "Backups include repo-local Markdown.",
+            "--kind",
+            "pattern",
+            "--tag",
+            "cache",
+            "--json",
+        ],
+        config_dir,
+        tmp_path,
+    )
+
+    create_code, create_stdout, create_stderr = _run_cli(
+        ["backup", "create", str(archive_path), "--json"],
+        config_dir,
+        tmp_path,
+    )
+    create_payload = _parse_object(create_stdout)
+    create_backup_payload = _expect_object(create_payload["backup"])
+    create_manifest = _expect_object(create_backup_payload["manifest"])
+
+    assert create_code == 0
+    assert create_stderr == ""
+    assert create_backup_payload["archive_path"] == str(archive_path)
+    assert create_manifest["project_count"] == 2
+    assert create_manifest["file_count"] == 1
+
+    inspect_code, inspect_stdout, _ = _run_cli(
+        ["backup", "inspect", str(archive_path), "--json"],
+        config_dir,
+        tmp_path,
+    )
+    inspect_payload = _parse_object(inspect_stdout)
+    inspect_backup_payload = _expect_object(inspect_payload["backup"])
+    inspect_manifest = _expect_object(inspect_backup_payload["manifest"])
+
+    assert inspect_code == 0
+    assert inspect_manifest["default_project"] == "demo"
+
+    restore_code, restore_stdout, _ = _run_cli(
+        ["backup", "restore", str(archive_path), "--json"],
+        restored_config_dir,
+        tmp_path,
+    )
+    restore_payload = _parse_object(restore_stdout)
+    restore_backup_payload = _expect_object(restore_payload["backup"])
+
+    assert restore_code == 0
+    assert restore_backup_payload["runtime_root"] == str(restored_config_dir)
+    assert restore_backup_payload["project_count"] == 2
+    assert restore_backup_payload["file_count"] == 1
+
+    read_code, read_stdout, _ = _run_cli(
+        ["read", "demo", "agent/memories/patterns/cache.md", "--json"],
+        restored_config_dir,
+        tmp_path,
+    )
+    read_payload = _parse_object(read_stdout)
+    read_document = _expect_object(read_payload["document"])
+
+    assert read_code == 0
+    assert read_document["body"] == "Backups include repo-local Markdown."
+
+
 def _run_cli(
     args: list[str],
     config_dir: Path,

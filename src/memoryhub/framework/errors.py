@@ -27,3 +27,7 @@ class ProjectConflictError(RegistryError):
 
 class ProjectNotFoundError(RegistryError):
     """Raised when a project does not exist."""
+
+
+class BackupError(MemoryHubError):
+    """Raised when a backup archive cannot be created, read, or restored."""
