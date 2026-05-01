@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from memoryhub.framework.context import ContextBundle, ContextDocument
 from memoryhub.framework.registry import ProjectRecord, ProjectRegistry
 from memoryhub.sources.markdown.parser import read_markdown_file
 from memoryhub.sources.markdown.schema import MarkdownDocument
@@ -10,7 +11,7 @@ from memoryhub.sources.markdown.serializer import (
     write_markdown_file,
 )
 from memoryhub.sources.markdown.sync import resolve_document_path
-from memoryhub.storage.sqlite.models import ReindexReport, SearchResult
+from memoryhub.storage.sqlite.models import ReindexReport, SearchFilters, SearchResult
 from memoryhub.storage.sqlite.search import SQLiteIndex
 
 
@@ -27,9 +28,54 @@ class MemoryHubLibrary:
         query: str,
         *,
         project_name: str | None = None,
+        kind: str | None = None,
+        tag: str | None = None,
+        path_prefix: str | None = None,
         limit: int = 10,
     ) -> tuple[SearchResult, ...]:
-        return self._index.search(query, project_name=project_name, limit=limit)
+        return self._index.search(
+            query,
+            filters=SearchFilters(
+                project_name=project_name,
+                kind=kind,
+                tag=tag,
+                path_prefix=path_prefix,
+                limit=limit,
+            ),
+        )
+
+    def build_context(
+        self,
+        query: str,
+        *,
+        project_name: str | None = None,
+        kind: str | None = None,
+        tag: str | None = None,
+        path_prefix: str | None = None,
+        limit: int = 5,
+    ) -> ContextBundle:
+        results = self.search(
+            query,
+            project_name=project_name,
+            kind=kind,
+            tag=tag,
+            path_prefix=path_prefix,
+            limit=limit,
+        )
+        documents: list[ContextDocument] = []
+        for result in results:
+            document = self.read_document(result.project_name, result.relative_path)
+            documents.append(
+                ContextDocument(
+                    project_name=result.project_name,
+                    relative_path=result.relative_path,
+                    title=document.title,
+                    kind=document.kind,
+                    body=document.body,
+                    tags=document.tags,
+                )
+            )
+        return ContextBundle(query=query, documents=tuple(documents))
 
     def read_document(self, project_name: str, relative_path: str) -> MarkdownDocument:
         record = self._registry.get_project(project_name)

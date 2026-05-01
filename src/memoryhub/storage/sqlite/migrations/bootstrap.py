@@ -24,6 +24,7 @@ def migrate_database(connection: sqlite3.Connection) -> None:
             absolute_path TEXT NOT NULL,
             title TEXT NOT NULL,
             kind TEXT NOT NULL,
+            tags TEXT NOT NULL DEFAULT '',
             body TEXT NOT NULL,
             frontmatter_json TEXT NOT NULL,
             mtime_ns INTEGER NOT NULL,
@@ -41,5 +42,22 @@ def migrate_database(connection: sqlite3.Connection) -> None:
         );
         """
     )
+    _ensure_column(connection, "source_files", "tags", "TEXT NOT NULL DEFAULT ''")
     connection.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
     connection.commit()
+
+
+def _ensure_column(
+    connection: sqlite3.Connection,
+    table_name: str,
+    column_name: str,
+    definition: str,
+) -> None:
+    columns = {
+        str(row[1])
+        for row in connection.execute(f"PRAGMA table_info({table_name})").fetchall()
+    }
+    if column_name not in columns:
+        connection.execute(
+            f"ALTER TABLE {table_name} ADD COLUMN {column_name} {definition}"
+        )

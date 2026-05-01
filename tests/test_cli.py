@@ -138,6 +138,88 @@ def test_cli_write_reindex_search_and_read_json(tmp_path: Path) -> None:
     assert read_document["body"] == "Use local caches for repeated context lookups."
 
 
+def test_cli_search_filters_and_context_json(tmp_path: Path) -> None:
+    config_dir = tmp_path / "hub"
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    _run_cli(
+        ["project", "add", str(repo_root), "--name", "demo", "--json"],
+        config_dir,
+        tmp_path,
+    )
+    _run_cli(
+        [
+            "write",
+            "demo",
+            "agent/memories/patterns/cache.md",
+            "--title",
+            "Cache Pattern",
+            "--body",
+            "Context lookup should prefer explicit caches.",
+            "--kind",
+            "pattern",
+            "--tag",
+            "cache",
+            "--json",
+        ],
+        config_dir,
+        tmp_path,
+    )
+    _run_cli(
+        [
+            "write",
+            "demo",
+            "user/memories/preferences/runtime.md",
+            "--title",
+            "Runtime Preference",
+            "--body",
+            "Context files should remain in project repositories.",
+            "--kind",
+            "preference",
+            "--tag",
+            "runtime",
+            "--json",
+        ],
+        config_dir,
+        tmp_path,
+    )
+
+    search_code, search_stdout, _ = _run_cli(
+        [
+            "search",
+            "context",
+            "--kind",
+            "preference",
+            "--tag",
+            "runtime",
+            "--path-prefix",
+            "user/",
+            "--json",
+        ],
+        config_dir,
+        tmp_path,
+    )
+    search_payload = _parse_object(search_stdout)
+    results = _object_list(_expect_list(search_payload["results"]))
+
+    assert search_code == 0
+    assert [result["title"] for result in results] == ["Runtime Preference"]
+
+    context_code, context_stdout, _ = _run_cli(
+        ["context", "context", "--tag", "cache", "--json"],
+        config_dir,
+        tmp_path,
+    )
+    context_payload = _parse_object(context_stdout)
+    context = _expect_object(context_payload["context"])
+    documents = _object_list(_expect_list(context["documents"]))
+
+    assert context_code == 0
+    assert context["document_count"] == 1
+    assert documents[0]["title"] == "Cache Pattern"
+    assert "## Cache Pattern" in _expect_str(context["markdown"])
+
+
 def _run_cli(
     args: list[str],
     config_dir: Path,
@@ -167,6 +249,11 @@ def _expect_object(value: object) -> dict[str, object]:
 def _expect_list(value: object) -> list[object]:
     assert isinstance(value, list)
     return cast(list[object], value)
+
+
+def _expect_str(value: object) -> str:
+    assert isinstance(value, str)
+    return value
 
 
 def _object_list(values: list[object]) -> list[dict[str, object]]:

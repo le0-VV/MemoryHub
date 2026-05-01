@@ -13,7 +13,7 @@ from memoryhub.sources.markdown.parser import read_markdown_file
 from memoryhub.sources.markdown.sync import iter_markdown_files
 from memoryhub.storage.sqlite.connection import connect_database
 from memoryhub.storage.sqlite.migrations import migrate_database
-from memoryhub.storage.sqlite.models import ReindexReport, SearchResult
+from memoryhub.storage.sqlite.models import ReindexReport, SearchFilters, SearchResult
 
 
 class SQLiteIndex:
@@ -47,28 +47,49 @@ class SQLiteIndex:
         query: str,
         *,
         project_name: str | None = None,
+        kind: str | None = None,
+        tag: str | None = None,
+        path_prefix: str | None = None,
         limit: int = 10,
+        filters: SearchFilters | None = None,
     ) -> tuple[SearchResult, ...]:
+        active_filters = filters or SearchFilters(
+            project_name=project_name,
+            kind=kind,
+            tag=tag,
+            path_prefix=path_prefix,
+            limit=limit,
+        )
         if query.strip() == "":
             raise MemoryHubError("search query cannot be empty")
-        if limit < 1 or limit > 100:
+        if active_filters.limit < 1 or active_filters.limit > 100:
             raise MemoryHubError("search limit must be between 1 and 100")
 
         self.migrate()
         sql = [
             "SELECT f.project_name, f.relative_path, f.title, f.kind,",
             "       substr(f.body, 1, 240) AS snippet,",
-            "       bm25(source_files_fts) AS rank",
+            "       bm25(source_files_fts) AS rank,",
+            "       f.tags",
             "FROM source_files_fts",
             "JOIN source_files f ON f.id = source_files_fts.rowid",
             "WHERE source_files_fts MATCH ?",
         ]
         parameters: list[object] = [query]
-        if project_name is not None:
+        if active_filters.project_name is not None:
             sql.append("AND f.project_name = ?")
-            parameters.append(project_name)
+            parameters.append(active_filters.project_name)
+        if active_filters.kind is not None:
+            sql.append("AND f.kind = ?")
+            parameters.append(active_filters.kind)
+        if active_filters.path_prefix is not None:
+            sql.append("AND f.relative_path LIKE ?")
+            parameters.append(f"{_escape_like(active_filters.path_prefix)}%")
+        if active_filters.tag is not None:
+            sql.append("AND instr(',' || f.tags || ',', ?) > 0")
+            parameters.append(f",{active_filters.tag},")
         sql.append("ORDER BY rank ASC LIMIT ?")
-        parameters.append(limit)
+        parameters.append(active_filters.limit)
 
         with connect_database(self._database_path) as connection:
             cursor = connection.execute(" ".join(sql), parameters)
@@ -118,12 +139,13 @@ class SQLiteIndex:
                     absolute_path,
                     title,
                     kind,
+                    tags,
                     body,
                     frontmatter_json,
                     mtime_ns,
                     size
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     project.record.name,
@@ -131,6 +153,7 @@ class SQLiteIndex:
                     str(path),
                     document.title,
                     document.kind,
+                    _serialize_tags(document.tags),
                     document.body,
                     frontmatter_json,
                     stat.st_mtime_ns,
@@ -174,6 +197,7 @@ def _search_result_from_row(row: object) -> SearchResult:
         kind=_expect_str(values[3], "kind"),
         snippet=_expect_str(values[4], "snippet"),
         rank=_expect_float(values[5], "rank"),
+        tags=_deserialize_tags(_expect_str(values[6], "tags")),
     )
 
 
@@ -187,3 +211,17 @@ def _expect_float(value: object, label: str) -> float:
     if isinstance(value, int | float):
         return float(value)
     raise MemoryHubError(f"expected numeric column: {label}")
+
+
+def _serialize_tags(tags: tuple[str, ...]) -> str:
+    return ",".join(tag.strip() for tag in tags if tag.strip() != "")
+
+
+def _deserialize_tags(tags: str) -> tuple[str, ...]:
+    if tags.strip() == "":
+        return ()
+    return tuple(tag for tag in tags.split(",") if tag != "")
+
+
+def _escape_like(value: str) -> str:
+    return value.replace("%", r"\%").replace("_", r"\_")

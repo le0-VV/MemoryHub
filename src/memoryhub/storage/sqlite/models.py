@@ -6,6 +6,24 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)
+class SearchFilters:
+    project_name: str | None = None
+    kind: str | None = None
+    tag: str | None = None
+    path_prefix: str | None = None
+    limit: int = 10
+
+    def to_json(self) -> dict[str, object]:
+        return {
+            "project_name": self.project_name,
+            "kind": self.kind,
+            "tag": self.tag,
+            "path_prefix": self.path_prefix,
+            "limit": self.limit,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class ReindexReport:
     project_count: int
     document_count: int
@@ -25,6 +43,7 @@ class SearchResult:
     kind: str
     snippet: str
     rank: float
+    tags: tuple[str, ...] = ()
 
     def to_json(self) -> dict[str, object]:
         return {
@@ -34,4 +53,5 @@ class SearchResult:
             "kind": self.kind,
             "snippet": self.snippet,
             "rank": self.rank,
+            "tags": list(self.tags),
         }

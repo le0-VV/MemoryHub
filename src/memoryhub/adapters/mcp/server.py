@@ -17,6 +17,7 @@ PROTOCOL_VERSION = "2025-06-18"
 PROJECT_LIST_TOOL = "project_list"
 STATUS_TOOL = "status"
 SEARCH_TOOL = "search"
+CONTEXT_TOOL = "context"
 READ_TOOL = "read"
 WRITE_TOOL = "write"
 
@@ -117,6 +118,26 @@ def _tools_list_result() -> dict[str, object]:
                     "properties": {
                         "query": {"type": "string"},
                         "project": {"type": "string"},
+                        "kind": {"type": "string"},
+                        "tag": {"type": "string"},
+                        "path_prefix": {"type": "string"},
+                        "limit": {"type": "integer"},
+                    },
+                    "required": ["query"],
+                    "additionalProperties": False,
+                },
+            },
+            {
+                "name": CONTEXT_TOOL,
+                "description": "Build prompt-ready context from indexed documents.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string"},
+                        "project": {"type": "string"},
+                        "kind": {"type": "string"},
+                        "tag": {"type": "string"},
+                        "path_prefix": {"type": "string"},
                         "limit": {"type": "integer"},
                     },
                     "required": ["query"],
@@ -173,6 +194,12 @@ def _tools_call_result(params: object, registry: ProjectRegistry) -> dict[str, o
     if tool_name == SEARCH_TOOL:
         query = _expect_string(arguments.get("query"), "arguments.query")
         project = _optional_string(arguments.get("project"), "arguments.project")
+        kind = _optional_string(arguments.get("kind"), "arguments.kind")
+        tag = _optional_string(arguments.get("tag"), "arguments.tag")
+        path_prefix = _optional_string(
+            arguments.get("path_prefix"),
+            "arguments.path_prefix",
+        )
         limit = _optional_int(arguments.get("limit"), "arguments.limit") or 10
         return _tool_result(
             {
@@ -181,9 +208,34 @@ def _tools_call_result(params: object, registry: ProjectRegistry) -> dict[str, o
                     for result in library.search(
                         query,
                         project_name=project,
+                        kind=kind,
+                        tag=tag,
+                        path_prefix=path_prefix,
                         limit=limit,
                     )
                 ]
+            }
+        )
+    if tool_name == CONTEXT_TOOL:
+        query = _expect_string(arguments.get("query"), "arguments.query")
+        project = _optional_string(arguments.get("project"), "arguments.project")
+        kind = _optional_string(arguments.get("kind"), "arguments.kind")
+        tag = _optional_string(arguments.get("tag"), "arguments.tag")
+        path_prefix = _optional_string(
+            arguments.get("path_prefix"),
+            "arguments.path_prefix",
+        )
+        limit = _optional_int(arguments.get("limit"), "arguments.limit") or 5
+        return _tool_result(
+            {
+                "context": library.build_context(
+                    query,
+                    project_name=project,
+                    kind=kind,
+                    tag=tag,
+                    path_prefix=path_prefix,
+                    limit=limit,
+                ).to_json()
             }
         )
     if tool_name == READ_TOOL:

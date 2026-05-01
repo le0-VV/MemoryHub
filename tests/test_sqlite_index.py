@@ -64,3 +64,41 @@ def test_sqlite_rebuild_recreates_deleted_database(tmp_path: Path) -> None:
     assert first_report.document_count == 1
     assert second_report.document_count == 1
     assert results[0].title == "Local Preference"
+
+
+def test_library_search_filters_and_context_assembly(tmp_path: Path) -> None:
+    layout = RuntimeLayout.from_root(tmp_path / "hub")
+    registry = ProjectRegistry(layout)
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    library = MemoryHubLibrary(registry)
+    registry.add_project(repo_root, name="demo")
+    library.write_document(
+        "demo",
+        "agent/memories/patterns/cache.md",
+        title="Cache Pattern",
+        body="Context lookup should prefer explicit caches.",
+        kind="pattern",
+        tags=("cache",),
+    )
+    library.write_document(
+        "demo",
+        "user/memories/preferences/runtime.md",
+        title="Runtime Preference",
+        body="Context files should remain in project repositories.",
+        kind="preference",
+        tags=("runtime",),
+    )
+    library.reindex()
+
+    kind_results = library.search("context", kind="pattern")
+    tag_results = library.search("context", tag="runtime")
+    path_results = library.search("context", path_prefix="user/")
+    bundle = library.build_context("context", tag="cache")
+
+    assert [result.title for result in kind_results] == ["Cache Pattern"]
+    assert [result.title for result in tag_results] == ["Runtime Preference"]
+    assert [result.title for result in path_results] == ["Runtime Preference"]
+    assert bundle.documents[0].title == "Cache Pattern"
+    assert "## Cache Pattern" in bundle.to_markdown()
+    assert "project: demo" in bundle.to_markdown()

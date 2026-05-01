@@ -57,6 +57,8 @@ def run(
             return _reindex(args, registry, out)
         if command == "search":
             return _search(args, registry, out)
+        if command == "context":
+            return _context(args, registry, out)
         if command == "read":
             return _read(args, registry, out)
         if command == "write":
@@ -112,8 +114,20 @@ def _build_parser() -> argparse.ArgumentParser:
     search_parser = subparsers.add_parser("search")
     search_parser.add_argument("query")
     search_parser.add_argument("--project")
+    search_parser.add_argument("--kind")
+    search_parser.add_argument("--tag")
+    search_parser.add_argument("--path-prefix")
     search_parser.add_argument("--limit", type=int, default=10)
     search_parser.add_argument("--json", action="store_true")
+
+    context_parser = subparsers.add_parser("context")
+    context_parser.add_argument("query")
+    context_parser.add_argument("--project")
+    context_parser.add_argument("--kind")
+    context_parser.add_argument("--tag")
+    context_parser.add_argument("--path-prefix")
+    context_parser.add_argument("--limit", type=int, default=5)
+    context_parser.add_argument("--json", action="store_true")
 
     read_parser = subparsers.add_parser("read")
     read_parser.add_argument("project")
@@ -233,6 +247,9 @@ def _search(
     results = MemoryHubLibrary(registry).search(
         cast(str, args.query),
         project_name=cast(str | None, args.project),
+        kind=cast(str | None, args.kind),
+        tag=cast(str | None, args.tag),
+        path_prefix=cast(str | None, args.path_prefix),
         limit=cast(int, args.limit),
     )
     if cast(bool, args.json):
@@ -243,6 +260,26 @@ def _search(
             f"{result.project_name}:{result.relative_path}\t"
             f"{result.title}\t{result.snippet}\n"
         )
+    return 0
+
+
+def _context(
+    args: argparse.Namespace,
+    registry: ProjectRegistry,
+    stdout: TextIO,
+) -> int:
+    bundle = MemoryHubLibrary(registry).build_context(
+        cast(str, args.query),
+        project_name=cast(str | None, args.project),
+        kind=cast(str | None, args.kind),
+        tag=cast(str | None, args.tag),
+        path_prefix=cast(str | None, args.path_prefix),
+        limit=cast(int, args.limit),
+    )
+    if cast(bool, args.json):
+        _write_json({"context": bundle.to_json()}, stdout)
+    else:
+        stdout.write(bundle.to_markdown())
     return 0
 
 
