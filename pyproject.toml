@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "memoryhub"
+version = "0.1.0"
+description = "Local OpenViking-style context hub runtime for agents"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [
+  { name = "Leonard W." },
+]
+dependencies = []
+
+[project.scripts]
+memoryhub = "memoryhub.adapters.cli.main:main"
+
+[dependency-groups]
+dev = [
+  "pyright>=1.1.400",
+  "pytest>=8.3",
+  "ruff>=0.11",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/memoryhub"]
+
+[tool.pytest.ini_options]
+addopts = ["--strict-config", "--strict-markers"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+src = ["src", "tests"]
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["A", "B", "E", "F", "I", "N", "RUF", "UP", "W"]
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+reportMissingTypeStubs = false
