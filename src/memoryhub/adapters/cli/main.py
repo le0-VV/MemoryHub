@@ -90,6 +90,8 @@ def _build_parser() -> argparse.ArgumentParser:
 
     install_parser = subparsers.add_parser("install")
     install_parser.add_argument("--force", action="store_true")
+    install_parser.add_argument("--repair", action="store_true")
+    install_parser.add_argument("--update", action="store_true")
     install_parser.add_argument("--json", action="store_true")
 
     doctor_parser = subparsers.add_parser("doctor")
@@ -211,12 +213,18 @@ def _install(
     layout: RuntimeLayout,
     stdout: TextIO,
 ) -> int:
-    report = install_runtime(layout, force=cast(bool, args.force))
+    report = install_runtime(
+        layout,
+        force=cast(bool, args.force),
+        repair=cast(bool, args.repair),
+        update=cast(bool, args.update),
+    )
     if cast(bool, args.json):
         _write_json(_install_payload(report), stdout)
     else:
         stdout.write(f"Installed MemoryHub runtime at {report.runtime_root}\n")
         stdout.write(f"Launcher: {report.bin_path}\n")
+        stdout.write(f"Launcher action: {report.launcher_action}\n")
     return 0
 
 

@@ -48,6 +48,13 @@ By default this prepares `~/.memoryhub`, initializes `config.json`, creates the
 global `projects/main` context tree, and writes a launcher at
 `~/.memoryhub/bin/memoryhub`.
 
+Repair or update the local launcher/metadata without changing project memory:
+
+```bash
+memoryhub install --repair
+memoryhub install --update
+```
+
 Create, inspect, or restore a source-of-truth backup:
 
 ```bash

@@ -8,12 +8,15 @@ import stat
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 from memoryhub.framework.errors import RuntimeLayoutError
 from memoryhub.framework.layout import RuntimeLayout
 from memoryhub.framework.registry import ProjectRegistry
 
 INSTALL_SCHEMA_VERSION = 1
+InstallMode = Literal["install", "force", "repair", "update"]
+LauncherAction = Literal["created", "unchanged", "repaired", "replaced", "updated"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,6 +28,7 @@ class InstallReport:
     python_executable: Path
     import_root: Path
     launcher_created: bool
+    launcher_action: LauncherAction
 
     def to_json(self) -> dict[str, object]:
         return {
@@ -35,6 +39,7 @@ class InstallReport:
             "python_executable": str(self.python_executable),
             "import_root": str(self.import_root),
             "launcher_created": self.launcher_created,
+            "launcher_action": self.launcher_action,
         }
 
 
@@ -43,17 +48,20 @@ def install_runtime(
     *,
     python_executable: Path | None = None,
     force: bool = False,
+    repair: bool = False,
+    update: bool = False,
 ) -> InstallReport:
+    mode = _install_mode(force=force, repair=repair, update=update)
     executable = _resolve_python_executable(python_executable)
     import_root = _resolve_import_root()
     ProjectRegistry(layout).ensure_initialized()
     metadata_path = layout.runtime_dir / "install.json"
     bin_path = layout.bin_dir / "memoryhub"
-    launcher_created = _write_launcher(
+    launcher_action = _write_launcher(
         bin_path,
         executable,
         import_root,
-        force=force,
+        mode=mode,
     )
     _write_install_metadata(layout, metadata_path, bin_path, executable, import_root)
     return InstallReport(
@@ -63,8 +71,22 @@ def install_runtime(
         metadata_path=metadata_path,
         python_executable=executable,
         import_root=import_root,
-        launcher_created=launcher_created,
+        launcher_created=launcher_action != "unchanged",
+        launcher_action=launcher_action,
     )
+
+
+def _install_mode(*, force: bool, repair: bool, update: bool) -> InstallMode:
+    selected_modes = sum(1 for value in (force, repair, update) if value)
+    if selected_modes > 1:
+        raise RuntimeLayoutError("choose only one of force, repair, or update")
+    if force:
+        return "force"
+    if repair:
+        return "repair"
+    if update:
+        return "update"
+    return "install"
 
 
 def _resolve_python_executable(python_executable: Path | None) -> Path:
@@ -85,23 +107,45 @@ def _write_launcher(
     python_executable: Path,
     import_root: Path,
     *,
-    force: bool,
-) -> bool:
-    if bin_path.exists() and not force:
+    mode: InstallMode,
+) -> LauncherAction:
+    expected = _launcher_text(python_executable, import_root)
+    if bin_path.exists():
+        if not bin_path.is_file():
+            raise RuntimeLayoutError(f"launcher path is not a file: {bin_path}")
         existing = bin_path.read_text(encoding="utf-8")
-        expected = _launcher_text(python_executable, import_root)
         if existing == expected:
-            return False
-        raise RuntimeLayoutError(f"launcher already exists: {bin_path}")
+            return _ensure_launcher_mode(bin_path)
+        if mode == "install":
+            raise RuntimeLayoutError(f"launcher already exists: {bin_path}")
+        _write_launcher_file(bin_path, expected)
+        return _replacement_action(mode)
 
+    _write_launcher_file(bin_path, expected)
+    return "created"
+
+
+def _write_launcher_file(bin_path: Path, text: str) -> None:
     bin_path.parent.mkdir(parents=True, exist_ok=True)
-    bin_path.write_text(
-        _launcher_text(python_executable, import_root),
-        encoding="utf-8",
-    )
+    bin_path.write_text(text, encoding="utf-8")
+    _ensure_launcher_mode(bin_path)
+
+
+def _ensure_launcher_mode(bin_path: Path) -> LauncherAction:
     current_mode = bin_path.stat().st_mode
-    bin_path.chmod(current_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-    return True
+    executable_mode = current_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+    if executable_mode == current_mode:
+        return "unchanged"
+    bin_path.chmod(executable_mode)
+    return "repaired"
+
+
+def _replacement_action(mode: InstallMode) -> LauncherAction:
+    if mode == "repair":
+        return "repaired"
+    if mode == "update":
+        return "updated"
+    return "replaced"
 
 
 def _launcher_text(python_executable: Path, import_root: Path) -> str:

@@ -30,7 +30,35 @@ def test_cli_install_outputs_json_and_creates_launcher(tmp_path: Path) -> None:
     assert code == 0
     assert stderr == ""
     assert install["runtime_root"] == str(config_dir)
+    assert install["launcher_action"] == "created"
     assert bin_path.is_file()
+    assert "memoryhub.adapters.cli" in bin_path.read_text(encoding="utf-8")
+
+
+def test_cli_install_repair_outputs_json_and_repairs_launcher(tmp_path: Path) -> None:
+    config_dir = tmp_path / "hub"
+    install_code, install_stdout, _ = _run_cli(
+        ["install", "--json"],
+        config_dir,
+        tmp_path,
+    )
+    install_payload = _parse_object(install_stdout)
+    install = _expect_object(install_payload["install"])
+    bin_path = Path(_expect_str(install["bin_path"]))
+    bin_path.write_text("damaged\n", encoding="utf-8")
+
+    repair_code, repair_stdout, repair_stderr = _run_cli(
+        ["install", "--repair", "--json"],
+        config_dir,
+        tmp_path,
+    )
+    repair_payload = _parse_object(repair_stdout)
+    repair = _expect_object(repair_payload["install"])
+
+    assert install_code == 0
+    assert repair_code == 0
+    assert repair_stderr == ""
+    assert repair["launcher_action"] == "repaired"
     assert "memoryhub.adapters.cli" in bin_path.read_text(encoding="utf-8")
 
 
