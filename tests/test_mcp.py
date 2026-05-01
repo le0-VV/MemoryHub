@@ -145,6 +145,25 @@ def test_mcp_status_write_search_and_read_tools(tmp_path: Path) -> None:
     )
 
 
+def test_mcp_status_fails_on_missing_project_registry_symlink(tmp_path: Path) -> None:
+    registry = ProjectRegistry(RuntimeLayout.from_root(tmp_path / "hub"))
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    record = registry.add_project(repo_root, name="demo")
+    record.registry_path.unlink()
+
+    status_content = _call_tool(registry, STATUS_TOOL, {})
+    status = _expect_object(status_content["status"])
+    checks = _object_list(_expect_list(status["checks"]))
+    project_registry_checks = [
+        check for check in checks if check["name"] == "project_registry"
+    ]
+
+    assert status["ok"] is False
+    assert project_registry_checks[-1]["ok"] is False
+    assert project_registry_checks[-1]["message"] == "demo registry symlink is missing"
+
+
 def test_mcp_search_filters_and_context_tool(tmp_path: Path) -> None:
     registry = ProjectRegistry(RuntimeLayout.from_root(tmp_path / "hub"))
     repo_root = tmp_path / "repo"

@@ -195,10 +195,10 @@ def _doctor(
     stdout: TextIO,
 ) -> int:
     registry.ensure_initialized()
-    report = doctor(registry.layout)
+    report = doctor(registry.layout, extra_checks=registry.inspect_health())
     if cast(bool, args.json):
         _write_json(report.to_json(), stdout)
-        return 0
+        return 0 if report.ok else 1
 
     status = "ok" if report.ok else "failed"
     stdout.write(f"MemoryHub runtime: {status}\n")

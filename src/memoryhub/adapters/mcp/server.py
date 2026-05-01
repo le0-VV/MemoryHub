@@ -193,7 +193,14 @@ def _tools_call_result(params: object, registry: ProjectRegistry) -> dict[str, o
         )
     if tool_name == STATUS_TOOL:
         registry.ensure_initialized()
-        return _tool_result({"status": doctor(registry.layout).to_json()})
+        return _tool_result(
+            {
+                "status": doctor(
+                    registry.layout,
+                    extra_checks=registry.inspect_health(),
+                ).to_json()
+            }
+        )
     if tool_name == SEARCH_TOOL:
         query = _expect_string(arguments.get("query"), "arguments.query")
         project = _optional_string(arguments.get("project"), "arguments.project")

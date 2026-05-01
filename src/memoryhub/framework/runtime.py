@@ -44,8 +44,15 @@ def ensure_runtime(layout: RuntimeLayout) -> None:
     ProjectSourceLayout.for_global(layout).ensure()
 
 
-def inspect_runtime(layout: RuntimeLayout) -> DoctorReport:
-    checks = tuple(_directory_check(path) for path in _doctor_directories(layout))
+def inspect_runtime(
+    layout: RuntimeLayout,
+    *,
+    extra_checks: tuple[DoctorCheck, ...] = (),
+) -> DoctorReport:
+    checks = (
+        *(tuple(_directory_check(path) for path in _doctor_directories(layout))),
+        *extra_checks,
+    )
     return DoctorReport(
         runtime_root=layout.root,
         ok=all(check.ok for check in checks),
@@ -53,9 +60,13 @@ def inspect_runtime(layout: RuntimeLayout) -> DoctorReport:
     )
 
 
-def doctor(layout: RuntimeLayout) -> DoctorReport:
+def doctor(
+    layout: RuntimeLayout,
+    *,
+    extra_checks: tuple[DoctorCheck, ...] = (),
+) -> DoctorReport:
     ensure_runtime(layout)
-    return inspect_runtime(layout)
+    return inspect_runtime(layout, extra_checks=extra_checks)
 
 
 def _doctor_directories(layout: RuntimeLayout) -> tuple[Path, ...]:

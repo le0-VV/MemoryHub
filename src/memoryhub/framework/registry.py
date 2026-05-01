@@ -17,7 +17,7 @@ from memoryhub.framework.errors import (
 )
 from memoryhub.framework.layout import RuntimeLayout
 from memoryhub.framework.project_source import ProjectSourceLayout
-from memoryhub.framework.runtime import ensure_runtime
+from memoryhub.framework.runtime import DoctorCheck, ensure_runtime
 
 CONFIG_VERSION: Final = 1
 MAIN_PROJECT_NAME: Final = "main"
@@ -257,6 +257,19 @@ class ProjectRegistry:
             return max(matches, key=lambda match: match[0])[1]
         return self.get_default()
 
+    def inspect_health(self) -> tuple[DoctorCheck, ...]:
+        state = self.ensure_initialized()
+        ordered_names = (
+            MAIN_PROJECT_NAME,
+            *sorted(name for name in state.projects if name != MAIN_PROJECT_NAME),
+        )
+        checks: list[DoctorCheck] = []
+        for name in ordered_names:
+            record = state.projects[name]
+            checks.append(_project_source_check(record))
+            checks.append(_project_registry_check(record))
+        return tuple(checks)
+
     def _initial_state(self) -> RegistryState:
         return RegistryState(
             default_project=MAIN_PROJECT_NAME,
@@ -329,6 +342,90 @@ def _is_relative_to(path: Path, parent: Path) -> bool:
     except ValueError:
         return False
     return True
+
+
+def _project_source_check(record: ProjectRecord) -> DoctorCheck:
+    if record.source_path.is_dir():
+        return DoctorCheck(
+            name="project_source",
+            ok=True,
+            path=record.source_path,
+            message=f"{record.name} source exists",
+        )
+    if record.source_path.exists():
+        return DoctorCheck(
+            name="project_source",
+            ok=False,
+            path=record.source_path,
+            message=f"{record.name} source path is not a directory",
+        )
+    return DoctorCheck(
+        name="project_source",
+        ok=False,
+        path=record.source_path,
+        message=f"{record.name} source is missing",
+    )
+
+
+def _project_registry_check(record: ProjectRecord) -> DoctorCheck:
+    if record.kind is ProjectKind.GLOBAL:
+        return _global_registry_check(record)
+    return _repository_registry_check(record)
+
+
+def _global_registry_check(record: ProjectRecord) -> DoctorCheck:
+    if record.registry_path.is_dir():
+        return DoctorCheck(
+            name="project_registry",
+            ok=True,
+            path=record.registry_path,
+            message=f"{record.name} registry path exists",
+        )
+    if record.registry_path.exists():
+        return DoctorCheck(
+            name="project_registry",
+            ok=False,
+            path=record.registry_path,
+            message=f"{record.name} registry path is not a directory",
+        )
+    return DoctorCheck(
+        name="project_registry",
+        ok=False,
+        path=record.registry_path,
+        message=f"{record.name} registry path is missing",
+    )
+
+
+def _repository_registry_check(record: ProjectRecord) -> DoctorCheck:
+    if not record.registry_path.is_symlink():
+        if record.registry_path.exists():
+            return DoctorCheck(
+                name="project_registry",
+                ok=False,
+                path=record.registry_path,
+                message=f"{record.name} registry path is not a symlink",
+            )
+        return DoctorCheck(
+            name="project_registry",
+            ok=False,
+            path=record.registry_path,
+            message=f"{record.name} registry symlink is missing",
+        )
+
+    linked_path = _read_symlink_absolute(record.registry_path)
+    if linked_path.resolve(strict=False) == record.source_path.resolve(strict=False):
+        return DoctorCheck(
+            name="project_registry",
+            ok=True,
+            path=record.registry_path,
+            message=f"{record.name} registry symlink points to source",
+        )
+    return DoctorCheck(
+        name="project_registry",
+        ok=False,
+        path=record.registry_path,
+        message=f"{record.name} registry symlink points to {linked_path}",
+    )
 
 
 def _expect_object(value: object, label: str) -> dict[str, object]:

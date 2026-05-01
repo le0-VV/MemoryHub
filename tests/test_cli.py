@@ -18,6 +18,31 @@ def test_cli_doctor_outputs_json(tmp_path: Path) -> None:
     assert payload["runtime_root"] == str(tmp_path / "hub")
 
 
+def test_cli_doctor_fails_on_missing_project_registry_symlink(tmp_path: Path) -> None:
+    config_dir = tmp_path / "hub"
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    _run_cli(
+        ["project", "add", str(repo_root), "--name", "demo", "--json"],
+        config_dir,
+        tmp_path,
+    )
+    (config_dir / "projects" / "demo").unlink()
+
+    code, stdout, stderr = _run_cli(["doctor", "--json"], config_dir, tmp_path)
+    payload = _parse_object(stdout)
+    checks = _object_list(_expect_list(payload["checks"]))
+    failing_project_checks = [
+        check for check in checks if check["name"] == "project_registry"
+    ]
+
+    assert code == 1
+    assert stderr == ""
+    assert payload["ok"] is False
+    assert failing_project_checks[-1]["ok"] is False
+    assert failing_project_checks[-1]["message"] == "demo registry symlink is missing"
+
+
 def test_cli_install_outputs_json_and_creates_launcher(tmp_path: Path) -> None:
     config_dir = tmp_path / "hub"
 
