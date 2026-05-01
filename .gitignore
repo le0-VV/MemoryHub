@@ -1,0 +1,14 @@
+.DS_Store
+
+# Agent-local scratch plans are intentionally not versioned.
+.agents/TODO.md
+
+# Python/build artifacts for the upcoming implementation.
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.pyright/
+build/
+dist/
+*.egg-info/
