@@ -7,6 +7,9 @@ Updated: 2026-05-02
 ## Language
 
 - Python 3.14 documentation: https://docs.python.org/3/
+- Python `sqlite3`: https://docs.python.org/3/library/sqlite3.html
+- Python `argparse`: https://docs.python.org/3/library/argparse.html
+- Python `json`: https://docs.python.org/3/library/json.html
 
 ## Packaging And Environments
 
