@@ -147,6 +147,9 @@ def test_cli_write_reindex_search_and_read_json(tmp_path: Path) -> None:
     assert write_code == 0
     assert write_stderr == ""
     assert written_document["title"] == "Cache Pattern"
+    assert written_document["uri"] == (
+        "openviking://project/demo/agent/memories/patterns/cache.md"
+    )
 
     reindex_code, reindex_stdout, _ = _run_cli(
         ["reindex", "--json"],
@@ -169,6 +172,9 @@ def test_cli_write_reindex_search_and_read_json(tmp_path: Path) -> None:
 
     assert search_code == 0
     assert results[0]["relative_path"] == "agent/memories/patterns/cache.md"
+    assert results[0]["uri"] == (
+        "openviking://project/demo/agent/memories/patterns/cache.md"
+    )
 
     read_code, read_stdout, _ = _run_cli(
         ["read", "demo", "agent/memories/patterns/cache.md", "--json"],
@@ -180,6 +186,9 @@ def test_cli_write_reindex_search_and_read_json(tmp_path: Path) -> None:
 
     assert read_code == 0
     assert read_document["body"] == "Use local caches for repeated context lookups."
+    assert read_document["uri"] == (
+        "openviking://project/demo/agent/memories/patterns/cache.md"
+    )
 
 
 def test_cli_search_filters_and_context_json(tmp_path: Path) -> None:
@@ -261,7 +270,14 @@ def test_cli_search_filters_and_context_json(tmp_path: Path) -> None:
     assert context_code == 0
     assert context["document_count"] == 1
     assert documents[0]["title"] == "Cache Pattern"
+    assert documents[0]["uri"] == (
+        "openviking://project/demo/agent/memories/patterns/cache.md"
+    )
     assert "## Cache Pattern" in _expect_str(context["markdown"])
+    assert (
+        "- uri: openviking://project/demo/agent/memories/patterns/cache.md"
+        in _expect_str(context["markdown"])
+    )
 
 
 def test_cli_backup_create_inspect_restore_and_read_json(tmp_path: Path) -> None:

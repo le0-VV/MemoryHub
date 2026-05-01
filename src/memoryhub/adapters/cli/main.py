@@ -21,6 +21,7 @@ from memoryhub.framework.registry import (
     ProjectRegistry,
 )
 from memoryhub.framework.runtime import doctor
+from memoryhub.openviking.resources import resource_descriptor, resource_from_document
 from memoryhub.sources.markdown.schema import MarkdownDocument
 from memoryhub.storage.sqlite.models import SearchResult
 
@@ -387,7 +388,14 @@ def _read(
         cast(str, args.path),
     )
     if cast(bool, args.json):
-        _write_json({"document": document.to_json()}, stdout)
+        _write_json(
+            _document_payload(
+                project_name=cast(str, args.project),
+                relative_path=cast(str, args.path),
+                document=document,
+            ),
+            stdout,
+        )
     else:
         stdout.write(document.body)
     return 0
@@ -409,7 +417,13 @@ def _write(
         tags=tags,
     )
     library.reindex()
-    return _document_result(document, cast(bool, args.json), stdout)
+    return _document_result(
+        document,
+        cast(bool, args.json),
+        stdout,
+        project_name=cast(str, args.project),
+        relative_path=cast(str, args.path),
+    )
 
 
 def _project_list_payload(projects: tuple[ProjectListItem, ...]) -> dict[str, object]:
@@ -417,19 +431,60 @@ def _project_list_payload(projects: tuple[ProjectListItem, ...]) -> dict[str, ob
 
 
 def _search_payload(results: tuple[SearchResult, ...]) -> dict[str, object]:
-    return {"results": [result.to_json() for result in results]}
+    return {"results": [_search_result_payload(result) for result in results]}
+
+
+def _search_result_payload(result: SearchResult) -> dict[str, object]:
+    payload = result.to_json()
+    resource = resource_descriptor(
+        project_name=result.project_name,
+        relative_path=result.relative_path,
+        title=result.title,
+        kind=result.kind,
+        tags=result.tags,
+    )
+    payload["uri"] = resource.uri
+    payload["resource"] = resource.to_json()
+    return payload
 
 
 def _document_result(
     document: MarkdownDocument,
     as_json: bool,
     stdout: TextIO,
+    *,
+    project_name: str,
+    relative_path: str,
 ) -> int:
     if as_json:
-        _write_json({"document": document.to_json()}, stdout)
+        _write_json(
+            _document_payload(
+                project_name=project_name,
+                relative_path=relative_path,
+                document=document,
+            ),
+            stdout,
+        )
     else:
         stdout.write(f"{document.title}\n")
     return 0
+
+
+def _document_payload(
+    *,
+    project_name: str,
+    relative_path: str,
+    document: MarkdownDocument,
+) -> dict[str, object]:
+    resource = resource_from_document(
+        project_name=project_name,
+        relative_path=relative_path,
+        document=document,
+    )
+    payload = document.to_json()
+    payload["uri"] = resource.uri
+    payload["resource"] = resource.to_json()
+    return {"document": payload, "resource": resource.to_json()}
 
 
 def _install_payload(report: InstallReport) -> dict[str, object]:

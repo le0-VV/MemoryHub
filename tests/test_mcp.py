@@ -98,6 +98,9 @@ def test_mcp_status_write_search_and_read_tools(tmp_path: Path) -> None:
     written_document = _expect_object(write_content["document"])
 
     assert written_document["title"] == "Cache Pattern"
+    assert written_document["uri"] == (
+        "openviking://project/demo/agent/memories/patterns/cache.md"
+    )
 
     search_response = handle_request(
         {
@@ -113,6 +116,9 @@ def test_mcp_status_write_search_and_read_tools(tmp_path: Path) -> None:
     results = _object_list(_expect_list(search_content["results"]))
 
     assert results[0]["project_name"] == "demo"
+    assert results[0]["uri"] == (
+        "openviking://project/demo/agent/memories/patterns/cache.md"
+    )
 
     read_response = handle_request(
         {
@@ -134,6 +140,9 @@ def test_mcp_status_write_search_and_read_tools(tmp_path: Path) -> None:
     read_document = _expect_object(read_content["document"])
 
     assert read_document["body"] == "Use local caches for repeated context lookups."
+    assert read_document["uri"] == (
+        "openviking://project/demo/agent/memories/patterns/cache.md"
+    )
 
 
 def test_mcp_search_filters_and_context_tool(tmp_path: Path) -> None:
@@ -190,6 +199,9 @@ def test_mcp_search_filters_and_context_tool(tmp_path: Path) -> None:
 
     assert context["document_count"] == 1
     assert documents[0]["title"] == "Cache Pattern"
+    assert documents[0]["uri"] == (
+        "openviking://project/demo/agent/memories/patterns/cache.md"
+    )
     assert "## Cache Pattern" in _expect_str(context["markdown"])
 
 

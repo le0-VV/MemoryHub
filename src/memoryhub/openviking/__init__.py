@@ -7,7 +7,11 @@ from memoryhub.openviking.compatibility import (
     compatibility_report,
 )
 from memoryhub.openviking.layout import CONTEXT_ROOT, SUPPORTED_CONTEXT_DIRS
-from memoryhub.openviking.resources import OpenVikingResource, resource_from_document
+from memoryhub.openviking.resources import (
+    OpenVikingResource,
+    resource_descriptor,
+    resource_from_document,
+)
 from memoryhub.openviking.uris import (
     OpenVikingURI,
     build_openviking_uri,
@@ -25,5 +29,6 @@ __all__ = [
     "build_openviking_uri",
     "compatibility_report",
     "parse_openviking_uri",
+    "resource_descriptor",
     "resource_from_document",
 ]

@@ -12,6 +12,9 @@ from memoryhub.framework.errors import MemoryHubError
 from memoryhub.framework.library import MemoryHubLibrary
 from memoryhub.framework.registry import ProjectRegistry
 from memoryhub.framework.runtime import doctor
+from memoryhub.openviking.resources import resource_descriptor, resource_from_document
+from memoryhub.sources.markdown.schema import MarkdownDocument
+from memoryhub.storage.sqlite.models import SearchResult
 
 PROTOCOL_VERSION = "2025-06-18"
 PROJECT_LIST_TOOL = "project_list"
@@ -204,7 +207,7 @@ def _tools_call_result(params: object, registry: ProjectRegistry) -> dict[str, o
         return _tool_result(
             {
                 "results": [
-                    result.to_json()
+                    _search_result_payload(result)
                     for result in library.search(
                         query,
                         project_name=project,
@@ -239,22 +242,38 @@ def _tools_call_result(params: object, registry: ProjectRegistry) -> dict[str, o
             }
         )
     if tool_name == READ_TOOL:
+        project_name = _expect_string(arguments.get("project"), "arguments.project")
+        relative_path = _expect_string(arguments.get("path"), "arguments.path")
         document = library.read_document(
-            _expect_string(arguments.get("project"), "arguments.project"),
-            _expect_string(arguments.get("path"), "arguments.path"),
+            project_name,
+            relative_path,
         )
-        return _tool_result({"document": document.to_json()})
+        return _tool_result(
+            _document_payload(
+                project_name=project_name,
+                relative_path=relative_path,
+                document=document,
+            )
+        )
     if tool_name == WRITE_TOOL:
+        project_name = _expect_string(arguments.get("project"), "arguments.project")
+        relative_path = _expect_string(arguments.get("path"), "arguments.path")
         document = library.write_document(
-            _expect_string(arguments.get("project"), "arguments.project"),
-            _expect_string(arguments.get("path"), "arguments.path"),
+            project_name,
+            relative_path,
             title=_expect_string(arguments.get("title"), "arguments.title"),
             body=_expect_string(arguments.get("body"), "arguments.body"),
             kind=_optional_string(arguments.get("kind"), "arguments.kind") or "memory",
             tags=_optional_string_list(arguments.get("tags"), "arguments.tags"),
         )
         library.reindex()
-        return _tool_result({"document": document.to_json()})
+        return _tool_result(
+            _document_payload(
+                project_name=project_name,
+                relative_path=relative_path,
+                document=document,
+            )
+        )
 
     raise MemoryHubError(f"unsupported tool: {tool_name}")
 
@@ -270,6 +289,37 @@ def _tool_result(structured_content: dict[str, object]) -> dict[str, object]:
         "structuredContent": structured_content,
         "isError": False,
     }
+
+
+def _search_result_payload(result: SearchResult) -> dict[str, object]:
+    payload = result.to_json()
+    resource = resource_descriptor(
+        project_name=result.project_name,
+        relative_path=result.relative_path,
+        title=result.title,
+        kind=result.kind,
+        tags=result.tags,
+    )
+    payload["uri"] = resource.uri
+    payload["resource"] = resource.to_json()
+    return payload
+
+
+def _document_payload(
+    *,
+    project_name: str,
+    relative_path: str,
+    document: MarkdownDocument,
+) -> dict[str, object]:
+    resource = resource_from_document(
+        project_name=project_name,
+        relative_path=relative_path,
+        document=document,
+    )
+    payload = document.to_json()
+    payload["uri"] = resource.uri
+    payload["resource"] = resource.to_json()
+    return {"document": payload, "resource": resource.to_json()}
 
 
 def _success_response(

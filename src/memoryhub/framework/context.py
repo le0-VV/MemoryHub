@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from memoryhub.openviking.resources import resource_descriptor
+
 
 @dataclass(frozen=True, slots=True)
 class ContextDocument:
@@ -14,11 +16,22 @@ class ContextDocument:
     body: str
     tags: tuple[str, ...]
 
+    @property
+    def uri(self) -> str:
+        return resource_descriptor(
+            project_name=self.project_name,
+            relative_path=self.relative_path,
+            title=self.title,
+            kind=self.kind,
+            tags=self.tags,
+        ).uri
+
     def to_markdown(self) -> str:
         tags = ", ".join(self.tags)
         metadata = [
             f"- project: {self.project_name}",
             f"- path: {self.relative_path}",
+            f"- uri: {self.uri}",
             f"- kind: {self.kind}",
         ]
         if tags:
@@ -36,10 +49,18 @@ class ContextDocument:
         return {
             "project_name": self.project_name,
             "relative_path": self.relative_path,
+            "uri": self.uri,
             "title": self.title,
             "kind": self.kind,
             "body": self.body,
             "tags": list(self.tags),
+            "resource": resource_descriptor(
+                project_name=self.project_name,
+                relative_path=self.relative_path,
+                title=self.title,
+                kind=self.kind,
+                tags=self.tags,
+            ).to_json(),
         }
 
 

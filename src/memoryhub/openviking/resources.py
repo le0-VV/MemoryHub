@@ -37,6 +37,23 @@ def resource_from_document(
     relative_path: str | Path,
     document: MarkdownDocument,
 ) -> OpenVikingResource:
+    return resource_descriptor(
+        project_name=project_name,
+        relative_path=relative_path,
+        title=document.title,
+        kind=document.kind,
+        tags=document.tags,
+    )
+
+
+def resource_descriptor(
+    *,
+    project_name: str,
+    relative_path: str | Path,
+    title: str,
+    kind: str,
+    tags: tuple[str, ...] = (),
+) -> OpenVikingResource:
     project = validate_project_name(project_name)
     path = safe_relative_markdown_path(relative_path)
     path_text = path.as_posix()
@@ -44,7 +61,7 @@ def resource_from_document(
         uri=build_openviking_uri(project, path),
         project_name=project,
         relative_path=path_text,
-        title=document.title,
-        kind=document.kind,
-        tags=document.tags,
+        title=title,
+        kind=kind,
+        tags=tags,
     )
