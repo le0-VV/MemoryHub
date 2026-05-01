@@ -69,6 +69,75 @@ def test_cli_project_add_list_default_and_remove_json(tmp_path: Path) -> None:
     assert removed_project["name"] == "demo"
 
 
+def test_cli_write_reindex_search_and_read_json(tmp_path: Path) -> None:
+    config_dir = tmp_path / "hub"
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    _run_cli(
+        ["project", "add", str(repo_root), "--name", "demo", "--json"],
+        config_dir,
+        tmp_path,
+    )
+
+    write_code, write_stdout, write_stderr = _run_cli(
+        [
+            "write",
+            "demo",
+            "agent/memories/patterns/cache.md",
+            "--title",
+            "Cache Pattern",
+            "--body",
+            "Use local caches for repeated context lookups.",
+            "--kind",
+            "pattern",
+            "--tag",
+            "cache",
+            "--json",
+        ],
+        config_dir,
+        tmp_path,
+    )
+    write_payload = _parse_object(write_stdout)
+    written_document = _expect_object(write_payload["document"])
+
+    assert write_code == 0
+    assert write_stderr == ""
+    assert written_document["title"] == "Cache Pattern"
+
+    reindex_code, reindex_stdout, _ = _run_cli(
+        ["reindex", "--json"],
+        config_dir,
+        tmp_path,
+    )
+    reindex_payload = _parse_object(reindex_stdout)
+    reindex_report = _expect_object(reindex_payload["reindex"])
+
+    assert reindex_code == 0
+    assert reindex_report["document_count"] == 1
+
+    search_code, search_stdout, _ = _run_cli(
+        ["search", "cache", "--json"],
+        config_dir,
+        tmp_path,
+    )
+    search_payload = _parse_object(search_stdout)
+    results = _object_list(_expect_list(search_payload["results"]))
+
+    assert search_code == 0
+    assert results[0]["relative_path"] == "agent/memories/patterns/cache.md"
+
+    read_code, read_stdout, _ = _run_cli(
+        ["read", "demo", "agent/memories/patterns/cache.md", "--json"],
+        config_dir,
+        tmp_path,
+    )
+    read_payload = _parse_object(read_stdout)
+    read_document = _expect_object(read_payload["document"])
+
+    assert read_code == 0
+    assert read_document["body"] == "Use local caches for repeated context lookups."
+
+
 def _run_cli(
     args: list[str],
     config_dir: Path,

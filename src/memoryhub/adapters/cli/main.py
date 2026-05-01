@@ -12,8 +12,15 @@ from typing import TextIO, cast
 from memoryhub.adapters.mcp.server import run_stdio
 from memoryhub.framework.errors import MemoryHubError
 from memoryhub.framework.layout import RuntimeLayout
-from memoryhub.framework.registry import ProjectListItem, ProjectRecord, ProjectRegistry
+from memoryhub.framework.library import MemoryHubLibrary
+from memoryhub.framework.registry import (
+    ProjectListItem,
+    ProjectRecord,
+    ProjectRegistry,
+)
 from memoryhub.framework.runtime import doctor
+from memoryhub.sources.markdown.schema import MarkdownDocument
+from memoryhub.storage.sqlite.models import SearchResult
 
 
 def main() -> int:
@@ -46,6 +53,14 @@ def run(
             return _doctor(args, registry, out)
         if command == "project":
             return _project(args, registry, cwd, out)
+        if command == "reindex":
+            return _reindex(args, registry, out)
+        if command == "search":
+            return _search(args, registry, out)
+        if command == "read":
+            return _read(args, registry, out)
+        if command == "write":
+            return _write(args, registry, out)
         if command == "mcp":
             run_stdio(registry=registry)
             return 0
@@ -90,6 +105,29 @@ def _build_parser() -> argparse.ArgumentParser:
     default_parser = project_subparsers.add_parser("default")
     default_parser.add_argument("name", nargs="?")
     default_parser.add_argument("--json", action="store_true")
+
+    reindex_parser = subparsers.add_parser("reindex")
+    reindex_parser.add_argument("--json", action="store_true")
+
+    search_parser = subparsers.add_parser("search")
+    search_parser.add_argument("query")
+    search_parser.add_argument("--project")
+    search_parser.add_argument("--limit", type=int, default=10)
+    search_parser.add_argument("--json", action="store_true")
+
+    read_parser = subparsers.add_parser("read")
+    read_parser.add_argument("project")
+    read_parser.add_argument("path")
+    read_parser.add_argument("--json", action="store_true")
+
+    write_parser = subparsers.add_parser("write")
+    write_parser.add_argument("project")
+    write_parser.add_argument("path")
+    write_parser.add_argument("--title", required=True)
+    write_parser.add_argument("--body", required=True)
+    write_parser.add_argument("--kind", default="memory")
+    write_parser.add_argument("--tag", action="append", dest="tags")
+    write_parser.add_argument("--json", action="store_true")
 
     subparsers.add_parser("mcp")
     return parser
@@ -171,8 +209,96 @@ def _project_result(record: ProjectRecord, as_json: bool, stdout: TextIO) -> int
     return 0
 
 
+def _reindex(
+    args: argparse.Namespace,
+    registry: ProjectRegistry,
+    stdout: TextIO,
+) -> int:
+    report = MemoryHubLibrary(registry).reindex()
+    if cast(bool, args.json):
+        _write_json({"reindex": report.to_json()}, stdout)
+    else:
+        stdout.write(
+            f"Indexed {report.document_count} documents "
+            f"across {report.project_count} projects.\n"
+        )
+    return 0
+
+
+def _search(
+    args: argparse.Namespace,
+    registry: ProjectRegistry,
+    stdout: TextIO,
+) -> int:
+    results = MemoryHubLibrary(registry).search(
+        cast(str, args.query),
+        project_name=cast(str | None, args.project),
+        limit=cast(int, args.limit),
+    )
+    if cast(bool, args.json):
+        _write_json(_search_payload(results), stdout)
+        return 0
+    for result in results:
+        stdout.write(
+            f"{result.project_name}:{result.relative_path}\t"
+            f"{result.title}\t{result.snippet}\n"
+        )
+    return 0
+
+
+def _read(
+    args: argparse.Namespace,
+    registry: ProjectRegistry,
+    stdout: TextIO,
+) -> int:
+    document = MemoryHubLibrary(registry).read_document(
+        cast(str, args.project),
+        cast(str, args.path),
+    )
+    if cast(bool, args.json):
+        _write_json({"document": document.to_json()}, stdout)
+    else:
+        stdout.write(document.body)
+    return 0
+
+
+def _write(
+    args: argparse.Namespace,
+    registry: ProjectRegistry,
+    stdout: TextIO,
+) -> int:
+    tags = tuple(cast(list[str] | None, args.tags) or [])
+    library = MemoryHubLibrary(registry)
+    document = library.write_document(
+        cast(str, args.project),
+        cast(str, args.path),
+        title=cast(str, args.title),
+        body=cast(str, args.body),
+        kind=cast(str, args.kind),
+        tags=tags,
+    )
+    library.reindex()
+    return _document_result(document, cast(bool, args.json), stdout)
+
+
 def _project_list_payload(projects: tuple[ProjectListItem, ...]) -> dict[str, object]:
     return {"projects": [project.to_json() for project in projects]}
+
+
+def _search_payload(results: tuple[SearchResult, ...]) -> dict[str, object]:
+    return {"results": [result.to_json() for result in results]}
+
+
+def _document_result(
+    document: MarkdownDocument,
+    as_json: bool,
+    stdout: TextIO,
+) -> int:
+    if as_json:
+        _write_json({"document": document.to_json()}, stdout)
+    else:
+        stdout.write(f"{document.title}\n")
+    return 0
 
 
 def _resolve_cli_path(value: str, cwd: Path | None) -> Path:

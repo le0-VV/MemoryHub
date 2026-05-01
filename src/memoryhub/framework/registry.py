@@ -220,6 +220,14 @@ class ProjectRegistry:
             raise RegistryError(f"default project is missing: {state.default_project}")
         return record
 
+    def get_project(self, name: str) -> ProjectRecord:
+        project_name = validate_project_name(name)
+        state = self.ensure_initialized()
+        record = state.projects.get(project_name)
+        if record is None:
+            raise ProjectNotFoundError(f"project does not exist: {project_name}")
+        return record
+
     def list_projects(self) -> tuple[ProjectListItem, ...]:
         state = self.ensure_initialized()
         ordered_names = sorted(
