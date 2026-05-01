@@ -36,3 +36,13 @@ uv run pytest
 ```
 
 The `memoryhub` console script is provided by the Python package.
+
+Install the local runtime root and launcher:
+
+```bash
+uv run memoryhub install
+```
+
+By default this prepares `~/.memoryhub`, initializes `config.json`, creates the
+global `projects/main` context tree, and writes a launcher at
+`~/.memoryhub/bin/memoryhub`.

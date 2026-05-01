@@ -11,6 +11,7 @@ from typing import TextIO, cast
 
 from memoryhub.adapters.mcp.server import run_stdio
 from memoryhub.framework.errors import MemoryHubError
+from memoryhub.framework.install import InstallReport, install_runtime
 from memoryhub.framework.layout import RuntimeLayout
 from memoryhub.framework.library import MemoryHubLibrary
 from memoryhub.framework.registry import (
@@ -49,6 +50,8 @@ def run(
 
     try:
         command = cast(str, args.command)
+        if command == "install":
+            return _install(args, layout, out)
         if command == "doctor":
             return _doctor(args, registry, out)
         if command == "project":
@@ -81,6 +84,10 @@ def _build_parser() -> argparse.ArgumentParser:
         help="override MEMORYHUB_CONFIG_DIR for this command",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    install_parser = subparsers.add_parser("install")
+    install_parser.add_argument("--force", action="store_true")
+    install_parser.add_argument("--json", action="store_true")
 
     doctor_parser = subparsers.add_parser("doctor")
     doctor_parser.add_argument("--json", action="store_true")
@@ -175,6 +182,20 @@ def _doctor(
         marker = "ok" if check.ok else "fail"
         stdout.write(f"- {marker}: {check.path} ({check.message})\n")
     return 0 if report.ok else 1
+
+
+def _install(
+    args: argparse.Namespace,
+    layout: RuntimeLayout,
+    stdout: TextIO,
+) -> int:
+    report = install_runtime(layout, force=cast(bool, args.force))
+    if cast(bool, args.json):
+        _write_json(_install_payload(report), stdout)
+    else:
+        stdout.write(f"Installed MemoryHub runtime at {report.runtime_root}\n")
+        stdout.write(f"Launcher: {report.bin_path}\n")
+    return 0
 
 
 def _project(
@@ -336,6 +357,10 @@ def _document_result(
     else:
         stdout.write(f"{document.title}\n")
     return 0
+
+
+def _install_payload(report: InstallReport) -> dict[str, object]:
+    return {"install": report.to_json()}
 
 
 def _resolve_cli_path(value: str, cwd: Path | None) -> Path:

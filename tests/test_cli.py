@@ -18,6 +18,22 @@ def test_cli_doctor_outputs_json(tmp_path: Path) -> None:
     assert payload["runtime_root"] == str(tmp_path / "hub")
 
 
+def test_cli_install_outputs_json_and_creates_launcher(tmp_path: Path) -> None:
+    config_dir = tmp_path / "hub"
+
+    code, stdout, stderr = _run_cli(["install", "--json"], config_dir, tmp_path)
+
+    payload = _parse_object(stdout)
+    install = _expect_object(payload["install"])
+    bin_path = Path(_expect_str(install["bin_path"]))
+
+    assert code == 0
+    assert stderr == ""
+    assert install["runtime_root"] == str(config_dir)
+    assert bin_path.is_file()
+    assert "memoryhub.adapters.cli" in bin_path.read_text(encoding="utf-8")
+
+
 def test_cli_project_add_list_default_and_remove_json(tmp_path: Path) -> None:
     config_dir = tmp_path / "hub"
     repo_root = tmp_path / "repo"
