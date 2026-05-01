@@ -10,6 +10,7 @@ Updated: 2026-05-02
 - Python `sqlite3`: https://docs.python.org/3/library/sqlite3.html
 - Python `argparse`: https://docs.python.org/3/library/argparse.html
 - Python `json`: https://docs.python.org/3/library/json.html
+- Python `zipfile`: https://docs.python.org/3/library/zipfile.html
 
 ## Packaging And Environments
 
